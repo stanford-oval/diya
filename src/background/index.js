@@ -25,6 +25,7 @@ class RecordingController {
     }
   }
 
+
   boot () {
     chrome.extension.onConnect.addListener(port => {
       console.debug('listeners connected')
