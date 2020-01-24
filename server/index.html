@@ -30,9 +30,44 @@
     <br>
     <br>
     <hr>
-    <h3>Test</h3>
+    <h3>Lists</h3>
+    <h5>Groceries</h5>
+    <ul>
+      <li>Coffee</li>
+      <li>Tea</li>
+      <li>Milk</li>
+    </ul>
+
+    <h5>Directions</h5>
+    <ol>
+      <li>Head north on N Halsted St</li>
+      <li>Turn right on W Diversey Pkwy</li>
+      <li>Turn left on N Orchard St</li>
+    </ol>
+    <hr>
+    <h3>Stocks</h3>
+    <input id='stock_input' value='apple'>
+    <button type='submit' id='stock_button'>search</button>
+    <div>name: <span id='stock_name'></span></div>
+    <div>price: <span id='stock_price'></span></div>
+    <br>
+    <br>
+    <div>
+        <span>Apple</span>
+    </div>
+    <div>
+        price: <span>$318</span>
+    </div>
+    <hr>
+    <h3>Restaurants</h3>
+    <div><tr>Restaurants 1</tr><tr> </tr><tr>1</tr></div>
+    <div>Restaurants 2</div>
+    <div>Restaurants 3</div>
+    <br>
+    <hr>
+    <h3>Buttons and Links</h3>
     <button name='say' href>Hello</button>
-    <h3>Links</h3>
+    <br><br>
     <a href="#">link 1</a>
     <br><br>
     <a href="#">link 2</a>
@@ -68,6 +103,30 @@
     <div id='speech'></div>
 
     <script>
+
+    function stock(){
+        name = $("#stock_input").val()
+        if(name == "apple"){
+            $("#stock_name").text("apple")
+            $("#stock_price").text("$318.00")
+        }
+
+        if(name == "vm"){
+            $("#stock_name").text("vm")
+            $("#stock_price").text("$150.00")
+        }
+    }
+
+    $("#stock_input").on('keyup', function (e) {
+        if (e.keyCode === 13) {
+            stock()
+        }
+    });
+
+
+    $("#stock_button").on('click', ()=>{
+        stock()
+    })
 
     function speak(message) {
       // var msg = new SpeechSynthesisUtterance(message)
