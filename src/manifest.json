@@ -1,9 +1,10 @@
 {
-  "name": "Puppeteer Recorder",
+  "name": "Nightmare Recorder",
   "version": "0.7.1",
   "manifest_version": 2,
   "description": "A Chrome extension for recording browser interaction and generating Puppeteer scripts",
   "permissions": [
+    "http://localhost:3000/*"
     "storage",
     "webNavigation",
     "tabs",

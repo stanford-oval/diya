@@ -2,20 +2,21 @@
   <div id="puppeteer-recorder" class="recorder">
     <div class="header">
       <a href="#" @click="goHome">
-        Puppeteer recorder <span class="text-muted"><small>{{version}}</small></span>
+        nightmare recorder 
+        <!-- <span class="text-muted"><small>{{version}}</small></span> -->
       </a>
-      <div class="left">
-        <div class="recording-badge" v-show="isRecording">
-          <span class="red-dot"></span>
-          {{recordingBadgeText}}
-        </div>
-        <a href="#" @click="toggleShowHelp" class="header-button">
-          <img src="/images/help.svg" alt="help" width="18px">
-        </a>
-        <a href="#" @click="openOptions" class="header-button">
-          <img src="/images/settings.svg" alt="settings" width="18px">
-        </a>
-      </div>
+      <!-- <div class="left"> -->
+        <!-- <div class="recording-badge" v-show="isRecording"> -->
+          <!-- <span class="red-dot"></span> -->
+          <!-- {{recordingBadgeText}} -->
+        <!-- </div> -->
+        <!-- <a href="#" @click="toggleShowHelp" class="header-button"> -->
+          <!-- <img src="/images/help.svg" alt="help" width="18px"> -->
+        <!-- </a> -->
+        <!-- <a href="#" @click="openOptions" class="header-button"> -->
+          <!-- <img src="/images/settings.svg" alt="settings" width="18px"> -->
+        <!-- </a> -->
+      <!-- </div> -->
     </div>
     <div class="main">
       <div class="tabs" v-show="!showHelp">
@@ -32,6 +33,7 @@
         <ResultsTab :code="code" :copy-link-text="copyLinkText" :restart="restart" :set-copying="setCopying" v-show="showResultsTab"/>
         <div class="results-footer" v-show="showResultsTab">
           <button class="btn btn-sm btn-primary" @click="restart" v-show="code">Restart</button>
+          <button class="btn btn-sm btn-primary" @click="run" v-show="code">Run</button>
           <a href="#" v-clipboard:copy='code' @click="setCopying" v-show="code">{{copyLinkText}}</a>
         </div>
       </div>
@@ -46,7 +48,7 @@
   import RecordingTab from './RecordingTab.vue'
   import ResultsTab from './ResultsTab.vue'
   import HelpTab from './HelpTab.vue'
-
+  import axios from 'axios'
   import actions from '../../models/extension-ui-actions'
 
 export default {
@@ -54,6 +56,7 @@ export default {
     components: { ResultsTab, RecordingTab, HelpTab },
     data () {
       return {
+        names: ['michael', 'gabi', 'bert'],
         code: '',
         options: {},
         showResultsTab: false,
@@ -132,6 +135,36 @@ export default {
         console.log('restart')
         this.cleanUp()
         this.bus.postMessage({ action: actions.CLEAN_UP })
+      },
+      run () {
+        this.bus.postMessage({ action: actions.CLEAN_UP })
+
+        console.log("code:")
+        console.log(this.code)
+        console.log("--------------")
+
+        axios.post('http://localhost:3000/run', {
+          code: this.code,
+          names: this.names,
+          username: 'user', 
+          password: 'pass'
+        })
+
+        // axios
+        // .post('http://localhost:3000/run', {
+        //   params: {
+        //     "test": "test"
+        //   }
+        // })
+        // .then(response => (
+        //      this.info = response.data.bpi
+        //    )
+        // )
+        // .catch(
+        //   error => console.log(error)
+        // )
+        // // this.cleanUp()
+
       },
       cleanUp () {
         this.recording = this.liveEvents = []

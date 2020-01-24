@@ -19,6 +19,7 @@ export default class EventRecorder {
   }
 
   boot () {
+    console.log('EventRecorder - boot')
     // We need to check the existence of chrome for testing purposes
     if (chrome.storage && chrome.storage.local) {
       chrome.storage.local.get(['options'], ({options}) => {
@@ -34,7 +35,9 @@ export default class EventRecorder {
   }
 
   _initializeRecorder () {
+    console.log('EventRecorder - _initializeRecorder')
     const events = Object.values(eventsToRecord)
+    console.log(events)
     if (!window.pptRecorderAddedControlListeners) {
       this._addAllListeners(events)
       this._boundedMessageListener = this._boundedMessageListener || this._handleBackgroundMessage.bind(this)
@@ -55,6 +58,7 @@ export default class EventRecorder {
   }
 
   _handleBackgroundMessage (msg, sender, sendResponse) {
+    console.log('EventRecorder - _handleBackgroundMessage')
     console.debug('content-script: message from background', msg)
     if (msg && msg.action) {
       switch (msg.action) {
@@ -80,6 +84,7 @@ export default class EventRecorder {
     // filter messages based on enabled / disabled features
     if (msg.action === 'click' && !this._isRecordingClicks) return
 
+
     try {
       // poor man's way of detecting whether this script was injected by an actual extension, or is loaded for
       // testing purposes
@@ -94,6 +99,8 @@ export default class EventRecorder {
   }
 
   _recordEvent (e) {
+
+
     if (this._previousEvent && this._previousEvent.timeStamp === e.timeStamp) return
     this._previousEvent = e
 
@@ -105,6 +112,9 @@ export default class EventRecorder {
         ? finder(e.target, {seedMinLength: 5, optimizedMinLength: optimizedMinLength, attr: (name, _value) => name === this._dataAttribute})
         : finder(e.target, {seedMinLength: 5, optimizedMinLength: optimizedMinLength})
 
+      console.log('click')
+      console.log(window.getSelection().toString())
+
       const msg = {
         selector: selector,
         value: e.target.value,
@@ -114,6 +124,9 @@ export default class EventRecorder {
         href: e.target.href ? e.target.href : null,
         coordinates: EventRecorder._getCoordinates(e)
       }
+
+      console.log(msg)
+
       this._sendMessage(msg)
     } catch (e) {}
   }

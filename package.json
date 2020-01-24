@@ -1,10 +1,10 @@
 {
-  "name": "puppeteer-recorder",
+  "name": "nightmare",
   "version": "0.7.1",
   "description": "A Chrome extension for recording browser interaction and generating Puppeteer scripts",
   "main": "index.js",
   "scripts": {
-    "dev": "NODE_ENV=development DEBUG=puppeteer-recorder:* webpack --watch",
+    "dev": "NODE_ENV=development DEBUG=nightmare:* webpack --watch",
     "build": "NODE_ENV=production webpack",
     "dist": "NODE_ENV=production webpack && node scripts/zip.js",
     "test": "npm run unit-test && npm run e2e-test",
@@ -16,10 +16,6 @@
   "pre-commit": [
     "test-prod"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/checkly/puppeteer-recorder"
-  },
   "keywords": [
     "puppeteer",
     "chrome",
@@ -27,13 +23,11 @@
   ],
   "author": "Tim Nolet",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/checkly/puppeteer-recorder/issues"
-  },
-  "homepage": "https://github.com/checkly/puppeteer-recorder#readme",
   "dependencies": {
     "@medv/finder": "^1.1.2",
+    "axios": "^0.19.2",
     "events": "^3.0.0",
+    "puppeteer-recorder": "^1.0.7",
     "vue": "^2.5.17",
     "vue-clipboard2": "^0.2.1",
     "vue-highlightjs": "^1.3.3"

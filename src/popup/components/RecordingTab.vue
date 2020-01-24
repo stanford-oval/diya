@@ -2,11 +2,10 @@
   <div class="tab recording-tab">
     <div class="content">
       <div class="empty" v-show="!isRecording">
-        <img src="/images/Desert.svg" alt="desert" width="78px">
-        <h3>No recorded events yet</h3>
+        <h3>No recorded events</h3>
         <p class="text-muted">Click record to begin</p>
         <div class="nag-cta" v-show="!isRecording">
-          <a href="https://surveys.hotjar.com/s?siteId=717179&surveyId=137462" target="_blank">⚡️ Puppeteer Recorder Pro is coming →</a>
+          <!-- <a href="https://surveys.hotjar.com/s?siteId=717179&surveyId=137462" target="_blank">⚡️ Puppeteer Recorder Pro is coming →</a> -->
         </div>
       </div>
       <div class="events" v-show="isRecording">

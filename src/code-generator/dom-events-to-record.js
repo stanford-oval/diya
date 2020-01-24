@@ -7,6 +7,8 @@ export default {
   SUBMIT: 'submit',
   LOAD: 'load',
   UNLOAD: 'unload'
+  // MOUSEDOWN: 'mousedown',
+  // MOUSEUP: 'mouseup'
 }
 
 // const events = [

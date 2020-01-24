@@ -2,7 +2,7 @@
   <div class="options">
     <div class="container">
       <div class="header">
-        Puppeteer Recorder Options
+        Nightmare Recorder Options
         <small class="saving-badge text-muted" v-show="saving">
           Saving...
         </small>
@@ -58,28 +58,28 @@
             </div>
           </div>
         </div>
-        <div class="settings-block">
-          <h4 class="settings-block-title">
-            Extension settings
-          </h4>
-          <div class="settings-block-main">
-            <div class="settings-group">
-              <label>
-                <input id="options-telemetry" type="checkbox" v-model="options.extension.telemetry" @change="save">
-                Allow recording of usage telemetry
-              </label>
-              <br>
-              <small>We only record clicks for basic product development, no website content or input data. Data is never, ever shared with 3rd parties.</small>
-            </div>
-          </div>
-        </div>
+        <!-- <div class="settings-block"> -->
+          <!-- <h4 class="settings-block-title"> -->
+            <!-- Extension settings -->
+          <!-- </h4> -->
+          <!-- <div class="settings-block-main"> -->
+            <!-- <div class="settings-group"> -->
+              <!-- <label> -->
+                <!-- <input id="options-telemetry" type="checkbox" v-model="options.extension.telemetry" @change="save"> -->
+                <!-- Allow recording of usage telemetry -->
+              <!-- </label> -->
+              <!-- <br> -->
+              <!-- <small>We only record clicks for basic product development, no website content or input data. Data is never, ever shared with 3rd parties.</small> -->
+            <!-- </div> -->
+          <!-- </div> -->
+        <!-- </div> -->
       </div>
-      <div class="footer">
-        sponsored by
-        <a href="https://checklyhq.com" target="_blank">
-          <img src="/images/text_racoon_logo.svg" alt="">
-        </a>
-      </div>
+      <!-- <div class="footer"> -->
+        <!-- sponsored by -->
+        <!-- <a href="https://checklyhq.com" target="_blank"> -->
+          <!-- <img src="/images/text_racoon_logo.svg" alt=""> -->
+        <!-- </a> -->
+      <!-- </div> -->
     </div>
   </div>
 </template>

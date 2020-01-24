@@ -1,0 +1,130 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/annyang/2.6.0/annyang.min.js"></script>
+
+<div id='transcript'></div>
+
+<hr>
+<div style="position: relative;">
+  <a href="/">main</a>
+</div>
+
+<hr>
+
+<div>
+  <table style="width: 300px; float: left">
+    <tr>
+      <td>Michael</td>
+    </tr>
+    <tr>
+      <td>Gabi</td>
+    </tr>
+    <tr>
+      <td>Bert</td>
+    </tr>
+    <tr>
+      <td>Luke</td>
+    </tr>
+    <tr>
+      <td>Sven</td>
+    </tr>
+    <tr>
+      <td>Suki</td>
+    </tr>
+    <tr>
+      <td>Fred</td>
+    </tr>
+    <tr>
+      <td>Dash</td>
+    </tr>
+  </table>
+
+  <table style="width: 300px; float: left">
+    <tr>
+      <td>michael@michael.com</td>
+    </tr>
+    <tr>
+      <td>gabbi@gabbi.com</td>
+    </tr>
+    <tr>
+      <td>bert@bert.com</td>
+    </tr>
+    <tr>
+      <td>luke@luke.com</td>
+    </tr>
+    <tr>
+      <td>sven@sven.com</td>
+    </tr>
+    <tr>
+      <td>suki@suki.com</td>
+    </tr>
+    <tr>
+      <td>fred@fred.com</td>
+    </tr>
+    <tr>
+      <td>dash@dash.com</td>
+    </tr>
+  </table>  
+</div>
+
+<br>
+
+<script type="text/javascript">
+
+if (annyang) {
+  var commands = {
+    'select this column': select_column,
+    'select this row': select_row,
+    'name this column :name': name,
+    'name this row :name': name,
+  }
+
+  annyang.addCommands(commands);
+  annyang.start();
+}
+
+annyang.addCallback('result', function(whatWasHeardArray) {
+  console.log('result')
+  console.log(whatWasHeardArray)
+  $("#transcript").text(whatWasHeardArray[0])
+})
+
+annyang.addCallback('start', function(whatWasHeardArray) {
+  $("#transcript").text('[start]')
+})
+
+annyang.addCallback('soundstart', function() {
+  $("#transcript").text('[soundstart]')
+})
+
+function name(){
+  // ownerIndex = 1
+  // $('table tr td:nth-child('+ownerIndex+')').css('color', 'blue')
+  emails = 
+  [
+    "michael@michael.com",
+    "gabbi@gabbi.com",
+    "bert@bert.com",
+    "luke@luke.com",
+    "sven@sven.com",
+    "suki@suki.com",
+    "fred@fred.com",
+    "dash@dash.com"
+  ]
+
+}
+
+function select_column(){
+  ownerIndex = 1
+  $('table tr td:nth-child('+ownerIndex+')').css('color', 'blue')
+  column = $.map($('table tr td:nth-child('+ownerIndex+')'), $.text)
+
+}
+
+function select_row(){
+  // $('table').css('color', 'green')
+  ownerIndex = 2
+  $('table tr').eq(ownerIndex)
+  $('table tr').eq(ownerIndex).css('color', 'red')
+}
+
+</script>
