@@ -8,6 +8,11 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/annyang/2.6.0/annyang.min.js"></script>
 
+<style type="text/css">
+    .selected {
+        background: #CCF;
+    }
+</style>
 
 
 <body>
@@ -32,18 +37,38 @@
     <hr>
     <h3>Lists</h3>
     <h5>Groceries</h5>
-    <ul>
+    <ul id='groceries' >
       <li>Coffee</li>
       <li>Tea</li>
       <li>Milk</li>
     </ul>
 
     <h5>Directions</h5>
-    <ol>
+    <ol id='directions'>
       <li>Head north on N Halsted St</li>
       <li>Turn right on W Diversey Pkwy</li>
       <li>Turn left on N Orchard St</li>
     </ol>
+    <hr>
+    <h3>Restaurants</h3>
+    <table id='restaurants' style="width:50%">
+      <tr>
+        <td>Italian Pizza</td>
+        <td>⭐⭐⭐</td>
+        <td>$$$$</td>
+      </tr>
+      <tr>
+        <td>Chinese Food</td>
+        <td>⭐⭐⭐⭐</td>
+        <td>$$$</td>
+      </tr>
+      <tr>
+        <td>Japanese Sushi</td>
+        <td>⭐⭐</td>
+        <td>$</td>
+      </tr>
+    </table>
+    <br>
     <hr>
     <h3>Stocks</h3>
     <input id='stock_input' value='apple'>
@@ -59,12 +84,7 @@
         price: <span>$318</span>
     </div>
     <hr>
-    <h3>Restaurants</h3>
-    <div><tr>Restaurants 1</tr><tr> </tr><tr>1</tr></div>
-    <div>Restaurants 2</div>
-    <div>Restaurants 3</div>
-    <br>
-    <hr>
+
     <h3>Buttons and Links</h3>
     <button name='say' href>Hello</button>
     <br><br>
@@ -103,6 +123,64 @@
     <div id='speech'></div>
 
     <script>
+
+    $table = $("#restaurants")
+
+    const background_style = 'background-color:#CCF'
+
+    $table.find("td").click(function(){
+        $('table tr > td, table tr > th').attr('style', 'background-color:none;')
+        $this = $(this) 
+        index = $this.parent().children().index($this) + 1
+        $('table tr > td:nth-child(' + index + ')').attr('style', background_style)
+        $('table tr > th:nth-child(' + index + ')').addClass('selected')
+    })
+
+
+    $select = $("#groceries")
+    $select.click((event)=>{
+        $('.selected').removeClass('.selected')
+        $(event.currentTarget).find("li").addClass('selected')
+    })
+
+    $select = $("#directions")
+    $select.click((event)=>{
+        $('.selected').removeClass('.selected')
+        $(event.currentTarget).find("li").addClass('selected')
+    })
+
+    // $select = $("#directions")
+    // $select.click((event)=>{
+    //     $()
+    //     $(event.currentTarget).find("li").attr('style', background_style)
+    // })
+
+    // $select = $("#directions")
+    // $select.click(()=>{
+    //     $this = $(this) 
+    //     $('ul > li, ol > li', $select).attr('style', 'background-color:none;')
+    //     $('ul > li, ol > li', $select).attr('style', background_style)
+    // })
+
+    function select(){
+        select_list()
+        select_row()
+        select_column()
+        select_multi()
+    }
+
+    function select_list(selector){
+        $("li")
+    }
+
+    function select_column(){
+        
+    }
+
+    function select_row(){
+        
+    }
+
 
     function stock(){
         name = $("#stock_input").val()
