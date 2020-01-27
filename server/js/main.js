@@ -7,7 +7,7 @@ $(function() {
     $table.find("td").click(function(){
         $('table tr > td, table tr > th').attr('style', 'background-color:none;')
         const $this = $(this)
-        index = $this.parent().children().index($this) + 1
+        const index = $this.parent().children().index($this) + 1
         $('table tr > td:nth-child(' + index + ')').attr('style', background_style)
         $('table tr > th:nth-child(' + index + ')').addClass('selected')
     })
