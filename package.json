@@ -1,7 +1,7 @@
 {
   "name": "nightmare",
   "version": "0.7.1",
-  "description": "A Chrome extension for recording browser interaction and generating Puppeteer scripts",
+  "description": "A Chrome extension for recording browser interaction and generating scripts using natural language",
   "main": "index.js",
   "scripts": {
     "dev": "NODE_ENV=development DEBUG=nightmare:* webpack --watch",
@@ -21,13 +21,25 @@
     "chrome",
     "extension"
   ],
-  "author": "Tim Nolet",
-  "license": "MIT",
+  "author": [
+    "Tim Nolet",
+    "Michael Fischer",
+    "Giovanni Campagna"
+  ],
+  "license": "Apache-2.0",
   "dependencies": {
     "@medv/finder": "^1.1.2",
+    "almond-dialog-agent": "^1.7.3",
     "axios": "^0.19.2",
+    "bufferutil": "^4.0.1",
     "events": "^3.0.0",
+    "node-gettext": "^2.0.0",
     "puppeteer-recorder": "^1.0.7",
+    "sqlite3": "^4.1.1",
+    "thingengine-core": "^1.7.0",
+    "thingpedia": "^2.6.0",
+    "thingtalk": "^1.9.2",
+    "utf-8-validate": "^5.0.2",
     "vue": "^2.5.17",
     "vue-clipboard2": "^0.2.1",
     "vue-highlightjs": "^1.3.3"
