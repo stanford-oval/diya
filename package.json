@@ -14,7 +14,6 @@
     "lint": "eslint --quiet -f codeframe src"
   },
   "pre-commit": [
-    "test-prod"
   ],
   "keywords": [
     "puppeteer",
