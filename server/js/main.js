@@ -37,15 +37,45 @@ $(function() {
     //     $('ul > li, ol > li', $select).attr('style', background_style)
     // })
 
-    function select(){
-        select_list()
-        select_row()
-        select_column()
-        select_multi()
+    // function select(){
+    //     select_list()
+    //     select_row()
+    //     select_column()
+    //     select_multi()
+    // }
+
+    function gesture_recognizer(trail) {
+        const selector = 'up' // 'down'
+        switch(x) {
+          case 'up':
+            select_column()
+            break
+          case 'down':
+            select_rows()
+            select_list()
+            break
+          default:
+        }
+    }
+
+    function gesture_start(selector){
+
+    }
+
+    function gesture_stop(selector){
+
+    }
+
+    function select_random(selector){
+
+    }
+
+    function select_class(selector){
+
     }
 
     function select_list(selector){
-        $("li")
+
     }
 
     function select_column(){
@@ -106,6 +136,8 @@ $(function() {
         var commands = {
             'this is a *var_name': tag_variable,
             'this is an *var_name': tag_variable,
+            'from here': gesture_start,
+            'to here': gesture_start
         };
 
         annyang.addCommands(commands);
