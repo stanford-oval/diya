@@ -44,6 +44,15 @@ $(function() {
     //     select_multi()
     // }
 
+    var mouse_x;
+    var mouse_y;
+
+    // always track mouse position
+    $(document).mousemove(function(event) {
+        mouse_x = event.pageX;
+        mouse_y = event.pageY;
+    })
+
     function gesture_recognizer(trail) {
         const selector = 'up' // 'down'
         switch(x) {
@@ -59,7 +68,16 @@ $(function() {
     }
 
     function gesture_start(selector){
-
+        var element = document.elementFromPoint(mouse_x, mouse_y)
+        const type = element.is()
+        switch(type) {
+          case 'LI':
+            break
+          case 'TR':
+            break
+          default:
+            break
+        }
     }
 
     function gesture_stop(selector){
