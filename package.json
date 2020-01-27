@@ -13,8 +13,7 @@
     "e2e-test": "jest __e2e-tests__ --runInBand --silent",
     "lint": "eslint --quiet -f codeframe src"
   },
-  "pre-commit": [
-  ],
+  "pre-commit": [],
   "keywords": [
     "puppeteer",
     "chrome",
@@ -32,6 +31,7 @@
     "axios": "^0.19.2",
     "bufferutil": "^4.0.1",
     "events": "^3.0.0",
+    "morgan": "^1.9.1",
     "node-gettext": "^2.0.0",
     "puppeteer-recorder": "^1.0.7",
     "sqlite3": "^4.1.1",

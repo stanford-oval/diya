@@ -9,7 +9,7 @@
 // You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
-
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,7 @@
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
+const morgan = require('morgan');
 
 const Engine = require('thingengine-core');
 const AssistantDispatcher = require('./almond/assistant');
@@ -34,29 +35,23 @@ function initFrontend() {
     const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
     app.set('port', port);
 
-    app.use('/static/css', express.static(path.join(path.dirname(module.filename), 'css')));
+    app.use('/css', express.static(path.join(path.dirname(module.filename), 'css')));
+    app.use('/js', express.static(path.join(path.dirname(module.filename), 'js')));
 
+    // logger
+    app.use(morgan('dev'));
     app.use(bodyParser.urlencoded({ extended: true }));
     app.use(bodyParser.json());
 
-    app.post('/auth', (req, res) => {
-        console.log(req.body) //undefined
-        res.end("Success")
+    app.get('/', (req, res) => {
+        res.sendFile(path.join(__dirname+'/index.html'));
     });
 
-
-    app.get('/', function (req, res){
-	    console.log('index')
-	    res.sendFile(path.join(__dirname+'/index.html'));
+    app.get('/sheets', (req, res) => {
+        res.sendFile(path.join(__dirname+'/sheets.html'));
     });
 
-    app.get('/sheets', function (req, res){
-	    console.log('sheets')
-	    res.sendFile(path.join(__dirname+'/sheets.html'));
-    });
-
-    app.all('/run', function (req, res){
-
+    /*app.all('/run', (req, res) => {
         const names = req.body.names
         // const code = req.body.code
 
@@ -94,8 +89,8 @@ function initFrontend() {
 	    // require('child_process').fork('./../run.js aaaaaa');
 	    // res.send('run response')
 	    // res.send(req.query)
-
     });
+    */
 
     // app.all('/get_thingtalk', urlencodedparser, function (req, res){
     // 	command = req.body.command
