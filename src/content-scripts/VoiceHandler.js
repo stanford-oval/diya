@@ -82,7 +82,7 @@ export default class VoiceHandler {
 
     // code to debug
     setTimeout(()=>{
-      gestureStop()
+      this.gestureStop()
     }, 2000)
 
     const commands = {
@@ -166,6 +166,9 @@ export default class VoiceHandler {
 
     this._delta_x = this._mouse_x_start - this._mouse_x_stop
     this._delta_y = this._mouse_y_start - this._mouse_y_stop
+
+    console.log(this._delta_x, this._delta_x)
+
 
   }
 

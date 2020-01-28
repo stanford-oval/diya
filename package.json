@@ -27,6 +27,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@medv/finder": "^1.1.2",
+    "@simonwep/selection-js": "^1.5.0",
     "almond-dialog-agent": "^1.7.3",
     "annyang": "^2.6.1",
     "axios": "^0.19.2",
