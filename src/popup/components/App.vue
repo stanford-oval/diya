@@ -44,7 +44,6 @@
 
 <script>
   import { version } from '../../../package.json'
-  import CodeGenerator from '../../code-generator/CodeGenerator'
   import RecordingTab from './RecordingTab.vue'
   import ResultsTab from './ResultsTab.vue'
   import HelpTab from './HelpTab.vue'
@@ -118,15 +117,8 @@ export default {
         console.debug('stop recorder')
         this.bus.postMessage({ action: actions.STOP })
 
-        this.$chrome.storage.local.get(['recording', 'options'], ({ recording, options }) => {
-          console.debug('loaded recording', recording)
-          console.debug('loaded options', options)
-
-          this.recording = recording
-          const codeOptions = options ? options.code : {}
-
-          const codeGen = new CodeGenerator(codeOptions)
-          this.code = codeGen.generate(this.recording)
+        this.$chrome.storage.local.get(['thingtalk'], ({ thingtalk }) => {
+          this.code = thingtalk
           this.showResultsTab = true
           this.storeState()
         })

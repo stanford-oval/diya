@@ -43,6 +43,8 @@ function initFrontend() {
     app.use(bodyParser.urlencoded({ extended: true }));
     app.use(bodyParser.json());
 
+    app.use('/recorder', require('./recorder'));
+
     app.get('/', (req, res) => {
         res.sendFile(path.join(__dirname+'/index.html'));
     });
