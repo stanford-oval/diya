@@ -24,11 +24,50 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
+const ThingTalk = require('thingtalk');
 
 const Engine = require('thingengine-core');
 const AssistantDispatcher = require('./almond/assistant');
 const platform = require('./almond/platform');
 const Config = require('./config');
+
+async function runThingTalk(engine, code) {
+    const program = await ThingTalk.Grammar.parseAndTypecheck(code, engine.schemas, true);
+    const app = await engine.apps.createApp(program, {});
+
+    // drain the queue of results from the app
+    let results = [];
+    let errors = [];
+    if (!app)
+        return [results, errors];
+
+    for (;;) {
+        let { item: next, resolve, reject } = await app.mainOutput.next();
+
+        if (next.isDone) {
+            resolve();
+            break;
+        }
+
+        if (next.isNotification) {
+            try {
+                results.push({ value: next.outputValue, type: next.outputType });
+                resolve();
+            } catch (e) {
+                reject(e);
+            }
+        } else if (next.isError) {
+            errors.push(next.error);
+            resolve();
+        } else if (next.isQuestion) {
+            let e = new Error('User cancelled');
+            e.code = 'ECANCELLED';
+            reject(e);
+        }
+    }
+
+    return [results, errors];
+}
 
 function initFrontend() {
     const app = express();
@@ -53,8 +92,17 @@ function initFrontend() {
         res.sendFile(path.join(__dirname+'/sheets.html'));
     });
 
-    app.all('/run', (req, res) => {
-        const names = req.body.names
+    app.all('/run', (req, res, next) => {
+        if (!req.body.code) {
+            res.status(400).json({ error: 'Missing code', code: 'EINVAL' });
+            return;
+        }
+
+        runThingTalk(req.body.code).then((result) => {
+            res.json({ status: 'ok', data: result });
+        }).catch(next);
+
+        /*const names = req.body.names
         // const code = req.body.code
 
 	    code = `
@@ -91,6 +139,7 @@ function initFrontend() {
 	    // require('child_process').fork('./../run.js aaaaaa');
 	    // res.send('run response')
 	    // res.send(req.query)
+	    */
     });
     
 
