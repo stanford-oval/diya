@@ -28,6 +28,7 @@
   "dependencies": {
     "@medv/finder": "^1.1.2",
     "almond-dialog-agent": "^1.7.3",
+    "annyang": "^2.6.1",
     "axios": "^0.19.2",
     "bufferutil": "^4.0.1",
     "events": "^3.0.0",

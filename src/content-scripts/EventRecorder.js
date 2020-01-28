@@ -84,7 +84,6 @@ export default class EventRecorder {
     // filter messages based on enabled / disabled features
     if (msg.action === 'click' && !this._isRecordingClicks) return
 
-
     try {
       // poor man's way of detecting whether this script was injected by an actual extension, or is loaded for
       // testing purposes

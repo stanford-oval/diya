@@ -77,7 +77,7 @@ class RecordingSession {
             return;
 
         if (event) {
-            if ((event.action === 'change' || event.action === 'select') &&
+            if ((event.action === 'change' || event.action === 'select' || event.action === 'THIS_IS_A') &&
                 event.selector === this._currentInput.selector &&
                 event.frameId === this._currentInput.frameId &&
                 event.frameUrl === this._currentInput.frameUrl)
@@ -87,7 +87,7 @@ class RecordingSession {
         this._addPuppeteerAction(this._currentInput, 'set_input', [
             new Ast.InputParam('text', new Ast.Value.String(this._currentInput.value))
         ]);
-        this._currentInput = null
+        this._currentInput = null;
     }
 
     async addRecordingEvent(event) {
@@ -113,6 +113,7 @@ class RecordingSession {
 
         case 'change':
         case 'select':
+        case 'THIS_IS_A':
             this._maybeFlushCurrentInput(event);
             this._currentInput = event;
             break;
@@ -184,26 +185,8 @@ class RecordingSession {
         return program;
     }
 
-    _handleThisIsA(what) {
-        // TODO
-    }
-
-    _maybeHandleSpecialNightmareCommand(parsed) {
-        const string = parsed.tokens.join(' ');
-        if (/^this is an? /.test(string)) {
-            const what = parsed.tokens.slice(3).join(' ');
-            this._handleThisIsA(what);
-            return true;
-        }
-
-        return false;
-    }
-
     async addNLCommand(command) {
         const parsed = await this._parser.sendUtterance(command, null, null);
-
-        if (this._maybeHandleSpecialNightmareCommand(parsed.tokens))
-            return { reply: '', status: 'ok' };
 
         this._maybeFlushCurrentInput();
 
