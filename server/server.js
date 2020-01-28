@@ -98,7 +98,7 @@ function initFrontend() {
             return;
         }
 
-        runThingTalk(req.body.code).then((result) => {
+        runThingTalk(app.engine, req.body.code).then((result) => {
             res.json({ status: 'ok', data: result });
         }).catch(next);
 

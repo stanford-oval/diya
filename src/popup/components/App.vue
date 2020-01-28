@@ -138,8 +138,6 @@ export default {
         axios.post('http://localhost:3000/run', {
           code: this.code,
           names: this.names,
-          username: 'user', 
-          password: 'pass'
         })
 
         // axios

@@ -22,7 +22,7 @@ const Gettext = require('node-gettext');
 const PuppeteerDevice = require('../puppeteer');
 const Builtins = require('thingengine-core/lib/devices/builtins');
 Builtins['com.google.puppeteer'] = {
-    kind: 'org.thingpedia.builtin.thingengine.phone',
+    kind: 'com.google.puppeteer',
     class: (fs.readFileSync(path.resolve(path.dirname(module.filename), '../puppeteer/manifest.tt'), { encoding: 'utf8' })),
     module: PuppeteerDevice
 };

@@ -35,7 +35,7 @@ class PuppeteerSession {
 
     async load(url) {
         this._frames = null;
-        await this._page.load(url);
+        await this._page.goto(url);
     }
 
     async _getFrame(frameUrl) {
@@ -79,7 +79,7 @@ module.exports = class PuppeeterDevice extends Tp.BaseDevice {
             return session;
 
         session = new PuppeteerSession();
-        env.engine.on('app-removed', (app) => {
+        env.engine.apps.on('app-removed', (app) => {
             if (app === env.app) {
                 this._sessions.delete(appId);
                 session.destroy();
@@ -90,14 +90,14 @@ module.exports = class PuppeeterDevice extends Tp.BaseDevice {
     }
 
     async do_load({ url }, env) {
-        return (await this._getSession(env)).load(url);
+        return (await this._getSession(env)).load(String(url));
     }
 
     async do_set_input({ frame_url, selector, text }, env) {
-        return (await this._getSession(env)).setInput(frame_url, selector, text);
+        return (await this._getSession(env)).setInput(String(frame_url), selector, text);
     }
 
     async do_click({ frame_url, selector }, env) {
-        return (await this._getSession(env)).click(frame_url, selector);
+        return (await this._getSession(env)).click(String(frame_url), selector);
     }
 };
