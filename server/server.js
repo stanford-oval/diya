@@ -53,7 +53,7 @@ function initFrontend() {
         res.sendFile(path.join(__dirname+'/sheets.html'));
     });
 
-    /*app.all('/run', (req, res) => {
+    app.all('/run', (req, res) => {
         const names = req.body.names
         // const code = req.body.code
 
@@ -92,7 +92,7 @@ function initFrontend() {
 	    // res.send('run response')
 	    // res.send(req.query)
     });
-    */
+    
 
     // app.all('/get_thingtalk', urlencodedparser, function (req, res){
     // 	command = req.body.command

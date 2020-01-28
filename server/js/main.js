@@ -44,6 +44,11 @@ $(function() {
     //     select_multi()
     // }
 
+
+    function get_row(){
+        
+    }
+
     function stock(){
         const name = $("#stock_input").val()
         if(name == "apple"){

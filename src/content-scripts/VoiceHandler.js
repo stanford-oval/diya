@@ -42,6 +42,12 @@ export default class VoiceHandler {
       this._current_click = event
     })
 
+
+    // code to debug
+    setTimeout(()=>{
+      console.log("gesture starting")
+    }, 1000)
+
     const commands = {
       'this is a *var_name': this.tagVariable.bind(this),
       'this is an *var_name': this.tagVariable.bind(this),
