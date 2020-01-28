@@ -22,10 +22,13 @@
 
 const ThingTalk = require('thingtalk');
 const Ast = ThingTalk.Ast;
+const { ParserClient } = require('almond-dialog-agent');
 
 const crypto = require('crypto');
 const express = require('express');
 const router = new express.Router();
+
+const Config = require('./config');
 
 function makeRandom(size = 32) {
     return crypto.randomBytes(size).toString('hex');
@@ -41,8 +44,11 @@ function elementIsActionable(event) {
 }
 
 class RecordingSession {
-    constructor() {
+    constructor(engine) {
         this._statements = [];
+        this._engine = engine;
+        this._platform = engine.platform;
+        this._parser = new ParserClient(Config.NL_SERVER_URL, this._platform.locale, this._platform.getSharedPreferences());
 
         this._currentFocus = null;
         this._currentInput = null;
@@ -57,7 +63,7 @@ class RecordingSession {
             params.push(new Ast.InputParam('selector', new Ast.Value.String(event.selector)));
 
         this._statements.push(new Ast.Statement.Command(null, [
-            new Ast.Action.Invocation(new Ast.Invocation(new Ast.Selector.Device('com.google.puppeteer', null, null), name, params, null), null)
+            new Ast.Action.Invocation(new Ast.Invocation(new Ast.Selector.Device('com.google.puppeteer', 'com.google.puppeteer', null), name, params, null), null)
         ]));
     }
 
@@ -122,10 +128,97 @@ class RecordingSession {
         }
     }
 
+    _tryConfigureDevice(kind) {
+        return this._engine.thingpedia.getDeviceSetup([kind]).then((factories) => {
+            var factory = factories[kind];
+            if (!factory) {
+                // something funky happened or thingpedia did not recognize the kind
+                return null;
+            }
+
+            if (factory.type === 'none') {
+                return this._engine.devices.addSerialized({ kind: factory.kind }).then((device) => {
+                    return device;
+                });
+            } else {
+                return null;
+            }
+        });
+    }
+
+    async _chooseDevice(selector) {
+        let kind = selector.kind;
+        if (selector.id !== null)
+            return;
+        let devices = this._engine.devices.getAllDevicesOfKind(kind);
+
+        if (devices.length === 0) {
+            const [device,] = await this._tryConfigureDevice(kind);
+            if (device)
+                selector.id = device.uniqueId;
+        } else {
+            selector.id = devices[0].uniqueId;
+        }
+    }
+
+    async _slotFill(program) {
+        for (const [, slot, ,] of program.iterateSlots()) {
+            if (!(slot instanceof Ast.Selector))
+                continue;
+            await this._chooseDevice(slot);
+        }
+    }
+
+    async _processCandidate(candidate, parsed) {
+        let program;
+        try {
+            program = ThingTalk.NNSyntax.fromNN(candidate.code, parsed.entities);
+            await program.typecheck(this._engine.schemas, true);
+        } catch(e) {
+            console.error('Failed to analyze ' + candidate.code.join(' ') + ' : ' + e.message);
+            return null;
+        }
+        if (!program.isProgram)
+            return null;
+        await this._slotFill(program);
+        return program;
+    }
+
+    _handleThisIsA(what) {
+        // TODO
+    }
+
+    _maybeHandleSpecialNightmareCommand(parsed) {
+        const string = parsed.tokens.join(' ');
+        if (/^this is an? /.test(string)) {
+            const what = parsed.tokens.slice(3).join(' ');
+            this._handleThisIsA(what);
+            return true;
+        }
+
+        return false;
+    }
+
     async addNLCommand(command) {
-        // TODO send to neural network then add thingtalk code
-        console.log('addNLCommand', command);
-        return 'command accepted';
+        const parsed = await this._parser.sendUtterance(command, null, null);
+
+        if (this._maybeHandleSpecialNightmareCommand(parsed.tokens))
+            return { reply: '', status: 'ok' };
+
+        this._maybeFlushCurrentInput();
+
+        const candidates = (await Promise.all(parsed.candidates.map((candidate) => {
+            return this._processCandidate(candidate, parsed);
+        }))).filter((r) => r !== null);
+
+        if (!candidates.length)
+            return { reply: "Sorry, I did not understand that.", status: 'noparse' };
+
+        const program = candidates[0];
+
+        // FIXME replace $context.selection with the current selection on the screen
+        this._statements.push(...program.rules);
+        return { reply: '', status: 'ok' };
     }
 
     async stop() {
@@ -146,7 +239,7 @@ const _sessions = new Map;
 
 router.post('/start', (req, res) => {
     const token = makeRandom();
-    _sessions.set(token, new RecordingSession());
+    _sessions.set(token, new RecordingSession(req.app.engine));
     res.json({ status: 'ok', token });
 });
 
@@ -167,8 +260,8 @@ router.post('/converse', (req, res, next) => {
         res.status(404).json({ error: 'invalid token', code: 'ENOENT' });
         return;
     }
-    session.addNLCommand(req.body.command).then((reply) => {
-        res.json({ status: 'ok', reply });
+    session.addNLCommand(req.body.command).then((result) => {
+        res.json(result);
     }).catch(next);
 });
 
