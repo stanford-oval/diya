@@ -62,7 +62,7 @@ export default {
         showHelp: false,
         liveEvents: [],
         recording: [],
-        isRecording: false,
+        isRecording: true,
         isPaused: false,
         isCopying: false,
         bus: null,

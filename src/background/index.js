@@ -1,16 +1,10 @@
-// -*- mode: js; indent-tabs-mode: nil; js-basic-offset: 2 -*-
-
-import axios from 'axios'
 import pptrActions from '../code-generator/pptr-actions'
 import ctrl from '../models/extension-control-messages'
 import actions from '../models/extension-ui-actions'
 
-const SERVER_URL = 'http://127.0.0.1:3000';
-
 class RecordingController {
   constructor () {
-    this._sessionToken = null
-
+    this._recording = []
     this._boundedMessageHandler = null
     this._boundedNavigationHandler = null
     this._boundedWaitHandler = null
@@ -45,72 +39,69 @@ class RecordingController {
     })
   }
 
-  async start () {
+  start () {
     console.debug('start recording')
-    await this.cleanUp()
-    await axios.post(SERVER_URL + '/recorder/start').then(({ data }) => {
-      this._sessionToken = data.token
+    this.cleanUp(() => {
+      this._badgeState = 'rec'
+
+      this._hasGoto = false
+      this._hasViewPort = false
+
+      this.injectScript()
+
+      this._boundedMessageHandler = this.handleMessage.bind(this)
+      this._boundedNavigationHandler = this.handleNavigation.bind(this)
+      this._boundedWaitHandler = this.handleWait.bind(this)
+
+      chrome.runtime.onMessage.addListener(this._boundedMessageHandler)
+      chrome.webNavigation.onCompleted.addListener(this._boundedNavigationHandler)
+      chrome.webNavigation.onBeforeNavigate.addListener(this._boundedWaitHandler)
+
+      chrome.browserAction.setIcon({ path: './images/icon-green.png' })
+      chrome.browserAction.setBadgeText({ text: this._badgeState })
+      chrome.browserAction.setBadgeBackgroundColor({ color: '#FF0000' })
+
+      /**
+       * Right click menu setup
+       */
+
+      chrome.contextMenus.removeAll()
+
+      // add the parent and its children
+
+      chrome.contextMenus.create({
+        id: this._menuId,
+        title: 'Puppeteer Recorder',
+        contexts: ['all']
+      })
+
+      chrome.contextMenus.create({
+        id: this._menuId + this._menuOptions.SCREENSHOT,
+        title: 'Take Screenshot (Ctrl+Shift+A)',
+        parentId: this._menuId,
+        contexts: ['all']
+      })
+
+      chrome.contextMenus.create({
+        id: this._menuId + this._menuOptions.SCREENSHOT_CLIPPED,
+        title: 'Take Screenshot Clipped (Ctrl+Shift+S)',
+        parentId: this._menuId,
+        contexts: ['all']
+      })
+
+      // add the handlers
+
+      this._boundedMenuHandler = this.handleMenuInteraction.bind(this)
+      chrome.contextMenus.onClicked.addListener(this._boundedMenuHandler)
+
+      this._boundedKeyCommandHandler = this.handleKeyCommands.bind(this)
+      chrome.commands.onCommand.addListener(this._boundedKeyCommandHandler)
     })
-
-    this._badgeState = 'rec'
-
-    this._hasGoto = false
-    this._hasViewPort = false
-
-    this.injectScript()
-
-    this._boundedMessageHandler = this.handleMessage.bind(this)
-    this._boundedNavigationHandler = this.handleNavigation.bind(this)
-    this._boundedWaitHandler = this.handleWait.bind(this)
-
-    chrome.runtime.onMessage.addListener(this._boundedMessageHandler)
-    chrome.webNavigation.onCompleted.addListener(this._boundedNavigationHandler)
-    chrome.webNavigation.onBeforeNavigate.addListener(this._boundedWaitHandler)
-
-    chrome.browserAction.setIcon({ path: './images/icon-green.png' })
-    chrome.browserAction.setBadgeText({ text: this._badgeState })
-    chrome.browserAction.setBadgeBackgroundColor({ color: '#FF0000' })
-
-    /**
-    * Right click menu setup
-    */
-
-    chrome.contextMenus.removeAll()
-
-    // add the parent and its children
-
-    chrome.contextMenus.create({
-      id: this._menuId,
-      title: 'Puppeteer Recorder',
-      contexts: ['all']
-    })
-
-    chrome.contextMenus.create({
-      id: this._menuId + this._menuOptions.SCREENSHOT,
-      title: 'Take Screenshot (Ctrl+Shift+A)',
-      parentId: this._menuId,
-      contexts: ['all']
-    })
-
-    chrome.contextMenus.create({
-      id: this._menuId + this._menuOptions.SCREENSHOT_CLIPPED,
-      title: 'Take Screenshot Clipped (Ctrl+Shift+S)',
-      parentId: this._menuId,
-      contexts: ['all']
-    })
-
-    // add the handlers
-
-    this._boundedMenuHandler = this.handleMenuInteraction.bind(this)
-    chrome.contextMenus.onClicked.addListener(this._boundedMenuHandler)
-
-    this._boundedKeyCommandHandler = this.handleKeyCommands.bind(this)
-    chrome.commands.onCommand.addListener(this._boundedKeyCommandHandler)
   }
 
-  async stop () {
+  stop () {
     console.debug('stop recording')
-    this._badgeState = ''
+    this._badgeState = this._recording.length > 0 ? '1' : ''
 
     chrome.runtime.onMessage.removeListener(this._boundedMessageHandler)
     chrome.webNavigation.onCompleted.removeListener(this._boundedNavigationHandler)
@@ -118,25 +109,17 @@ class RecordingController {
     chrome.contextMenus.onClicked.removeListener(this._boundedMenuHandler)
 
     chrome.browserAction.setIcon({ path: './images/icon-black.png' })
-    chrome.browserAction.setBadgeText({ text: this._badgeState })
+    chrome.browserAction.setBadgeText({text: this._badgeState})
     chrome.browserAction.setBadgeBackgroundColor({color: '#45C8F1'})
 
-    if (!this._sessionToken) {
-      return
-    }
-
-    const response = await axios.post(SERVER_URL + '/recorder/stop', {
-      token: this._sessionToken,
-    })
-
-    chrome.storage.local.set({ thingtalk: response.data.code }, () => {
+    chrome.storage.local.set({ recording: this._recording }, () => {
       console.debug('recording stored')
     })
   }
 
   pause () {
     console.debug('pause')
-    this._badgeState = 'pau'
+    this._badgeState = '❚❚'
     chrome.browserAction.setBadgeText({ text: this._badgeState })
     this._isPaused = true
   }
@@ -148,14 +131,14 @@ class RecordingController {
     this._isPaused = false
   }
 
-  async cleanUp () {
+  cleanUp (cb) {
     console.debug('cleanup')
+    this._recording = []
     chrome.browserAction.setBadgeText({ text: '' })
-
-    if (this._sessionToken) {
-      await axios.post(SERVER_URL + '/recorder/destroy', { token: this._sessionToken })
-    }
-    this._sessionToken = null
+    chrome.storage.local.remove('recording', () => {
+      console.debug('stored recording cleared')
+      if (cb) cb()
+    })
   }
 
   recordCurrentUrl (href) {
@@ -188,13 +171,12 @@ class RecordingController {
     msg.frameId = sender ? sender.frameId : null
     msg.frameUrl = sender ? sender.url : null
 
-    if (this._isPaused || !this._sessionToken)
-      return
-
-    axios.post(SERVER_URL + '/recorder/add-event', {
-      token: this._sessionToken,
-      event: msg
-    })
+    if (!this._isPaused) {
+      this._recording.push(msg)
+      chrome.storage.local.set({ recording: this._recording }, () => {
+        console.debug('stored recording updated')
+      })
+    }
   }
 
   handleControlMessage (msg, sender) {
