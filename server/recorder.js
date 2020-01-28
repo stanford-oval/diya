@@ -20,6 +20,9 @@
 //         Giovanni Campagna <gcampagn@cs.stanford.edu>
 "use strict";
 
+const ThingTalk = require('thingtalk');
+const Ast = ThingTalk.Ast;
+
 const crypto = require('crypto');
 const express = require('express');
 const router = new express.Router();
@@ -28,14 +31,95 @@ function makeRandom(size = 32) {
     return crypto.randomBytes(size).toString('hex');
 }
 
+function elementIsFocusable(event) {
+    const tagName = event.tagName.toLowerCase();
+    return (tagName === 'input' && !['submit', 'reset', 'button'].includes(event.inputType)) || tagName === 'textarea';
+}
+function elementIsActionable(event) {
+    const tagName = event.tagName.toLowerCase();
+    return (tagName === 'input' && ['submit', 'reset', 'button'].includes(event.inputType)) || tagName === 'button' || tagName === 'a';
+}
+
 class RecordingSession {
     constructor() {
         this._statements = [];
+
+        this._currentFocus = null;
+        this._currentInput = null;
+    }
+
+    _addPuppeteerAction(event, name, params) {
+        if (event.frameId || event.frameId === 0)
+            params.push(new Ast.InputParam('frame_id', new Ast.Value.Number(event.frameId)));
+        if (event.frameUrl)
+            params.push(new Ast.InputParam('frame_url', new Ast.Value.Entity(event.frameUrl, 'tt:url', null)));
+        if (event.selector)
+            params.push(new Ast.InputParam('selector', new Ast.Value.String(event.selector)));
+
+        this._statements.push(new Ast.Statement.Command(null, [
+            new Ast.Action.Invocation(new Ast.Invocation(new Ast.Selector.Device('com.google.puppeteer', null, null), name, params, null), null)
+        ]));
+    }
+
+    _maybeFlushCurrentInput(event) {
+        // input events come in a whole bunch, but we only want to record the final one
+        // so we wait until the next recorded event or command and maybe flush the current one
+        // if the next event is for the same element (selector + frameId + frameUrl) we ignore it
+        // and overwrite _currentInput
+
+        if (this._currentInput === null)
+            return;
+
+        if (event) {
+            if ((event.action === 'change' || event.action === 'select') &&
+                event.selector === this._currentInput.selector &&
+                event.frameId === this._currentInput.frameId &&
+                event.frameUrl === this._currentInput.frameUrl)
+                return;
+        }
+
+        this._addPuppeteerAction(this._currentInput, 'set_input', [
+            new Ast.InputParam('text', new Ast.Value.String(this._currentInput.value))
+        ]);
+        this._currentInput = null
     }
 
     async addRecordingEvent(event) {
-        console.log('addRecordingEvent', event);
-        // TODO convert to a thingtalk statement...
+        switch (event.action) {
+        case 'GOTO':
+            this._maybeFlushCurrentInput(event);
+            this._addPuppeteerAction(event, 'load', [new Ast.InputParam('url', new Ast.Value.Entity(event.href, 'tt:url', null))]);
+            break;
+
+        case 'VIEWPORT':
+            // ignore
+            break;
+
+        case 'click':
+        case 'dblclick':
+            this._maybeFlushCurrentInput(event);
+            if (elementIsFocusable(event))
+                this._currentFocus = event;
+
+            if (elementIsActionable(event))
+                this._addPuppeteerAction(event, 'click', []);
+            break;
+
+        case 'change':
+        case 'select':
+            this._maybeFlushCurrentInput(event);
+            this._currentInput = event;
+            break;
+
+        case 'keydown':
+            // ignore (we handle change/select events instead)
+            break;
+
+        default:
+            this._maybeFlushCurrentInput(event);
+            // log
+            console.log('unknown recording event', event);
+        }
     }
 
     async addNLCommand(command) {
@@ -45,7 +129,13 @@ class RecordingSession {
     }
 
     async stop() {
-        return `now => @com.twitter.post(status="hello");`;
+        this._maybeFlushCurrentInput();
+
+        const program = new Ast.Program(/* classes */ [], /* declarations */ [], this._statements, /* principal */ null, /* oninputs */ []);
+
+        const code = program.prettyprint();
+        console.log('Generated', code);
+        return code;
     }
 
     async destroy() {

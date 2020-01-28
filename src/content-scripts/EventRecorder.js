@@ -99,8 +99,6 @@ export default class EventRecorder {
   }
 
   _recordEvent (e) {
-
-
     if (this._previousEvent && this._previousEvent.timeStamp === e.timeStamp) return
     this._previousEvent = e
 
@@ -112,20 +110,22 @@ export default class EventRecorder {
         ? finder(e.target, {seedMinLength: 5, optimizedMinLength: optimizedMinLength, attr: (name, _value) => name === this._dataAttribute})
         : finder(e.target, {seedMinLength: 5, optimizedMinLength: optimizedMinLength})
 
-      console.log('click')
-      console.log(window.getSelection().toString())
+      let selection
+      if (e.type === 'select') {
+        selection = event.target.value.substring(event.target.selectionStart, event.target.selectionEnd)
+      }
 
       const msg = {
         selector: selector,
         value: e.target.value,
         tagName: e.target.tagName,
+        inputType: e.target.tagName === 'INPUT' ? e.target.type : null,
+        selection,
         action: e.type,
         keyCode: e.keyCode ? e.keyCode : null,
         href: e.target.href ? e.target.href : null,
         coordinates: EventRecorder._getCoordinates(e)
       }
-
-      console.log(msg)
 
       this._sendMessage(msg)
     } catch (e) {}
