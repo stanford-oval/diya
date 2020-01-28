@@ -32,6 +32,7 @@
     "axios": "^0.19.2",
     "bufferutil": "^4.0.1",
     "events": "^3.0.0",
+    "jquery": "^3.4.1",
     "morgan": "^1.9.1",
     "node-gettext": "^2.0.0",
     "puppeteer-recorder": "^1.0.7",

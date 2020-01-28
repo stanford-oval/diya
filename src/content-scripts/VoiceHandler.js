@@ -33,6 +33,35 @@ export default class VoiceHandler {
   }
 
   start () {
+
+    console.log($)
+
+    // const background_style = 'background-color:#CCF'
+
+    // const $table = $("#restaurants")
+    // $table.find("td").click(function(){
+    //     $('table tr > td, table tr > th').attr('style', 'background-color:none;')
+    //     const $this = $(this)
+    //     const index = $this.parent().children().index($this) + 1
+    //     $('table tr > td:nth-child(' + index + ')').attr('style', background_style)
+    //     $('table tr > th:nth-child(' + index + ')').addClass('selected')
+    // })
+
+    // let $select = $("#groceries")
+    // $select.click((event)=>{
+    //     $('.selected').removeClass('.selected')
+    //     $(event.currentTarget).find("li").addClass('selected')
+    // })
+
+    // console.log($select)
+
+    // $select = $("#directions")
+    // $select.click((event)=>{
+    //     $('.selected').removeClass('.selected')
+    //     $(event.currentTarget).find("li").addClass('selected')
+    // })
+
+
     // always track mouse position
     document.addEventListener('mousemove', (event) => {
       this._mouse_x = event.pageX
