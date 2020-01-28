@@ -25,8 +25,14 @@ import finder from '@medv/finder'
 
 export default class VoiceHandler {
   constructor () {
-    this._mouse_x = 0
-    this._mouse_y = 0
+    this._mouse_x_current = 0
+    this._mouse_y_current = 0
+    this._mouse_x_start = 0
+    this._mouse_y_start = 0
+    this._mouse_x_stop = 0
+    this._mouse_y_stop = 0
+    this._delta_x = 0
+    this._delta_y = 0
     this._current_click = null
 
     this._eventLog = []
@@ -34,32 +40,30 @@ export default class VoiceHandler {
 
   start () {
 
-    console.log($)
+    const background_style = 'background-color:#CCF'
 
-    // const background_style = 'background-color:#CCF'
+    const $table = $("#restaurants")
+    $table.find("td").click(function(){
+        $('table tr > td, table tr > th').attr('style', 'background-color:none;')
+        const $this = $(this)
+        const index = $this.parent().children().index($this) + 1
+        $('table tr > td:nth-child(' + index + ')').attr('style', background_style)
+        $('table tr > th:nth-child(' + index + ')').addClass('selected')
+    })
 
-    // const $table = $("#restaurants")
-    // $table.find("td").click(function(){
-    //     $('table tr > td, table tr > th').attr('style', 'background-color:none;')
-    //     const $this = $(this)
-    //     const index = $this.parent().children().index($this) + 1
-    //     $('table tr > td:nth-child(' + index + ')').attr('style', background_style)
-    //     $('table tr > th:nth-child(' + index + ')').addClass('selected')
-    // })
+    let $select = $("#groceries")
+    $select.click((event)=>{
+        $('.selected').removeClass('.selected')
+        $(event.currentTarget).find("li").addClass('selected')
+    })
 
-    // let $select = $("#groceries")
-    // $select.click((event)=>{
-    //     $('.selected').removeClass('.selected')
-    //     $(event.currentTarget).find("li").addClass('selected')
-    // })
+    console.log($select)
 
-    // console.log($select)
-
-    // $select = $("#directions")
-    // $select.click((event)=>{
-    //     $('.selected').removeClass('.selected')
-    //     $(event.currentTarget).find("li").addClass('selected')
-    // })
+    $select = $("#directions")
+    $select.click((event)=>{
+        $('.selected').removeClass('.selected')
+        $(event.currentTarget).find("li").addClass('selected')
+    })
 
 
     // always track mouse position
@@ -71,11 +75,15 @@ export default class VoiceHandler {
       this._current_click = event
     })
 
+    setTimeout(()=>{
+      this.gestureStart()
+    }, 1000)
+
 
     // code to debug
     setTimeout(()=>{
-      console.log("gesture starting")
-    }, 1000)
+      gestureStop()
+    }, 2000)
 
     const commands = {
       'this is a *var_name': this.tagVariable.bind(this),
@@ -134,19 +142,30 @@ export default class VoiceHandler {
   }
 
   gestureStart (selector) {
-    var element = document.elementFromPoint(this._mouse_x, this._mouse_y)
-    const type = element.is()
-    switch (type) {
-      case 'LI':
-        break
-      case 'TR':
-        break
-      default:
-        break
-    }
+    console.log(this._mouse_x, this._mouse_y)
+
+    this._mouse_x_start = this._mouse_x
+    this._mouse_y_start = this._mouse_y
+
+
+    // var element = document.elementFromPoint(this._mouse_x, this._mouse_y)
+    // const type = element.is()
+    // switch (type) {
+    //   case 'LI':
+    //     break
+    //   case 'TR':
+    //     break
+    //   default:
+    //     break
+    // }
   }
 
   gestureStop (selector) {
+    this._mouse_x_stop = this._mouse_x
+    this._mouse_y_stop = this._mouse_y
+
+    this._delta_x = this._mouse_x_start - this._mouse_x_stop
+    this._delta_y = this._mouse_y_start - this._mouse_y_stop
 
   }
 
