@@ -14,9 +14,18 @@
 const fs = require('fs');
 const os = require('os');
 const util = require('util');
+const path = require('path');
 const Tp = require('thingpedia');
 const child_process = require('child_process');
 const Gettext = require('node-gettext');
+
+const PuppeteerDevice = require('../puppeteer');
+const Builtins = require('thingengine-core/lib/devices/builtins');
+Builtins['com.google.puppeteer'] = {
+    kind: 'org.thingpedia.builtin.thingengine.phone',
+    class: (fs.readFileSync(path.resolve(path.dirname(module.filename), '../puppeteer/manifest.tt'), { encoding: 'utf8' })),
+    module: PuppeteerDevice
+};
 
 var _unzipApi = {
     async unzip(zipPath, dir) {
@@ -119,7 +128,8 @@ class ServerPlatform extends Tp.BasePlatform {
     }
 
     getPlatformDevice() {
-        return null;
+        // HACK: mark it as the platform device so it will be loaded automatically
+        return Builtins['com.google.puppeteer'];
     }
 
     // Check if this platform has the required capability

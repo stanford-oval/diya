@@ -1,0 +1,23 @@
+// -*- mode: js ; js-basic-offset: 2 -*-
+class @com.google.puppeteer
+#_[name="Puppeteer"]
+#_[description="Control the browser and do things"]
+{
+  import loader from @org.thingpedia.builtin();
+  import config from @org.thingpedia.config.none();
+
+  action load(in req url : Entity(tt:url) #_[canonical="url"])
+  #_[canonical="load"]
+  #_[confirmation="load ${url}"];
+
+  action set_input(in req frame_url : Entity(tt:url) #_[canonical="frame url"],
+                   in req selector : String #_[canonical="selector"],
+                   in req text : String #_[canonical="text"])
+  #_[canonical="set input"]
+  #_[confirmation="set the element ${selector} to ${text}"];
+
+  action click(in req frame_url : Entity(tt:url) #_[canonical="frame url"],
+               in req selector : String #_[canonical="selector"])
+  #_[canonical="click"]
+  #_[confirmation="click on the element ${selector}"];
+}

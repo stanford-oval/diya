@@ -55,8 +55,6 @@ class RecordingSession {
     }
 
     _addPuppeteerAction(event, name, params) {
-        if (event.frameId || event.frameId === 0)
-            params.push(new Ast.InputParam('frame_id', new Ast.Value.Number(event.frameId)));
         if (event.frameUrl)
             params.push(new Ast.InputParam('frame_url', new Ast.Value.Entity(event.frameUrl, 'tt:url', null)));
         if (event.selector)
