@@ -5,7 +5,8 @@
   "description": "A Chrome extension for recording browser interaction and generating Puppeteer scripts",
   "permissions": [
     "http://localhost:3000/*",
-    "storage",
+    "http://127.0.0.1:3000",
+     "storage",
     "webNavigation",
     "tabs",
     "contextMenus"
