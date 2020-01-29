@@ -115,6 +115,12 @@ export default class EventRecorder {
       }
 
 
+      if($('.selected').length){
+        console.log('is selected')
+      } else {
+        console.log('not selected')
+      }
+
       console.log('selector')
       console.log(selector)
       console.log('selector')

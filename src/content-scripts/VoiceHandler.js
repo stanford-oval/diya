@@ -113,6 +113,14 @@ export default class VoiceHandler {
     // })
 
 
+
+
+    document.addEventListener('keyup', (event) => {
+     if (event.key === "Escape") { // escape key maps to keycode `27`
+          this.selectClear()
+      }
+    })
+
     // always track mouse position
     document.addEventListener('mousemove', (event) => {
       this._mouse_x = event.pageX
@@ -127,7 +135,8 @@ export default class VoiceHandler {
       'this is an *var_name': this.tagVariable.bind(this),
       'from here': this.gestureStart.bind(this),
       'to here': this.gestureStop.bind(this),
-      'more like this': this.selectClass.bind(this)
+      'more like this': this.selectClass.bind(this),
+      'clear selected': this.selectedClear.bind(this),
     }
 
     annyang.addCommands(commands)
@@ -177,6 +186,12 @@ export default class VoiceHandler {
         break
       default:
     }
+  }
+
+
+
+  selectClear (selected) {
+    $('.selected').removeClass('selected')
   }
 
   gestureStart (selector) {
