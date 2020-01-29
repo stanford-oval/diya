@@ -2,50 +2,53 @@
 $(function() {
 
 
-    const selection = Selection.create({
+    // const selection = Selection.create({
 
-        // Class for the selection-area
-        class: 'selection',
+    //     // Class for the selection-area
+    //     class: 'selection',
 
-        // All elements in this container can be selected
-        // selectables: ['div'],
-        selectables: ['.box-wrap > div', 'li', 'td', 'a'],
+    //     // All elements in this container can be selected
+    //     // selectables: ['div'],
+    //     selectables: ['.box-wrap > div', 'li', 'td', 'a'],
 
-        // The container is also the boundary in this case
-        // boundaries: ['.box-wrap']
-    }).on('start', ({inst, selected, oe}) => {
+    //     // The container is also the boundary in this case
+    //     // boundaries: ['.box-wrap']
+    // }).on('start', ({inst, selected, oe}) => {
 
-        // Remove class if the user isn't pressing the control key or ⌘ key
-        if (!oe.ctrlKey && !oe.metaKey) {
+    //     // Remove class if the user isn't pressing the control key or ⌘ key
+    //     if (!oe.ctrlKey && !oe.metaKey) {
 
-            // Unselect all elements
-            for (const el of selected) {
-                el.classList.remove('selected');
-                inst.removeFromSelection(el);
-            }
+    //         // Unselect all elements
+    //         for (const el of selected) {
+    //             el.classList.remove('selected');
+    //             inst.removeFromSelection(el);
+    //         }
 
-            // Clear previous selection
-            inst.clearSelection();
-        }
+    //         // Clear previous selection
+    //         inst.clearSelection();
+    //     }
 
-    }).on('move', ({changed: {removed, added}}) => {
+    // }).on('move', ({changed: {removed, added}}) => {
 
-        // Add a custom class to the elements that where selected.
-        for (const el of added) {
-            el.classList.add('selected');
-        }
+    //     // Add a custom class to the elements that where selected.
+    //     for (const el of added) {
+    //         el.classList.add('selected');
+    //     }
 
-        // Remove the class from elements that where removed
-        // since the last selection
-        for (const el of removed) {
-            el.classList.remove('selected');
-        }
+    //     // Remove the class from elements that where removed
+    //     // since the last selection
+    //     for (const el of removed) {
+    //         el.classList.remove('selected');
+    //     }
 
-    }).on('stop', ({inst}) => {
+    // }).on('stop', ({inst}) => {
         
-        // Remember selection in case the user wants to add smth in the next one
-        inst.keepSelection();
-    });
+    //     // Remember selection in case the user wants to add smth in the next one
+    //     inst.keepSelection();
+    // });
+
+
+
 
     // $select = $("#directions")
     // $select.click((event)=>{
@@ -59,13 +62,6 @@ $(function() {
     //     $('ul > li, ol > li', $select).attr('style', 'background-color:none;')
     //     $('ul > li, ol > li', $select).attr('style', background_style)
     // })
-
-    // function select(){
-    //     select_list()
-    //     select_row()
-    //     select_column()
-    //     select_multi()
-    // }
 
 
     function get_row(){
