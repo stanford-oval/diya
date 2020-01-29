@@ -8,10 +8,11 @@ $(function() {
         class: 'selection',
 
         // All elements in this container can be selected
-        selectables: ['.box-wrap > div'],
+        // selectables: ['div'],
+        selectables: ['.box-wrap > div', 'li', 'td', 'a'],
 
         // The container is also the boundary in this case
-        boundaries: ['.box-wrap']
+        // boundaries: ['.box-wrap']
     }).on('start', ({inst, selected, oe}) => {
 
         // Remove class if the user isn't pressing the control key or ⌘ key
