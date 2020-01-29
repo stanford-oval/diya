@@ -55,7 +55,6 @@ export default {
     components: { ResultsTab, RecordingTab, HelpTab },
     data () {
       return {
-        names: ['michael', 'gabi', 'bert'],
         code: '',
         options: {},
         showResultsTab: false,
@@ -137,24 +136,7 @@ export default {
 
         axios.post('http://localhost:3000/run', {
           code: this.code,
-          names: this.names,
         })
-
-        // axios
-        // .post('http://localhost:3000/run', {
-        //   params: {
-        //     "test": "test"
-        //   }
-        // })
-        // .then(response => (
-        //      this.info = response.data.bpi
-        //    )
-        // )
-        // .catch(
-        //   error => console.log(error)
-        // )
-        // // this.cleanUp()
-
       },
       cleanUp () {
         this.recording = this.liveEvents = []
