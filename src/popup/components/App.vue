@@ -84,6 +84,11 @@ export default {
         }
       })
       this.bus = this.$chrome.extension.connect({ name: 'recordControls' })
+
+      this.stop()
+      this.start()
+
+
     },
     methods: {
       toggleRecord () {
