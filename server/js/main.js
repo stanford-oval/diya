@@ -2,55 +2,49 @@
 $(function() {
 
 
-    const selection = new Selection({
+    const selection = Selection.create({
 
-        // Class for the selection-area-element
-        class: 'selection-area',
+        // Class for the selection-area
+        class: 'selection',
 
-        // document object - if you want to use it within an embed document (or iframe)
-        frame: document,
+        // All elements in this container can be selected
+        selectables: ['.box-wrap > div'],
 
-        // px, how many pixels the point should move before starting the selection (combined distance).
-        // Or specifiy the threshold for each axis by passing an object like {x: <number>, y: <number>}.
-        startThreshold: 10,
+        // The container is also the boundary in this case
+        boundaries: ['.box-wrap']
+    }).on('start', ({inst, selected, oe}) => {
 
-        // Disable the selection functionality for touch devices
-        disableTouch: false,
+        // Remove class if the user isn't pressing the control key or ⌘ key
+        if (!oe.ctrlKey && !oe.metaKey) {
 
-        // On which point an element should be selected.
-        // Available modes are cover (cover the entire element), center (touch the center) or
-        // the default mode is touch (just touching it).
-        mode: 'touch',
+            // Unselect all elements
+            for (const el of selected) {
+                el.classList.remove('selected');
+                inst.removeFromSelection(el);
+            }
 
-        // Behaviour on single-click
-        // Available modes are 'native' (element was mouse-event target) or 
-        // 'touch' (element got touched)
-        tapMode: 'native',
+            // Clear previous selection
+            inst.clearSelection();
+        }
 
-        // Enable single-click selection (Also disables range-selection via shift + ctrl)
-        singleClick: true,
+    }).on('move', ({changed: {removed, added}}) => {
 
-        // Query selectors from elements which can be selected
-        selectables: [],
+        // Add a custom class to the elements that where selected.
+        for (const el of added) {
+            el.classList.add('selected');
+        }
 
-        // Query selectors for elements from where a selection can be start
-        startareas: ['html'],
+        // Remove the class from elements that where removed
+        // since the last selection
+        for (const el of removed) {
+            el.classList.remove('selected');
+        }
 
-        // Query selectors for elements which will be used as boundaries for the selection
-        boundaries: ['html'],
-
-        // Query selector or dom node to set up container for selection-area-element
-        selectionAreaContainer: 'body',
-
-        // On scrollable areas the number on px per frame is devided by this amount.
-        // Default is 10 to provide a enjoyable scroll experience.
-        scrollSpeedDivider: 10,
-
-        // Browsers handle mouse-wheel events differently, this number will be used as 
-        // numerator to calculate the mount of px while scrolling manually: manualScrollSpeed / scrollSpeedDivider
-        manualScrollSpeed: 750
+    }).on('stop', ({inst}) => {
+        
+        // Remember selection in case the user wants to add smth in the next one
+        inst.keepSelection();
     });
-
 
     // $select = $("#directions")
     // $select.click((event)=>{
