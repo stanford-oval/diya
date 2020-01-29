@@ -136,15 +136,13 @@ export default class VoiceHandler {
       'from here': this.gestureStart.bind(this),
       'to here': this.gestureStop.bind(this),
       'more like this': this.selectClass.bind(this),
-      'clear selected': this.selectedClear.bind(this),
+      'clear selected': this.selectClear.bind(this),
     }
 
     annyang.addCommands(commands)
     annyang.start()
 
     annyang.addCallback('result', function (whatWasHeardArray) {
-      console.log('result')
-      console.log(whatWasHeardArray)
       document.getElementById('transcript').textContent = whatWasHeardArray[0]
     })
     annyang.addCallback('resultNoMatch', function (whatWasHeardArray) {

@@ -37,7 +37,6 @@ export default class EventRecorder {
   _initializeRecorder () {
     console.log('EventRecorder - _initializeRecorder')
     const events = Object.values(eventsToRecord)
-    console.log(events)
     if (!window.pptRecorderAddedControlListeners) {
       this._addAllListeners(events)
       this._boundedMessageListener = this._boundedMessageListener || this._handleBackgroundMessage.bind(this)
@@ -104,26 +103,33 @@ export default class EventRecorder {
     // we explicitly catch any errors and swallow them, as none node-type events are also ingested.
     // for these events we cannot generate selectors, which is OK
     try {
-      const optimizedMinLength = (e.target.id) ? 2 : 10 // if the target has an id, use that instead of multiple other selectors
-      const selector = this._dataAttribute
-        ? finder(e.target, {seedMinLength: 5, optimizedMinLength: optimizedMinLength, attr: (name, _value) => name === this._dataAttribute})
-        : finder(e.target, {seedMinLength: 5, optimizedMinLength: optimizedMinLength})
 
       let selection
-      if (e.type === 'select') {
-        selection = event.target.value.substring(event.target.selectionStart, event.target.selectionEnd)
-      }
+      let selector
+      var selector_group = []
+      var selected = $('.selected')
+      const optimizedMinLength = (e.target.id) ? 2 : 10 // if the target has an id, use that instead of multiple other selectors
 
+      if(selected.length){
+        $.each( selected, function( index, value ){
+          let selector_item = finder(value, {seedMinLength: 5, optimizedMinLength: optimizedMinLength})
+          selector_group.push(selector_item)
+        })
+        .promise().done( function(){ 
+          selector = selector_group.join(", ")
+        })
 
-      if($('.selected').length){
-        console.log('is selected')
       } else {
-        console.log('not selected')
+        selector = this._dataAttribute
+          ? finder(e.target, {seedMinLength: 5, optimizedMinLength: optimizedMinLength, attr: (name, _value) => name === this._dataAttribute})
+          : finder(e.target, {seedMinLength: 5, optimizedMinLength: optimizedMinLength})
+
+        if (e.type === 'select') {
+          selection = event.target.value.substring(event.target.selectionStart, event.target.selectionEnd)
+        }
       }
 
-      console.log('selector')
       console.log(selector)
-      console.log('selector')
 
       const msg = {
         selector: selector,
