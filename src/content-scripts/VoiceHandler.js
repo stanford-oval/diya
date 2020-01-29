@@ -122,21 +122,12 @@ export default class VoiceHandler {
       this._current_click = event
     })
 
-    setTimeout(()=>{
-      this.gestureStart()
-    }, 1000)
-
-
-    // code to debug
-    setTimeout(()=>{
-      this.gestureStop()
-    }, 2000)
-
     const commands = {
       'this is a *var_name': this.tagVariable.bind(this),
       'this is an *var_name': this.tagVariable.bind(this),
       'from here': this.gestureStart.bind(this),
-      'to here': this.gestureStop.bind(this)
+      'to here': this.gestureStop.bind(this),
+      'more like this': this.selectClass.bind(this)
     }
 
     annyang.addCommands(commands)
@@ -206,6 +197,7 @@ export default class VoiceHandler {
     //     break
     // }
   }
+
 
   gestureStop (selector) {
     this._mouse_x_stop = this._mouse_x
