@@ -45,9 +45,11 @@ $(function() {
         
     //     // Remember selection in case the user wants to add smth in the next one
     //     inst.keepSelection();
+
+    //     var selected = $('.selected')
+    //     console.log(selected)
+
     // });
-
-
 
 
     // $select = $("#directions")

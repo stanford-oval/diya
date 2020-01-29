@@ -114,6 +114,11 @@ export default class EventRecorder {
         selection = event.target.value.substring(event.target.selectionStart, event.target.selectionEnd)
       }
 
+
+      console.log('selector')
+      console.log(selector)
+      console.log('selector')
+
       const msg = {
         selector: selector,
         value: e.target.value,
