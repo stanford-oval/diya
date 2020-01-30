@@ -9,3 +9,6 @@ window.eventRecorder = new EventRecorder()
 window.eventRecorder.boot()
 window.nightmareVoiceHandler = new VoiceHandler()
 window.nightmareVoiceHandler.start()
+
+
+

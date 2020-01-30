@@ -34,14 +34,14 @@ export default class VoiceHandler {
     this._delta_x = 0
     this._delta_y = 0
     this._current_click = null
+    this._selection = null
 
     this._eventLog = []
   }
 
   start () {
 
-
-    const selection = Selection.create({
+    this._selection = Selection.create({
 
         // Class for the selection-area
         class: 'selection',
@@ -52,7 +52,8 @@ export default class VoiceHandler {
 
         // The container is also the boundary in this case
         // boundaries: ['.box-wrap']
-    }).on('start', ({inst, selected, oe}) => {
+    })
+    .on('start', ({inst, selected, oe}) => {
 
         // Remove class if the user isn't pressing the control key or ⌘ key
         if (!oe.ctrlKey && !oe.metaKey) {
@@ -66,8 +67,8 @@ export default class VoiceHandler {
             // Clear previous selection
             inst.clearSelection();
         }
-
-    }).on('move', ({changed: {removed, added}}) => {
+    })
+    .on('move', ({changed: {removed, added}}) => {
 
         // Add a custom class to the elements that where selected.
         for (const el of added) {
@@ -79,16 +80,16 @@ export default class VoiceHandler {
         for (const el of removed) {
             el.classList.remove('selected');
         }
-
-    }).on('stop', ({inst}) => {
-        
+    })
+    .on('stop', ({inst}) => {
         // Remember selection in case the user wants to add smth in the next one
         inst.keepSelection();
     });
 
+    this._selection.disable() 
+
 
     // const background_style = 'background-color:#CCF'
-
     // const $table = $("#restaurants")
     // $table.find("td").click(function(){
     //     $('table tr > td, table tr > th').attr('style', 'background-color:none;')
@@ -97,23 +98,16 @@ export default class VoiceHandler {
     //     $('table tr > td:nth-child(' + index + ')').attr('style', background_style)
     //     $('table tr > th:nth-child(' + index + ')').addClass('selected')
     // })
-
     // let $select = $("#groceries")
     // $select.click((event)=>{
     //     $('.selected').removeClass('.selected')
     //     $(event.currentTarget).find("li").addClass('selected')
     // })
-
-    // console.log($select)
-
     // $select = $("#directions")
     // $select.click((event)=>{
     //     $('.selected').removeClass('.selected')
     //     $(event.currentTarget).find("li").addClass('selected')
     // })
-
-
-
 
     document.addEventListener('keyup', (event) => {
      if (event.key === "Escape") { // escape key maps to keycode `27`
@@ -137,6 +131,10 @@ export default class VoiceHandler {
       'to here': this.gestureStop.bind(this),
       'more like this': this.selectClass.bind(this),
       'clear selected': this.selectClear.bind(this),
+      'start selection': this.selectStart.bind(this),
+      'start select': this.selectStart.bind(this),
+      'stop selection': this.selectStop.bind(this),
+      'stop select': this.selectStop.bind(this),
     }
 
     annyang.addCommands(commands)
@@ -156,6 +154,16 @@ export default class VoiceHandler {
     annyang.addCallback('soundstart', function () {
       document.getElementById('transcript').textContent = '[soundstart]'
     })
+  }
+
+  selectStart (){
+    this._selection.cancel() 
+    this._selection.enable() 
+  }
+
+  selectStop () {
+    this._selection.cancel() 
+    this._selection.disable() 
   }
 
   _sendMessage (msg) {
@@ -189,7 +197,7 @@ export default class VoiceHandler {
 
 
   selectClear (selected) {
-    $('.selected').removeClass('selected')
+    this._selection.cancel() 
   }
 
   gestureStart (selector) {
