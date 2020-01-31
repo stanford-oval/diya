@@ -20,6 +20,7 @@
 //         Giovanni Campagna <gcampagn@cs.stanford.edu>
 "use strict";
 
+const Tp = require('thingpedia');
 const ThingTalk = require('thingtalk');
 const Ast = ThingTalk.Ast;
 const { ParserClient } = require('almond-dialog-agent');
@@ -56,12 +57,16 @@ class RecordingSession {
 
     _addPuppeteerAction(event, name, params) {
         if (event.frameUrl)
-            params.push(new Ast.InputParam('frame_url', new Ast.Value.Entity(event.frameUrl, 'tt:url', null)));
+            params.push(new Ast.InputParam(null, 'frame_url', new Ast.Value.Entity(event.frameUrl, 'tt:url', null)));
         if (event.selector)
-            params.push(new Ast.InputParam('selector', new Ast.Value.String(event.selector)));
+            params.push(new Ast.InputParam(null, 'selector', new Ast.Value.String(event.selector)));
 
-        this._statements.push(new Ast.Statement.Command(null, [
-            new Ast.Action.Invocation(new Ast.Invocation(new Ast.Selector.Device('com.google.puppeteer', 'com.google.puppeteer', null), name, params, null), null)
+        this._statements.push(new Ast.Statement.Command(null, null, [
+            new Ast.Action.Invocation(null,
+                new Ast.Invocation(null,
+                    new Ast.Selector.Device(null, 'com.google.puppeteer', 'com.google.puppeteer', null),
+                    name, params, null),
+                null)
         ]));
     }
 
@@ -92,7 +97,7 @@ class RecordingSession {
         switch (event.action) {
         case 'GOTO':
             this._maybeFlushCurrentInput(event);
-            this._addPuppeteerAction(event, 'load', [new Ast.InputParam('url', new Ast.Value.Entity(event.href, 'tt:url', null))]);
+            this._addPuppeteerAction(event, 'load', [new Ast.InputParam(null, 'url', new Ast.Value.Entity(event.href, 'tt:url', null))]);
             break;
 
         case 'VIEWPORT':
@@ -118,7 +123,7 @@ class RecordingSession {
 
         case 'NAME_PROGRAM':
             this._maybeFlushCurrentInput(event);
-            this._doNameProgram(event.varName);
+            namedPrograms.set(event.varName, this._makeProgram());
             break;
 
         case 'keydown':
@@ -207,14 +212,17 @@ class RecordingSession {
         return { reply: '', status: 'ok' };
     }
 
-    async stop() {
+    _makeProgram() {
         this._maybeFlushCurrentInput();
-
-        const program = new Ast.Program(/* classes */ [], /* declarations */ [], this._statements, /* principal */ null, /* oninputs */ []);
+        const program = new Ast.Program(null, /* classes */ [], /* declarations */ [], this._statements, /* principal */ null, /* oninputs */ []);
 
         const code = program.prettyprint();
         console.log('Generated', code);
         return code;
+    }
+
+    async stop() {
+        return this._makeProgram();
     }
 
     async destroy() {
