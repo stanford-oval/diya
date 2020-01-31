@@ -41,6 +41,8 @@ export default class VoiceHandler {
 }
   start () {
 
+    let color = 1
+
     this._selection = Selection.create({
 
         // Class for the selection-area
@@ -68,7 +70,11 @@ export default class VoiceHandler {
             inst.clearSelection();
         }
     })
-    .on('move', ({changed: {removed, added}}) => {
+    .on('move', (event) => {
+        // {changed: {removed, added}}
+
+        let removed = event.changed.removed;
+        let added = event.changed.added;
 
         // Add a custom class to the elements that where selected.
         for (const el of added) {
@@ -85,8 +91,8 @@ export default class VoiceHandler {
         // Remember selection in case the user wants to add smth in the next one
         inst.keepSelection();
 
-        console.log(this._selection.option('class'))
-        console.log(this._selection.option('class', 'selection_2'))
+        // console.log(this._selection.option('class'))
+        // console.log(this._selection.option('class', 'selection_2'))
 
 
     });

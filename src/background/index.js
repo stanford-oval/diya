@@ -27,7 +27,8 @@ class RecordingController {
     this._menuId = 'PUPPETEER_RECORDER_CONTEXT_MENU'
     this._menuOptions = {
       SCREENSHOT: 'SCREENSHOT',
-      SCREENSHOT_CLIPPED: 'SCREENSHOT_CLIPPED'
+      SCREENSHOT_CLIPPED: 'SCREENSHOT_CLIPPED',
+      NAME_VARIABLES: 'NAME_VARIABLES'
     }
   }
 
@@ -81,7 +82,7 @@ class RecordingController {
 
     chrome.contextMenus.create({
       id: this._menuId,
-      title: 'Puppeteer Recorder',
+      title: 'Nightmare 👻',
       contexts: ['all']
     })
 
@@ -99,6 +100,13 @@ class RecordingController {
       contexts: ['all']
     })
 
+    chrome.contextMenus.create({
+      id: this._menuId + this._menuOptions.NAME_VARIABLES,
+      title: 'Name Variables',
+      parentId: this._menuId,
+      contexts: ['all']
+    })
+
     // add the handlers
 
     this._boundedMenuHandler = this.handleMenuInteraction.bind(this)
@@ -106,6 +114,9 @@ class RecordingController {
 
     this._boundedKeyCommandHandler = this.handleKeyCommands.bind(this)
     chrome.commands.onCommand.addListener(this._boundedKeyCommandHandler)
+
+    this._boundedNameVariableHandler = this.handleNameVariable.bind(this)
+    chrome.commands.onCommand.addListener(this._boundedNameVariableHandler)
   }
 
   async stop () {
@@ -222,6 +233,10 @@ class RecordingController {
         this.toggleScreenShotMode(actions.TOGGLE_SCREENSHOT_CLIPPED_MODE)
         break
     }
+  }
+
+  handleNameVariable (command) {
+
   }
 
   handleKeyCommands (command) {

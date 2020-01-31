@@ -25,9 +25,9 @@
           <button class="btn btn-sm" @click="toggleRecord" :class="isRecording ? 'btn-danger' : 'btn-primary'">
             {{recordButtonText}}
           </button>
-          <button class="btn btn-sm btn-primary btn-outline-primary" @click="togglePause" v-show="isRecording">
-            {{pauseButtonText}}
-          </button>
+          <!-- <button class="btn btn-sm btn-primary btn-outline-primary" @click="togglePause" v-show="isRecording"> -->
+            <!-- {{pauseButtonText}} -->
+          <!-- </button> -->
           <a href="#" @click="showResultsTab = true" v-show="code">view code</a>
         </div>
         <ResultsTab :code="code" :copy-link-text="copyLinkText" :restart="restart" :set-copying="setCopying" v-show="showResultsTab"/>
@@ -62,7 +62,7 @@ export default {
         liveEvents: [],
         recording: [],
         isRecording: true,
-        isPaused: false,
+        // isPaused: false,
         isCopying: false,
         bus: null,
         version
@@ -96,16 +96,16 @@ export default {
         this.isRecording = !this.isRecording
         this.storeState()
       },
-      togglePause () {
-        if (this.isPaused) {
-          this.bus.postMessage({ action: actions.UN_PAUSE })
-          this.isPaused = false
-        } else {
-          this.bus.postMessage({ action: actions.PAUSE })
-          this.isPaused = true
-        }
-        this.storeState()
-      },
+      // togglePause () {
+      //   if (this.isPaused) {
+      //     this.bus.postMessage({ action: actions.UN_PAUSE })
+      //     this.isPaused = false
+      //   } else {
+      //     this.bus.postMessage({ action: actions.PAUSE })
+      //     this.isPaused = true
+      //   }
+      //   this.storeState()
+      // },
       start () {
         this.trackEvent('Start')
         this.cleanUp()
@@ -130,10 +130,6 @@ export default {
       },
       run () {
         this.bus.postMessage({ action: actions.CLEAN_UP })
-
-        console.log("code:")
-        console.log(this.code)
-        console.log("--------------")
 
         axios.post('http://localhost:3000/run', {
           code: this.code,
