@@ -72,15 +72,13 @@ export default class VoiceHandler {
 
         // Add a custom class to the elements that where selected.
         for (const el of added) {
-            el.classList.add('selected_' + i);
-            i += 1
+            el.classList.add('selected');
         }
 
         // Remove the class from elements that where removed
         // since the last selection
         for (const el of removed) {
-            el.classList.remove('selected_' + i);
-            i += 1
+            el.classList.remove('selected');
         }
     })
     .on('stop', ({inst}) => {
