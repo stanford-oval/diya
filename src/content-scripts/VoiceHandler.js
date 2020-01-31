@@ -37,8 +37,8 @@ export default class VoiceHandler {
     this._selection = null
 
     this._eventLog = []
-  }
-
+  
+}
   start () {
 
     this._selection = Selection.create({
@@ -72,21 +72,28 @@ export default class VoiceHandler {
 
         // Add a custom class to the elements that where selected.
         for (const el of added) {
-            el.classList.add('selected');
+            el.classList.add('selected_' + i);
+            i += 1
         }
 
         // Remove the class from elements that where removed
         // since the last selection
         for (const el of removed) {
-            el.classList.remove('selected');
+            el.classList.remove('selected_' + i);
+            i += 1
         }
     })
     .on('stop', ({inst}) => {
         // Remember selection in case the user wants to add smth in the next one
         inst.keepSelection();
+
+        console.log(this._selection.option('class'))
+        console.log(this._selection.option('class', 'selection_2'))
+
+
     });
 
-    this._selection.disable() 
+    // this._selection.disable() 
 
 
     // const background_style = 'background-color:#CCF'
