@@ -121,8 +121,8 @@ export default class VoiceHandler {
     // })
 
     document.addEventListener('keyup', (event) => {
-     if (event.key === "Escape") { // escape key maps to keycode `27`
-          this.selectClear()
+      if (event.key === "Escape") { // escape key maps to keycode `27`
+        this.selectClear()
       }
     })
 
@@ -138,6 +138,17 @@ export default class VoiceHandler {
     const commands = {
       'this is a *var_name': this.tagVariable.bind(this),
       'this is an *var_name': this.tagVariable.bind(this),
+      'these are *var_name': this.tagVariable.bind(this),
+      'this variable is a *var_name': this.tagVariable.bind(this),
+
+      'call this program *var_name': this.nameProgram.bind(this),
+      'call this command *var_name': this.nameProgram.bind(this),
+      'name this command *var_name': this.nameProgram.bind(this),
+      'name this program *var_name': this.nameProgram.bind(this),
+      'this program is *var_name': this.nameProgram.bind(this),
+      'this program is called *var_name': this.nameProgram.bind(this),
+      'this program should be called *var_name': this.nameProgram.bind(this),
+
       'from here': this.gestureStart.bind(this),
       'to here': this.gestureStop.bind(this),
       'more like this': this.selectClass.bind(this),
@@ -167,14 +178,14 @@ export default class VoiceHandler {
     })
   }
 
-  selectStart (){
-    this._selection.cancel() 
-    this._selection.enable() 
+  selectStart () {
+    this._selection.cancel()
+    this._selection.enable()
   }
 
   selectStop () {
-    this._selection.cancel() 
-    this._selection.disable() 
+    this._selection.cancel()
+    this._selection.disable()
   }
 
   _sendMessage (msg) {
@@ -263,9 +274,14 @@ export default class VoiceHandler {
 
   }
 
-  tagVariable (varName) {
-    console.log('tagVariable', varName, this._current_click)
+  nameProgram (varName) {
+    this._sendMessage({
+      action: 'NAME_PROGRAM',
+      varName: varName
+    })
+  }
 
+  tagVariable (varName) {
     if (!this._current_click) return
 
     if (this._current_click.target.tagName === 'TEXTAREA') {

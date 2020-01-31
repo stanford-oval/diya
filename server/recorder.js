@@ -116,6 +116,11 @@ class RecordingSession {
             this._currentInput = event;
             break;
 
+        case 'NAME_PROGRAM':
+            this._maybeFlushCurrentInput(event);
+            this._doNameProgram(event.varName);
+            break;
+
         case 'keydown':
             // ignore (we handle change/select events instead)
             break;
