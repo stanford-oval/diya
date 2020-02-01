@@ -30,10 +30,11 @@ class RecordingController {
       SCREENSHOT_CLIPPED: 'SCREENSHOT_CLIPPED',
       NAME_VARIABLES: 'NAME_VARIABLES'
     }
+
+    this._allPorts = new Set()
   }
 
-
-  boot () {
+  async boot () {
     chrome.extension.onConnect.addListener(port => {
       console.debug('listeners connected')
       port.onMessage.addListener(msg => {
@@ -43,22 +44,12 @@ class RecordingController {
         if (msg.action && msg.action === actions.PAUSE) this.pause()
         if (msg.action && msg.action === actions.UN_PAUSE) this.unPause()
       })
+      port.onDisconnect.addListener(() => {
+        this._allPorts.delete(port)
+      })
+
+      this._allPorts.add(port)
     })
-  }
-
-  async start () {
-    console.debug('start recording')
-    await this.cleanUp()
-    await axios.post(SERVER_URL + '/recorder/start').then(({ data }) => {
-      this._sessionToken = data.token
-    })
-
-    this._badgeState = 'rec'
-
-    this._hasGoto = false
-    this._hasViewPort = false
-
-    this.injectScript()
 
     this._boundedMessageHandler = this.handleMessage.bind(this)
     this._boundedNavigationHandler = this.handleNavigation.bind(this)
@@ -68,13 +59,33 @@ class RecordingController {
     chrome.webNavigation.onCompleted.addListener(this._boundedNavigationHandler)
     chrome.webNavigation.onBeforeNavigate.addListener(this._boundedWaitHandler)
 
+    axios.post(SERVER_URL + '/recorder/start').then(({ data }) => {
+      this._sessionToken = data.token
+    })
+  }
+
+  _broadcastMessage (msg) {
+    for (let port of this._allPorts) {
+      port.postMessage(msg)
+    }
+  }
+
+  start () {
+    console.debug('start recording')
+    this.cleanUp()
+
+    this._badgeState = 'rec'
+
+    this._hasGoto = false
+    this._hasViewPort = false
+
     chrome.browserAction.setIcon({ path: './images/icon-green.png' })
     chrome.browserAction.setBadgeText({ text: this._badgeState })
     chrome.browserAction.setBadgeBackgroundColor({ color: '#FF0000' })
 
     /**
-    * Right click menu setup
-    */
+     * Right click menu setup
+     */
 
     chrome.contextMenus.removeAll()
 
@@ -119,30 +130,30 @@ class RecordingController {
     chrome.commands.onCommand.addListener(this._boundedNameVariableHandler)
   }
 
-  async stop () {
-    console.debug('stop recording')
-    this._badgeState = ''
+    this._sendEvent({ action: 'START_RECORDING' })
+    chrome.tabs.query({ active: true }, (tabs) => {
+      for (let tab of tabs) {
+        chrome.tabs.sendMessage(tab.id, { action: actions.START })
+      }
+    })
+  }
 
+  destroy () {
     chrome.runtime.onMessage.removeListener(this._boundedMessageHandler)
     chrome.webNavigation.onCompleted.removeListener(this._boundedNavigationHandler)
     chrome.webNavigation.onBeforeNavigate.removeListener(this._boundedWaitHandler)
     chrome.contextMenus.onClicked.removeListener(this._boundedMenuHandler)
+  }
+
+  async stop () {
+    console.debug('stop recording')
+    this._badgeState = ''
 
     chrome.browserAction.setIcon({ path: './images/icon-black.png' })
     chrome.browserAction.setBadgeText({ text: this._badgeState })
     chrome.browserAction.setBadgeBackgroundColor({color: '#45C8F1'})
 
-    if (!this._sessionToken) {
-      return
-    }
-
-    const response = await axios.post(SERVER_URL + '/recorder/stop', {
-      token: this._sessionToken,
-    })
-
-    chrome.storage.local.set({ thingtalk: response.data.code }, () => {
-      console.debug('recording stored')
-    })
+    this._sendEvent({ action: 'STOP_RECORDING' })
   }
 
   pause () {
@@ -159,14 +170,9 @@ class RecordingController {
     this._isPaused = false
   }
 
-  async cleanUp () {
+  cleanUp () {
     console.debug('cleanup')
     chrome.browserAction.setBadgeText({ text: '' })
-
-    if (this._sessionToken) {
-      await axios.post(SERVER_URL + '/recorder/destroy', { token: this._sessionToken })
-    }
-    this._sessionToken = null
   }
 
   recordCurrentUrl (href) {
@@ -192,6 +198,22 @@ class RecordingController {
     this.handleMessage({ selector: undefined, value, action: pptrActions.SCREENSHOT })
   }
 
+  _sendEvent (event) {
+    if (this._isPaused || !this._sessionToken) return
+
+    axios.post(SERVER_URL + '/recorder/add-event', {
+      token: this._sessionToken,
+      event: event
+    }).then((response) => {
+      if (response.data.code) {
+        chrome.storage.local.set({ thingtalk: response.data.code }, () => {
+          console.debug('recording stored')
+          this._broadcastMessage({ action: 'codeUpdated' })
+        })
+      }
+    })
+  }
+
   handleMessage (msg, sender) {
     if (msg.control) return this.handleControlMessage(msg, sender)
 
@@ -199,13 +221,7 @@ class RecordingController {
     msg.frameId = sender ? sender.frameId : null
     msg.frameUrl = sender ? sender.url : null
 
-    if (this._isPaused || !this._sessionToken)
-      return
-
-    axios.post(SERVER_URL + '/recorder/add-event', {
-      token: this._sessionToken,
-      event: msg
-    })
+    this._sendEvent(msg)
   }
 
   handleControlMessage (msg, sender) {
@@ -217,7 +233,6 @@ class RecordingController {
 
   handleNavigation ({ frameId }) {
     console.debug('frameId is:', frameId)
-    this.injectScript()
     if (frameId === 0) {
       this.recordNavigation()
     }
@@ -259,10 +274,6 @@ class RecordingController {
 
   handleWait () {
     chrome.browserAction.setBadgeText({ text: 'wait' })
-  }
-
-  injectScript () {
-    chrome.tabs.executeScript({ file: 'content-script.js', allFrames: true })
   }
 }
 

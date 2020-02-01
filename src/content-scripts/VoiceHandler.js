@@ -94,11 +94,8 @@ export default class VoiceHandler {
         // console.log(this._selection.option('class'))
         // console.log(this._selection.option('class', 'selection_2'))
 
-
     });
-
-    // this._selection.disable() 
-
+    this._selection.disable()
 
     // const background_style = 'background-color:#CCF'
     // const $table = $("#restaurants")
@@ -149,6 +146,13 @@ export default class VoiceHandler {
       'this program is called *var_name': this.nameProgram.bind(this),
       'this program should be called *var_name': this.nameProgram.bind(this),
 
+      'call *prog_name': this.runProgram.bind(this),
+      'run *prog_name': this.runProgram.bind(this),
+      'call *prog_name with *var_name': this.runProgram.bind(this),
+      'run *prog_name with *var_name': this.runProgram.bind(this),
+      'call *prog_name using *var_name': this.runProgram.bind(this),
+      'run *prog_name using *var_name': this.runProgram.bind(this),
+
       'from here': this.gestureStart.bind(this),
       'to here': this.gestureStop.bind(this),
       'more like this': this.selectClass.bind(this),
@@ -162,11 +166,13 @@ export default class VoiceHandler {
     annyang.addCommands(commands)
     annyang.start()
 
-    annyang.addCallback('result', function (whatWasHeardArray) {
+    annyang.addCallback('result', function (whatWasHeardArray, ...data) {
+      console.log('annyang result', data)
       document.getElementById('transcript').textContent = whatWasHeardArray[0]
     })
-    annyang.addCallback('resultNoMatch', function (whatWasHeardArray) {
+    annyang.addCallback('resultNoMatch', function (whatWasHeardArray, ...data) {
       // ship to almond for processing...
+      console.log('no match', whatWasHeardArray, data);
     })
 
     annyang.addCallback('start', function (whatWasHeardArray) {
@@ -198,7 +204,7 @@ export default class VoiceHandler {
         this._eventLog.push(msg)
       }
     } catch (err) {
-      console.debug('caught error', err)
+      console.error('caught error', err)
     }
   }
 
@@ -278,6 +284,14 @@ export default class VoiceHandler {
     this._sendMessage({
       action: 'NAME_PROGRAM',
       varName: varName
+    })
+  }
+
+  runProgram (progName, ...args) {
+    this._sendMessage({
+      action: 'RUN_PROGRAM',
+      varName: progName,
+      args: args
     })
   }
 

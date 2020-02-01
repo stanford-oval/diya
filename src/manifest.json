@@ -38,6 +38,12 @@
       "description": "Take screenshot clipped"
     }
   },
+  "content_scripts": [
+    {
+      "matches": ["http://localhost:3000/*", "http://127.0.0.1:3000/*"],
+      "js": ["content-script.js"]
+    }
+  ],
   "background": {
     "scripts": [
       "background.js"

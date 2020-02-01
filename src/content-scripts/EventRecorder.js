@@ -35,19 +35,24 @@ export default class EventRecorder {
   }
 
   _initializeRecorder () {
-    console.log('EventRecorder - _initializeRecorder')
-    const events = Object.values(eventsToRecord)
-    if (!window.pptRecorderAddedControlListeners) {
-      this._addAllListeners(events)
-      this._boundedMessageListener = this._boundedMessageListener || this._handleBackgroundMessage.bind(this)
-      chrome.runtime.onMessage.addListener(this._boundedMessageListener)
-      window.pptRecorderAddedControlListeners = true
-    }
+    try {
+      const events = Object.values(eventsToRecord)
+      if (!window.pptRecorderAddedControlListeners) {
+        this._addAllListeners(events)
+        this._boundedMessageListener = this._boundedMessageListener || this._handleBackgroundMessage.bind(this)
+        chrome.runtime.onMessage.addListener(this._boundedMessageListener)
+        window.pptRecorderAddedControlListeners = true
+      }
 
-    if (!window.document.pptRecorderAddedControlListeners && chrome.runtime && chrome.runtime.onMessage) {
-      window.document.pptRecorderAddedControlListeners = true
+      if (!window.document.pptRecorderAddedControlListeners && chrome.runtime && chrome.runtime.onMessage) {
+        window.document.pptRecorderAddedControlListeners = true
+      }
+    } catch (e) {
+      console.error(e)
     }
+  }
 
+  startRecording () {
     if (this._isTopFrame) {
       this._sendMessage({ control: ctrl.EVENT_RECORDER_STARTED })
       this._sendMessage({ control: ctrl.GET_CURRENT_URL, href: window.location.href })
@@ -57,10 +62,13 @@ export default class EventRecorder {
   }
 
   _handleBackgroundMessage (msg, sender, sendResponse) {
-    console.log('EventRecorder - _handleBackgroundMessage')
     console.debug('content-script: message from background', msg)
     if (msg && msg.action) {
       switch (msg.action) {
+        case actions.START:
+          this.startRecording()
+          break
+
         case actions.TOGGLE_SCREENSHOT_MODE:
           this._handleScreenshotMode(false)
           break
@@ -128,8 +136,6 @@ export default class EventRecorder {
           selection = event.target.value.substring(event.target.selectionStart, event.target.selectionEnd)
         }
       }
-
-      console.log(selector)
 
       const msg = {
         selector: selector,

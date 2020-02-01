@@ -20,9 +20,11 @@
 //         Giovanni Campagna <gcampagn@cs.stanford.edu>
 "use strict";
 
+const assert = require('assert');
 const Tp = require('thingpedia');
 const ThingTalk = require('thingtalk');
 const Ast = ThingTalk.Ast;
+const Type = ThingTalk.Type;
 const { ParserClient } = require('almond-dialog-agent');
 
 const crypto = require('crypto');
@@ -44,15 +46,72 @@ function elementIsActionable(event) {
     return (tagName === 'input' && ['submit', 'reset', 'button'].includes(event.inputType)) || tagName === 'button' || tagName === 'a';
 }
 
+// HACK this should be somewhere else
+const namedPrograms = new Tp.Helpers.FilePreferences('./named-programs.json');
+
+class ProgramBuilder {
+    constructor() {
+        this.name = null;
+        this._statements = [];
+        this._declaredProcedures = new Map;
+        this._declaredVariables = new Map;
+    }
+
+    _makeProgram() {
+        const declarations = Array.from(this._declaredProcedures.values());
+        return new Ast.Program(null, [] /* classes */, declarations, this._statements);
+    }
+
+    finish() {
+        let prog;
+        if (this.name !== null) {
+            const procedure = this._makeProgram();
+            const args = {};
+            for (let [name, type] in this._declaredVariables)
+                args[name] = type;
+            const decl = new Ast.Statement.Declaration(null, this.name, 'procedure', args, procedure);
+            prog = new Ast.Program(null, [], [decl], []);
+        } else {
+            prog = this._makeProgram();
+        }
+        const code = prog.prettyprint();
+        console.log('Generated', code);
+        return code;
+    }
+
+    declareVariable(varName, type) {
+        this._declaredVariables.set(varName, type);
+    }
+
+    addStatement(stmt) {
+        this._statements.push(stmt);
+    }
+
+    addAction(action) {
+        this.addStatement(new Ast.Statement.Command(null, null, [action]));
+    }
+
+    addNamedQuery(name, query) {
+        this.addStatement(new Ast.Statement.Assignment(null, name, query, query.schema));
+    }
+
+    addProcedure(decl) {
+        this._declaredProcedures.set(decl.name, decl);
+    }
+}
+
 class RecordingSession {
     constructor(engine) {
-        this._statements = [];
+        this._builder = new ProgramBuilder();
+
         this._engine = engine;
         this._platform = engine.platform;
         this._parser = new ParserClient(Config.NL_SERVER_URL, this._platform.locale, this._platform.getSharedPreferences());
 
         this._currentFocus = null;
         this._currentInput = null;
+
+        this._recordingMode = false;
     }
 
     _addPuppeteerAction(event, name, params) {
@@ -61,13 +120,11 @@ class RecordingSession {
         if (event.selector)
             params.push(new Ast.InputParam(null, 'selector', new Ast.Value.String(event.selector)));
 
-        this._statements.push(new Ast.Statement.Command(null, null, [
-            new Ast.Action.Invocation(null,
-                new Ast.Invocation(null,
-                    new Ast.Selector.Device(null, 'com.google.puppeteer', 'com.google.puppeteer', null),
-                    name, params, null),
-                null)
-        ]));
+        this._builder.addAction(new Ast.Action.Invocation(null,
+            new Ast.Invocation(null,
+                new Ast.Selector.Device(null, 'com.google.puppeteer', 'com.google.puppeteer', null),
+                name, params, null),
+            null));
     }
 
     _maybeFlushCurrentInput(event) {
@@ -87,15 +144,87 @@ class RecordingSession {
                 return;
         }
 
-        this._addPuppeteerAction(this._currentInput, 'set_input', [
-            new Ast.InputParam('text', new Ast.Value.String(this._currentInput.value))
-        ]);
+        let value = new Ast.Value.String(this._currentInput.value);
+        if (this._currentInput.varName) {
+            this._builder.declareVariable('v_' + this._currentInput.value, Type.String);
+            const chunks = this._currentInput.value.split('[' + this._currentInput.varName + ']');
+
+            let operands = [];
+            for (let i = 0; i < chunks.length; i++) {
+                if (i > 0 && i < chunks.length-1)
+                    operands.append(new Ast.Value.VarRef(this._currentInput.varName));
+                operands.append(new Ast.Value.String(chunks[i]));
+            }
+            if (operands.length > 1)
+                value = new Ast.Value.Computation('+', operands);
+            else
+                value = operands[0];
+        }
+
+        this._addPuppeteerAction(this._currentInput, 'set_input', [new Ast.InputParam(null, 'text', value)]);
         this._currentInput = null;
+    }
+
+    _doNameProgram(name) {
+        this._builder.name = 'p_' + name;
+        const code = this._builder.finish();
+        namedPrograms.set('p_' + name, code);
+
+        this._builder = new ProgramBuilder();
+    }
+
+    async _doRunProgram() {
+        await this._engine.createApp(this._builder.finish(), {
+            description: 'a program created with Nightmare' // there is a bug in thingtalk where we fail to describe certain programs...
+        });
+    }
+
+    async _runProgram(progName, args) {
+        console.log('_runProgram', progName, args);
+        this._recordProgramCall(progName, args);
+
+        if (!this._recordingMode) {
+            await this._doRunProgram();
+            this._builder = new ProgramBuilder();
+        }
+    }
+
+    _recordProgramCall(progName, args) {
+        const prog = namedPrograms.get('p_' + progName);
+        if (!prog)
+            throw new Error(`No such program ${progName}`);
+
+        const parsed = ThingTalk.Grammar.parse(prog);
+        assert(parsed.classes.length === 0 && parsed.declarations.length === 1 &&
+            parsed.declarations[0].name === 'p_' + progName && parsed.rules.length === 0);
+
+        const decl = parsed.declarations[0];
+
+        let in_params = [];
+        let expected_in_params = Object.keys(decl.args);
+        for (let i = 0; i < Math.min(args.length, expected_in_params); i++)
+            in_params.push(new Ast.InputParam(null, expected_in_params[i], new Ast.Value.VarRef('q_' + args[i] + '.text')));
+
+        this._builder.addProcedure(decl);
+        this._builder.addAction(new Ast.Action.VarRef(null, 'p_' + progName, in_params, null));
     }
 
     async addRecordingEvent(event) {
         switch (event.action) {
+        case 'START_RECORDING':
+            // reset the selection state when the user clicks start
+            this._currentInput = null;
+            this._currentSelection = null;
+            this._builder = new ProgramBuilder();
+            this._recordingMode = true;
+            break;
+
+        case 'STOP_RECORDING':
+            this._recordingMode = false;
+            return { code: this._builder.finish() };
+
         case 'GOTO':
+            console.log(event);
             this._maybeFlushCurrentInput(event);
             this._addPuppeteerAction(event, 'load', [new Ast.InputParam(null, 'url', new Ast.Value.Entity(event.href, 'tt:url', null))]);
             break;
@@ -123,7 +252,12 @@ class RecordingSession {
 
         case 'NAME_PROGRAM':
             this._maybeFlushCurrentInput(event);
-            namedPrograms.set(event.varName, this._makeProgram());
+            this._doNameProgram(event.varName);
+            break;
+
+        case 'RUN_PROGRAM':
+            this._maybeFlushCurrentInput(event);
+            this._runProgram(event.varName, event.args);
             break;
 
         case 'keydown':
@@ -135,6 +269,8 @@ class RecordingSession {
             // log
             console.log('unknown recording event', event);
         }
+
+        return undefined;
     }
 
     _tryConfigureDevice(kind) {
@@ -212,19 +348,6 @@ class RecordingSession {
         return { reply: '', status: 'ok' };
     }
 
-    _makeProgram() {
-        this._maybeFlushCurrentInput();
-        const program = new Ast.Program(null, /* classes */ [], /* declarations */ [], this._statements, /* principal */ null, /* oninputs */ []);
-
-        const code = program.prettyprint();
-        console.log('Generated', code);
-        return code;
-    }
-
-    async stop() {
-        return this._makeProgram();
-    }
-
     async destroy() {
     }
 }
@@ -243,8 +366,9 @@ router.post('/add-event', (req, res, next) => {
         res.status(404).json({ error: 'invalid token', code: 'ENOENT' });
         return;
     }
-    session.addRecordingEvent(req.body.event).then(() => {
-        res.json({ status: 'ok' });
+    session.addRecordingEvent(req.body.event).then((result = {}) => {
+        result.status = 'ok';
+        res.json(result);
     }).catch(next);
 });
 
@@ -256,18 +380,6 @@ router.post('/converse', (req, res, next) => {
     }
     session.addNLCommand(req.body.command).then((result) => {
         res.json(result);
-    }).catch(next);
-});
-
-router.post('/stop', (req, res, next) => {
-    const session = _sessions.get(req.body.token);
-    if (!session) {
-        res.status(404).json({ error: 'invalid token', code: 'ENOENT' });
-        return;
-    }
-    _sessions.delete(req.body.token);
-    session.stop().then((code) => {
-        res.json({ status: 'ok', code });
     }).catch(next);
 });
 

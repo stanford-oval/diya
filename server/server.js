@@ -32,8 +32,7 @@ const platform = require('./almond/platform');
 const Config = require('./config');
 
 async function runThingTalk(engine, code) {
-    const program = await ThingTalk.Grammar.parseAndTypecheck(code, engine.schemas, true);
-    const app = await engine.apps.createApp(program, {});
+    const app = await engine.apps.createApp(code, {});
 
     // drain the queue of results from the app
     let results = [];

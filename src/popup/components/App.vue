@@ -84,7 +84,10 @@ export default {
         }
       })
       this.bus = this.$chrome.extension.connect({ name: 'recordControls' })
-
+      this.bus.onMessage.addListener((msg) => {
+        if (msg.action === 'codeUpdated')
+          this.updateCode()
+      })
     },
     methods: {
       toggleRecord () {
@@ -117,9 +120,12 @@ export default {
         console.debug('stop recorder')
         this.bus.postMessage({ action: actions.STOP })
 
+        this.showResultsTab = true
+        this.storeState()
+      },
+      updateCode() {
         this.$chrome.storage.local.get(['thingtalk'], ({ thingtalk }) => {
           this.code = thingtalk
-          this.showResultsTab = true
           this.storeState()
         })
       },
@@ -131,9 +137,7 @@ export default {
       run () {
         this.bus.postMessage({ action: actions.CLEAN_UP })
 
-        axios.post('http://localhost:3000/run', {
-          code: this.code,
-        })
+        console.error('there is no run, use voice');
       },
       cleanUp () {
         this.recording = this.liveEvents = []

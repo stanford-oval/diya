@@ -63,6 +63,14 @@ class PuppeteerSession {
         // type
         await element.type(text);
     }
+
+    async select(frameUrl, selector) {
+        const frame = await this._getFrame(frameUrl);
+        await frame.waitForSelector(selector);
+
+        const values = await frame.$$eval(selector, (elements) => elements.map((el) => el.textContent));
+        return values.map((v) => ({ text: v }));
+    }
 }
 
 module.exports = class PuppeeterDevice extends Tp.BaseDevice {
@@ -79,6 +87,7 @@ module.exports = class PuppeeterDevice extends Tp.BaseDevice {
             return session;
 
         session = new PuppeteerSession();
+        this._sessions.set(appId, session);
         env.engine.apps.on('app-removed', (app) => {
             if (app === env.app) {
                 this._sessions.delete(appId);
@@ -86,7 +95,16 @@ module.exports = class PuppeeterDevice extends Tp.BaseDevice {
             }
         });
         await session.init();
+        console.log('Created new Puppeteer session');
         return session;
+    }
+
+    async get_inject({ values }) {
+        return values.map((v) => ({ text: v }));
+    }
+
+    async get_select({ frame_url, selector }, filter, env) {
+        return (await this._getSession(env)).select(String(frame_url), selector);
     }
 
     async do_load({ url }, env) {
