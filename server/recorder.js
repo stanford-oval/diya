@@ -29,6 +29,7 @@ const { ParserClient } = require('almond-dialog-agent');
 
 const crypto = require('crypto');
 const express = require('express');
+const stemmer = require('stemmer');
 const router = new express.Router();
 
 const Config = require('./config');
@@ -67,7 +68,7 @@ class ProgramBuilder {
         if (this.name !== null) {
             const procedure = this._makeProgram();
             const args = {};
-            for (let [name, type] in this._declaredVariables)
+            for (let [name, type] of this._declaredVariables)
                 args[name] = type;
             const decl = new Ast.Statement.Declaration(null, this.name, 'procedure', args, procedure);
             prog = new Ast.Program(null, [], [decl], []);
@@ -91,6 +92,10 @@ class ProgramBuilder {
         this.addStatement(new Ast.Statement.Command(null, null, [action]));
     }
 
+    addQueryAction(query, action) {
+        this.addStatement(new Ast.Statement.Command(null, query, [action]));
+    }
+
     addNamedQuery(name, query) {
         this.addStatement(new Ast.Statement.Assignment(null, name, query, query.schema));
     }
@@ -98,6 +103,16 @@ class ProgramBuilder {
     addProcedure(decl) {
         this._declaredProcedures.set(decl.name, decl);
     }
+}
+
+function wordsToVariable(words, prefix = '') {
+    // stem all words
+    if (!Array.isArray(words))
+        words = words.split(/\s+/g);
+
+    words = words.map((word) => stemmer(word));
+
+    return prefix + words.join('_');
 }
 
 class RecordingSession {
@@ -112,6 +127,19 @@ class RecordingSession {
         this._currentInput = null;
 
         this._recordingMode = false;
+    }
+
+    _addPuppeteerQuery(event, name, params, saveAs) {
+        if (event.frameUrl)
+            params.push(new Ast.InputParam(null, 'frame_url', new Ast.Value.Entity(event.frameUrl, 'tt:url', null)));
+        if (event.selector)
+            params.push(new Ast.InputParam(null, 'selector', new Ast.Value.String(event.selector)));
+
+        this._builder.addNamedQuery(saveAs, new Ast.Table.Invocation(null,
+            new Ast.Invocation(null,
+                new Ast.Selector.Device(null, 'com.google.puppeteer', 'com.google.puppeteer', null),
+                name, params, null),
+            null));
     }
 
     _addPuppeteerAction(event, name, params) {
@@ -137,6 +165,9 @@ class RecordingSession {
             return;
 
         if (event) {
+            if (this._currentInput.varName && !event.varName)
+                event.varName = this._currentInput.varName;
+
             if ((event.action === 'change' || event.action === 'select' || event.action === 'THIS_IS_A') &&
                 event.selector === this._currentInput.selector &&
                 event.frameId === this._currentInput.frameId &&
@@ -144,16 +175,18 @@ class RecordingSession {
                 return;
         }
 
+        console.log(this._currentInput);
         let value = new Ast.Value.String(this._currentInput.value);
         if (this._currentInput.varName) {
-            this._builder.declareVariable('v_' + this._currentInput.value, Type.String);
+            this._builder.declareVariable(wordsToVariable(this._currentInput.varName, 'v_'), Type.String);
             const chunks = this._currentInput.value.split('[' + this._currentInput.varName + ']');
 
             let operands = [];
             for (let i = 0; i < chunks.length; i++) {
-                if (i > 0 && i < chunks.length-1)
-                    operands.append(new Ast.Value.VarRef(this._currentInput.varName));
-                operands.append(new Ast.Value.String(chunks[i]));
+                if (i > 0)
+                    operands.push(new Ast.Value.VarRef(wordsToVariable(this._currentInput.varName, 'v_')));
+                if (chunks[i])
+                    operands.push(new Ast.Value.String(chunks[i]));
             }
             if (operands.length > 1)
                 value = new Ast.Value.Computation('+', operands);
@@ -166,9 +199,9 @@ class RecordingSession {
     }
 
     _doNameProgram(name) {
-        this._builder.name = 'p_' + name;
+        this._builder.name = wordsToVariable(name, 'p_');
         const code = this._builder.finish();
-        namedPrograms.set('p_' + name, code);
+        namedPrograms.set(this._builder.name, code);
 
         this._builder = new ProgramBuilder();
     }
@@ -190,23 +223,42 @@ class RecordingSession {
     }
 
     _recordProgramCall(progName, args) {
-        const prog = namedPrograms.get('p_' + progName);
+        progName = wordsToVariable(progName, 'p_');
+        const prog = namedPrograms.get(progName);
         if (!prog)
             throw new Error(`No such program ${progName}`);
 
         const parsed = ThingTalk.Grammar.parse(prog);
         assert(parsed.classes.length === 0 && parsed.declarations.length === 1 &&
-            parsed.declarations[0].name === 'p_' + progName && parsed.rules.length === 0);
+            parsed.declarations[0].name === progName && parsed.rules.length === 0);
 
         const decl = parsed.declarations[0];
 
-        let in_params = [];
-        let expected_in_params = Object.keys(decl.args);
-        for (let i = 0; i < Math.min(args.length, expected_in_params); i++)
-            in_params.push(new Ast.InputParam(null, expected_in_params[i], new Ast.Value.VarRef('q_' + args[i] + '.text')));
+        // FIXME we should use an alias here but aliases do not work
+        //let in_params = args.map((arg) =>
+        //    new Ast.InputParam(null, wordsToVariable(arg, 'v_'), new Ast.Value.VarRef(wordsToVariable(arg, '__t_') + '.text')));
+        let in_params = args.map((arg) => new Ast.InputParam(null, wordsToVariable(arg, 'v_'), new Ast.Value.VarRef('text')));
 
         this._builder.addProcedure(decl);
-        this._builder.addAction(new Ast.Action.VarRef(null, 'p_' + progName, in_params, null));
+        const action = new Ast.Action.VarRef(null, progName, in_params, null);
+        if (args.length > 0) {
+            const tables = args.map((arg) => new Ast.Table.VarRef(null, wordsToVariable(arg, 't_'), [], null));
+            const query = tables.reduce((t1, t2) => new Ast.Table.Join(null, t1, t2, [], null));
+            this._builder.addQueryAction(query, action);
+        } else {
+            this._builder.addAction(action);
+        }
+    }
+
+    _handleThisIsA(event) {
+        this._maybeFlushCurrentInput(event);
+        if (event.tagName) {
+            // tagged a variable inside an input
+            this._currentInput = event;
+        } else {
+            // tagged a selection
+            this._addPuppeteerQuery(event, 'select', [], wordsToVariable(event.varName, 't_'));
+        }
     }
 
     async addRecordingEvent(event) {
@@ -243,9 +295,12 @@ class RecordingSession {
                 this._addPuppeteerAction(event, 'click', []);
             break;
 
+        case 'THIS_IS_A':
+            this._handleThisIsA(event);
+            break;
+
         case 'change':
         case 'select':
-        case 'THIS_IS_A':
             this._maybeFlushCurrentInput(event);
             this._currentInput = event;
             break;

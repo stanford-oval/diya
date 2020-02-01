@@ -19,9 +19,7 @@ class RecordingController {
     this._badgeState = ''
     this._isPaused = false
 
-    // Some events are sent double on page navigations to simplify the event recorder.
-    // We keep some simple state to disregard events if needed.
-    this._hasGoto = false
+    this._currentUrl = false
     this._hasViewPort = false
 
     this._menuId = 'PUPPETEER_RECORDER_CONTEXT_MENU'
@@ -76,7 +74,7 @@ class RecordingController {
 
     this._badgeState = 'rec'
 
-    this._hasGoto = false
+    this._currentUrl = undefined
     this._hasViewPort = false
 
     chrome.browserAction.setIcon({ path: './images/icon-green.png' })
@@ -128,7 +126,6 @@ class RecordingController {
 
     this._boundedNameVariableHandler = this.handleNameVariable.bind(this)
     chrome.commands.onCommand.addListener(this._boundedNameVariableHandler)
-  }
 
     this._sendEvent({ action: 'START_RECORDING' })
     chrome.tabs.query({ active: true }, (tabs) => {
@@ -176,10 +173,10 @@ class RecordingController {
   }
 
   recordCurrentUrl (href) {
-    if (!this._hasGoto) {
+    if (this._currentUrl !== href) {
       console.debug('recording goto* for:', href)
       this.handleMessage({selector: undefined, value: undefined, action: pptrActions.GOTO, href})
-      this._hasGoto = true
+      this._currentUrl = href
     }
   }
 

@@ -35,66 +35,57 @@ export default class VoiceHandler {
     this._delta_y = 0
     this._current_click = null
     this._selection = null
+    this._selectedElements = new Set()
 
     this._eventLog = []
-  
-}
+  }
+
   start () {
-
-    let color = 1
-
     this._selection = Selection.create({
+      // Class for the selection-area
+      class: 'selection',
 
-        // Class for the selection-area
-        class: 'selection',
+      // All elements in this container can be selected
+      // selectables: ['div'],
+      selectables: ['.box-wrap > div', 'li', 'td', 'a'],
 
-        // All elements in this container can be selected
-        // selectables: ['div'],
-        selectables: ['.box-wrap > div', 'li', 'td', 'a'],
-
-        // The container is also the boundary in this case
-        // boundaries: ['.box-wrap']
-    })
-    .on('start', ({inst, selected, oe}) => {
-
-        // Remove class if the user isn't pressing the control key or ⌘ key
-        if (!oe.ctrlKey && !oe.metaKey) {
-
-            // Unselect all elements
-            for (const el of selected) {
-                el.classList.remove('selected');
-                inst.removeFromSelection(el);
-            }
-
-            // Clear previous selection
-            inst.clearSelection();
+      // The container is also the boundary in this case
+      // boundaries: ['.box-wrap']
+    }).on('start', ({inst, selected, oe}) => {
+      // Remove class if the user isn't pressing the control key or ⌘ key
+      if (!oe.ctrlKey && !oe.metaKey) {
+        // Clear previous selection
+        for (let el of this._selectedElements) {
+          el.classList.remove('selected')
         }
+        this._selectedElements.clear()
+        inst.clearSelection()
+      }
+    }).on('move', (event) => {
+      // {changed: {removed, added}}
+
+      let removed = event.changed.removed
+      let added = event.changed.added
+
+      // Add a custom class to the elements that where selected.
+      for (const el of added) {
+        this._selectedElements.add(el)
+        el.classList.add('selected')
+      }
+
+      // Remove the class from elements that where removed
+      // since the last selection
+      for (const el of removed) {
+        this._selectedElements.remove(el)
+        el.classList.remove('selected')
+      }
+    }).on('stop', ({inst}) => {
+      // Remember selection in case the user wants to add smth in the next one
+      inst.keepSelection()
+
+      // console.log(this._selection.option('class'))
+      // console.log(this._selection.option('class', 'selection_2'))
     })
-    .on('move', (event) => {
-        // {changed: {removed, added}}
-
-        let removed = event.changed.removed;
-        let added = event.changed.added;
-
-        // Add a custom class to the elements that where selected.
-        for (const el of added) {
-            el.classList.add('selected');
-        }
-
-        // Remove the class from elements that where removed
-        // since the last selection
-        for (const el of removed) {
-            el.classList.remove('selected');
-        }
-    })
-    .on('stop', ({inst}) => {
-        // Remember selection in case the user wants to add smth in the next one
-        inst.keepSelection();
-
-        // console.log(this._selection.option('class'))
-        // console.log(this._selection.option('class', 'selection_2'))
-
-    });
     this._selection.disable()
 
     // const background_style = 'background-color:#CCF'
@@ -138,29 +129,31 @@ export default class VoiceHandler {
       'these are *var_name': this.tagVariable.bind(this),
       'this variable is a *var_name': this.tagVariable.bind(this),
 
-      'call this program *var_name': this.nameProgram.bind(this),
-      'call this command *var_name': this.nameProgram.bind(this),
-      'name this command *var_name': this.nameProgram.bind(this),
-      'name this program *var_name': this.nameProgram.bind(this),
-      'this program is *var_name': this.nameProgram.bind(this),
-      'this program is called *var_name': this.nameProgram.bind(this),
-      'this program should be called *var_name': this.nameProgram.bind(this),
+      'call this program :var_name': this.nameProgram.bind(this),
+      'call this command :var_name': this.nameProgram.bind(this),
+      'name this command :var_name': this.nameProgram.bind(this),
+      'name this program :var_name': this.nameProgram.bind(this),
+      'this program is :var_name': this.nameProgram.bind(this),
+      'this program is called :var_name': this.nameProgram.bind(this),
+      'this program should be called :var_name': this.nameProgram.bind(this),
 
-      'call *prog_name': this.runProgram.bind(this),
-      'run *prog_name': this.runProgram.bind(this),
-      'call *prog_name with *var_name': this.runProgram.bind(this),
-      'run *prog_name with *var_name': this.runProgram.bind(this),
-      'call *prog_name using *var_name': this.runProgram.bind(this),
-      'run *prog_name using *var_name': this.runProgram.bind(this),
+      'call :prog_name with *var_name': this.runProgram.bind(this),
+      'run :prog_name with *var_name': this.runProgram.bind(this),
+      'call :prog_name using *var_name': this.runProgram.bind(this),
+      'run :prog_name using *var_name': this.runProgram.bind(this),
+      'call :prog_name': this.runProgram.bind(this),
+      'run :prog_name': this.runProgram.bind(this),
 
       'from here': this.gestureStart.bind(this),
       'to here': this.gestureStop.bind(this),
       'more like this': this.selectClass.bind(this),
       'clear selected': this.selectClear.bind(this),
+      'begin selection': this.selectStart.bind(this),
       'start selection': this.selectStart.bind(this),
       'start select': this.selectStart.bind(this),
       'stop selection': this.selectStop.bind(this),
       'stop select': this.selectStop.bind(this),
+      'end selection': this.selectStop.bind(this),
     }
 
     annyang.addCommands(commands)
@@ -195,6 +188,9 @@ export default class VoiceHandler {
   }
 
   _sendMessage (msg) {
+    // ensure the server is initialized for the current page
+    window.eventRecorder.sendCurrentUrl();
+
     try {
       // poor man's way of detecting whether this script was injected by an actual extension, or is loaded for
       // testing purposes
@@ -296,8 +292,45 @@ export default class VoiceHandler {
   }
 
   tagVariable (varName) {
-    if (!this._current_click) return
+    if (this._current_click && ['TEXTAREA', 'INPUT'].includes(this._current_click.target.tagName)) {
+      this._tagVariableForInput(varName)
+    } else {
+      this._tagVariableForSelection(varName)
+    }
+  }
 
+  _getMultiSelector (elements) {
+    const selectors = []
+    for (let el of elements) {
+      const optimizedMinLength = (el.id) ? 2 : 10 // if the target has an id, use that instead of multiple other selectors
+      selectors.push(finder(el, {
+        seedMinLength: 5,
+        optimizedMinLength: optimizedMinLength,
+        className (className) {
+          return className !== 'selected'
+        }
+      }))
+    }
+    return selectors.join(', ')
+  }
+
+  _tagVariableForSelection (varName) {
+    const selector = this._getMultiSelector(this._selectedElements)
+
+    this._sendMessage({
+      selector: selector,
+      value: null,
+      tagName: null,
+      inputType: null,
+      selection: null,
+      action: 'THIS_IS_A',
+      varName: varName,
+      keyCode: null,
+      href: null
+    })
+  }
+
+  _tagVariableForInput (varName) {
     if (this._current_click.target.tagName === 'TEXTAREA') {
       this._replaceSelectedTextArea(this._current_click.target, `[${varName}]`)
     }
@@ -306,8 +339,8 @@ export default class VoiceHandler {
       this._replaceSelectedInput(this._current_click.target, `[${varName}]`)
     }
 
-    const optimizedMinLength = this._current_click.target.id ? 2 : 10 // if the target has an id, use that instead of multiple other selectors
-    const selector = finder(this._current_click.target, {seedMinLength: 5, optimizedMinLength: optimizedMinLength})
+    const optimizedMinLength = (this._current_click.target.id) ? 2 : 10 // if the target has an id, use that instead of multiple other selectors
+    const selector = finder(this._current_click.target, { seedMinLength: 5, optimizedMinLength: optimizedMinLength })
 
     this._sendMessage({
       selector: selector,
