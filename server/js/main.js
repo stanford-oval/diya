@@ -1,7 +1,6 @@
 "use strict";
 $(function() {
 
-
     // const selection = Selection.create({
 
     //     // Class for the selection-area
