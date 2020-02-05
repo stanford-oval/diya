@@ -30,7 +30,7 @@ Builtins['com.google.puppeteer'] = {
 var _unzipApi = {
     async unzip(zipPath, dir) {
         var args = ['-uo', zipPath, '-d', dir];
-        const { stdout, stderr } = await util.promisify(child_process.execFile)('/usr/bin/unzip', args, {
+        const { stdout, stderr } = await util.promisify(child_process.execFile)('unzip', args, {
             maxBuffer: 10 * 1024 * 1024
         });
         console.log('stdout', stdout);
@@ -48,11 +48,15 @@ function safeMkdirSync(dir) {
 }
 
 function getUserConfigDir() {
+    if (process.platform === 'win32')
+        return process.env.APPDATA;
     if (process.env.XDG_CONFIG_HOME)
         return process.env.XDG_CONFIG_HOME;
     return os.homedir() + '/.config';
 }
 function getUserCacheDir() {
+    if (process.platform === 'win32')
+        return process.env.TEMP;
     if (process.env.XDG_CACHE_HOME)
         return process.env.XDG_CACHE_HOME;
     return os.homedir() + '/.cache';
