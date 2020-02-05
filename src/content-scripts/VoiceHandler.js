@@ -137,10 +137,13 @@ export default class VoiceHandler {
       'this program is called :var_name': this.nameProgram.bind(this),
       'this program should be called :var_name': this.nameProgram.bind(this),
 
-      'call :prog_name with *var_name': this.runProgram.bind(this),
-      'run :prog_name with *var_name': this.runProgram.bind(this),
-      'call :prog_name using *var_name': this.runProgram.bind(this),
-      'run :prog_name using *var_name': this.runProgram.bind(this),
+      'call :prog_name with :var_name': this.runProgram.bind(this),
+      'run :prog_name with :var_name': this.runProgram.bind(this),
+      'call :prog_name using :var_name': this.runProgram.bind(this),
+      'run :prog_name using :var_name': this.runProgram.bind(this),
+      'call :prog_name using :v1 and :v2': this.runProgram.bind(this),
+      'call :prog_name with :v1 and :v2': this.runProgram.bind(this),
+      'run :prog_name using :v1 and :v2': this.runProgram.bind(this),
       'call :prog_name': this.runProgram.bind(this),
       'run :prog_name': this.runProgram.bind(this),
 
