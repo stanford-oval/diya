@@ -221,8 +221,6 @@ export default class VoiceHandler {
     }
   }
 
-
-
   selectClear (selected) {
     this._selection.cancel() 
   }
@@ -232,7 +230,6 @@ export default class VoiceHandler {
 
     this._mouse_x_start = this._mouse_x
     this._mouse_y_start = this._mouse_y
-
 
     // var element = document.elementFromPoint(this._mouse_x, this._mouse_y)
     // const type = element.is()
@@ -244,39 +241,6 @@ export default class VoiceHandler {
     //   default:
     //     break
     // }
-  }
-
-
-  gestureStop (selector) {
-    this._mouse_x_stop = this._mouse_x
-    this._mouse_y_stop = this._mouse_y
-
-    this._delta_x = this._mouse_x_start - this._mouse_x_stop
-    this._delta_y = this._mouse_y_start - this._mouse_y_stop
-
-    console.log(this._delta_x, this._delta_x)
-
-
-  }
-
-  selectRandom (selector) {
-
-  }
-
-  selectClass (selector) {
-
-  }
-
-  selectList (selector) {
-
-  }
-
-  selectColumn () {
-
-  }
-
-  selectRow () {
-
   }
 
   nameProgram (varName) {
@@ -414,3 +378,28 @@ export default class VoiceHandler {
     el.value = val.slice(0, sel.start) + text + val.slice(sel.end)
   }
 }
+
+// gestureStop (selector) {
+//   this._mouse_x_stop = this._mouse_x
+//   this._mouse_y_stop = this._mouse_y
+
+//   this._delta_x = this._mouse_x_start - this._mouse_x_stop
+//   this._delta_y = this._mouse_y_start - this._mouse_y_stop
+
+//   console.log(this._delta_x, this._delta_x)
+// }
+
+// selectRandom (selector) {
+// }
+
+// selectClass (selector) {
+// }
+
+// selectList (selector) {
+// }
+
+// selectColumn () {
+// }
+
+// selectRow () {
+// }

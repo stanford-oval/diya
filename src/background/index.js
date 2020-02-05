@@ -26,7 +26,7 @@ class RecordingController {
     this._menuOptions = {
       SCREENSHOT: 'SCREENSHOT',
       SCREENSHOT_CLIPPED: 'SCREENSHOT_CLIPPED',
-      NAME_VARIABLES: 'NAME_VARIABLES'
+      NAME_VARIABLE: 'NAME_VARIABLE'
     }
 
     this._allPorts = new Set()
@@ -91,7 +91,7 @@ class RecordingController {
 
     chrome.contextMenus.create({
       id: this._menuId,
-      title: 'Nightmare 👻',
+      title: 'Nightmare',
       contexts: ['all']
     })
 
@@ -110,8 +110,8 @@ class RecordingController {
     })
 
     chrome.contextMenus.create({
-      id: this._menuId + this._menuOptions.NAME_VARIABLES,
-      title: 'Name Variables',
+      id: this._menuId + this._menuOptions.NAME_VARIABLE,
+      title: 'Name Variable',
       parentId: this._menuId,
       contexts: ['all']
     })
@@ -123,9 +123,6 @@ class RecordingController {
 
     this._boundedKeyCommandHandler = this.handleKeyCommands.bind(this)
     chrome.commands.onCommand.addListener(this._boundedKeyCommandHandler)
-
-    this._boundedNameVariableHandler = this.handleNameVariable.bind(this)
-    chrome.commands.onCommand.addListener(this._boundedNameVariableHandler)
 
     this._sendEvent({ action: 'START_RECORDING' })
     chrome.tabs.query({ active: true }, (tabs) => {
@@ -237,12 +234,20 @@ class RecordingController {
 
   handleMenuInteraction (info, tab) {
     console.debug('context menu clicked')
+    console.debug(info.menuItemId)
+    console.debug('context menu clicked')
+
     switch (info.menuItemId) {
       case (this._menuId + this._menuOptions.SCREENSHOT):
         this.toggleScreenShotMode(actions.TOGGLE_SCREENSHOT_MODE)
         break
+
       case (this._menuId + this._menuOptions.SCREENSHOT_CLIPPED):
         this.toggleScreenShotMode(actions.TOGGLE_SCREENSHOT_CLIPPED_MODE)
+        break
+
+      case (this._menuId + this._menuOptions.NAME_VARIABLE):
+        this._broadcastMessage({ action: 'variableNamed' })
         break
     }
   }
