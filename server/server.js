@@ -32,13 +32,13 @@ const platform = require('./almond/platform');
 const Config = require('./config');
 
 async function runThingTalk(engine, code) {
-    const app = await engine.apps.createApp(code, {});
+    const app = await engine.createApp(code, {});
 
     // drain the queue of results from the app
     let results = [];
     let errors = [];
     if (!app)
-        return [results, errors];
+        return { results, errors };
 
     for (;;) {
         let { item: next, resolve, reject } = await app.mainOutput.next();
@@ -65,7 +65,7 @@ async function runThingTalk(engine, code) {
         }
     }
 
-    return [results, errors];
+    return { results, errors };
 }
 
 function initFrontend() {
@@ -91,7 +91,13 @@ function initFrontend() {
         res.sendFile(path.join(__dirname+'/sheets.html'));
     });
 
-    app.all('/run', (req, res, next) => {
+    app.post('/devices/create', (req, res, next) => {
+        app.engine.devices.addSerialized(req.body).then((d) => {
+            res.json({ status: 'ok', data: app.engine.getDeviceInfo(d.uniqueId) });
+        });
+    });
+
+    app.post('/run', (req, res, next) => {
         if (!req.body.code) {
             res.status(400).json({ error: 'Missing code', code: 'EINVAL' });
             return;
