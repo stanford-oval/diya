@@ -1,68 +1,11 @@
 "use strict";
 $(function() {
 
-    // const selection = Selection.create({
 
-    //     // Class for the selection-area
-    //     class: 'selection',
-
-    //     // All elements in this container can be selected
-    //     // selectables: ['div'],
-    //     selectables: ['.box-wrap > div', 'li', 'td', 'a'],
-
-    //     // The container is also the boundary in this case
-    //     // boundaries: ['.box-wrap']
-    // }).on('start', ({inst, selected, oe}) => {
-
-    //     // Remove class if the user isn't pressing the control key or ⌘ key
-    //     if (!oe.ctrlKey && !oe.metaKey) {
-
-    //         // Unselect all elements
-    //         for (const el of selected) {
-    //             el.classList.remove('selected');
-    //             inst.removeFromSelection(el);
-    //         }
-
-    //         // Clear previous selection
-    //         inst.clearSelection();
-    //     }
-
-    // }).on('move', ({changed: {removed, added}}) => {
-
-    //     // Add a custom class to the elements that where selected.
-    //     for (const el of added) {
-    //         el.classList.add('selected');
-    //     }
-
-    //     // Remove the class from elements that where removed
-    //     // since the last selection
-    //     for (const el of removed) {
-    //         el.classList.remove('selected');
-    //     }
-
-    // }).on('stop', ({inst}) => {
-        
-    //     // Remember selection in case the user wants to add smth in the next one
-    //     inst.keepSelection();
-
-    //     var selected = $('.selected')
-    //     console.log(selected)
-
-    // });
-
-
-    // $select = $("#directions")
-    // $select.click((event)=>{
-    //     $()
-    //     $(event.currentTarget).find("li").attr('style', background_style)
-    // })
-
-    // $select = $("#directions")
-    // $select.click(()=>{
-    //     $this = $(this)
-    //     $('ul > li, ol > li', $select).attr('style', 'background-color:none;')
-    //     $('ul > li, ol > li', $select).attr('style', background_style)
-    // })
+    $(".button_reserve").on("click", (e)=>{
+        let restaurant_name = $(e.target).attr('name')
+        $("#reservation_result").text('Reserved "' + restaurant_name + '"')
+    })
 
 
     function get_row(){
