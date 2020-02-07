@@ -116,7 +116,14 @@ export default {
       //   }
       //   this.storeState()
       // },
+
+      speak(msg) {
+        var msg = new SpeechSynthesisUtterance(msg);
+        window.speechSynthesis.speak(msg);
+      },
+
       start () {
+        this.speak('complete your task')
         this.trackEvent('Start')
         this.cleanUp()
         console.debug('start recorder')
@@ -129,6 +136,7 @@ export default {
 
         this.showResultsTab = true
         this.storeState()
+        this.speak('what would you like to name this program?')
       },
       updateCode() {
         this.$chrome.storage.local.get(['thingtalk'], ({ thingtalk }) => {
