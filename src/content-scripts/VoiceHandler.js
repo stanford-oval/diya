@@ -18,36 +18,34 @@
 //
 // Author: Michael Fischer <mfischer@cs.stanford.edu>
 //         Giovanni Campagna <gcampagn@cs.stanford.edu>
-'use strict'
+'use strict';
 
-import annyang from 'annyang'
-import finder from '@medv/finder'
+import annyang from 'annyang';
+import finder from '@medv/finder';
 
 export default class VoiceHandler {
-  constructor () {
-    this._mouse_x_current = 0
-    this._mouse_y_current = 0
-    this._mouse_x_start = 0
-    this._mouse_y_start = 0
-    this._mouse_x_stop = 0
-    this._mouse_y_stop = 0
-    this._delta_x = 0
-    this._delta_y = 0
-    this._current_click = null
-    this._selection = null
-    this._selectedElements = new Set()
+  constructor() {
+    this._mouse_x_current = 0;
+    this._mouse_y_current = 0;
+    this._mouse_x_start = 0;
+    this._mouse_y_start = 0;
+    this._mouse_x_stop = 0;
+    this._mouse_y_stop = 0;
+    this._delta_x = 0;
+    this._delta_y = 0;
+    this._current_click = null;
+    this._selection = null;
+    this._selectedElements = new Set();
 
-    this._eventLog = []
+    this._eventLog = [];
   }
 
-  start () {
-
+  start() {
     // setTimeout(()=>{
-      console.log("2 2 2 2 sdf 2 2")
+    console.log('2 2 2 2 sdf 2 2');
     //   var msg = new SpeechSynthesisUtterance('hi World');
     //   window.speechSynthesis.speak(msg);
     // }, 3000)
-
 
     this._selection = Selection.create({
       // Class for the selection-area
@@ -59,42 +57,45 @@ export default class VoiceHandler {
 
       // The container is also the boundary in this case
       // boundaries: ['.box-wrap']
-    }).on('start', ({inst, selected, oe}) => {
-      // Remove class if the user isn't pressing the control key or ⌘ key
-      if (!oe.ctrlKey && !oe.metaKey) {
-        // Clear previous selection
-        for (let el of this._selectedElements) {
-          el.classList.remove('selected')
-        }
-        this._selectedElements.clear()
-        inst.clearSelection()
-      }
-    }).on('move', (event) => {
-      // {changed: {removed, added}}
-
-      let removed = event.changed.removed
-      let added = event.changed.added
-
-      // Add a custom class to the elements that where selected.
-      for (const el of added) {
-        this._selectedElements.add(el)
-        el.classList.add('selected')
-      }
-
-      // Remove the class from elements that where removed
-      // since the last selection
-      for (const el of removed) {
-        this._selectedElements.remove(el)
-        el.classList.remove('selected')
-      }
-    }).on('stop', ({inst}) => {
-      // Remember selection in case the user wants to add smth in the next one
-      inst.keepSelection()
-
-      // console.log(this._selection.option('class'))
-      // console.log(this._selection.option('class', 'selection_2'))
     })
-    this._selection.disable()
+      .on('start', ({ inst, selected, oe }) => {
+        // Remove class if the user isn't pressing the control key or ⌘ key
+        if (!oe.ctrlKey && !oe.metaKey) {
+          // Clear previous selection
+          for (let el of this._selectedElements) {
+            el.classList.remove('selected');
+          }
+          this._selectedElements.clear();
+          inst.clearSelection();
+        }
+      })
+      .on('move', event => {
+        // {changed: {removed, added}}
+
+        let removed = event.changed.removed;
+        let added = event.changed.added;
+
+        // Add a custom class to the elements that where selected.
+        for (const el of added) {
+          this._selectedElements.add(el);
+          el.classList.add('selected');
+        }
+
+        // Remove the class from elements that where removed
+        // since the last selection
+        for (const el of removed) {
+          this._selectedElements.remove(el);
+          el.classList.remove('selected');
+        }
+      })
+      .on('stop', ({ inst }) => {
+        // Remember selection in case the user wants to add smth in the next one
+        inst.keepSelection();
+
+        // console.log(this._selection.option('class'))
+        // console.log(this._selection.option('class', 'selection_2'))
+      });
+    this._selection.disable();
 
     // const background_style = 'background-color:#CCF'
     // const $table = $("#restaurants")
@@ -116,20 +117,21 @@ export default class VoiceHandler {
     //     $(event.currentTarget).find("li").addClass('selected')
     // })
 
-    document.addEventListener('keyup', (event) => {
-      if (event.key === "Escape") { // escape key maps to keycode `27`
-        this.selectClear()
+    document.addEventListener('keyup', event => {
+      if (event.key === 'Escape') {
+        // escape key maps to keycode `27`
+        this.selectClear();
       }
-    })
+    });
 
     // always track mouse position
-    document.addEventListener('mousemove', (event) => {
-      this._mouse_x = event.pageX
-      this._mouse_y = event.pageY
-    })
-    document.body.addEventListener('click', (event) => {
-      this._current_click = event
-    })
+    document.addEventListener('mousemove', event => {
+      this._mouse_x = event.pageX;
+      this._mouse_y = event.pageY;
+    });
+    document.body.addEventListener('click', event => {
+      this._current_click = event;
+    });
 
     const commands = {
       'this is a *var_name': this.tagVariable.bind(this),
@@ -155,6 +157,10 @@ export default class VoiceHandler {
       'call :prog_name': this.runProgram.bind(this),
       'run :prog_name': this.runProgram.bind(this),
 
+      // Run program with scheduling
+      'run :prog_name at *time': this.scheduleProgram.bind(this),
+      // 'run :prog_name with :var_name at *time': this.runProgram.bind(this),
+
       //'from here': this.gestureStart.bind(this),
       //'to here': this.gestureStop.bind(this),
       //'more like this': this.selectClass.bind(this),
@@ -165,40 +171,40 @@ export default class VoiceHandler {
       'stop selection': this.selectStop.bind(this),
       'stop select': this.selectStop.bind(this),
       'end selection': this.selectStop.bind(this),
-    }
+    };
 
-    annyang.addCommands(commands)
-    annyang.start()
+    annyang.addCommands(commands);
+    annyang.start();
 
-    annyang.addCallback('result', function (whatWasHeardArray, ...data) {
-      console.log('annyang result', data)
-      document.getElementById('transcript').textContent = whatWasHeardArray[0]
-    })
-    annyang.addCallback('resultNoMatch', function (whatWasHeardArray, ...data) {
+    annyang.addCallback('result', function(whatWasHeardArray, ...data) {
+      console.log('annyang result', data);
+      document.getElementById('transcript').textContent = whatWasHeardArray[0];
+    });
+    annyang.addCallback('resultNoMatch', function(whatWasHeardArray, ...data) {
       // ship to almond for processing...
       console.log('no match', whatWasHeardArray, data);
-    })
+    });
 
-    annyang.addCallback('start', function (whatWasHeardArray) {
-      document.getElementById('transcript').textContent = '[start]'
-    })
+    annyang.addCallback('start', function(whatWasHeardArray) {
+      document.getElementById('transcript').textContent = '[start]';
+    });
 
-    annyang.addCallback('soundstart', function () {
-      document.getElementById('transcript').textContent = '[soundstart]'
-    })
+    annyang.addCallback('soundstart', function() {
+      document.getElementById('transcript').textContent = '[soundstart]';
+    });
   }
 
-  selectStart () {
-    this._selection.cancel()
-    this._selection.enable()
+  selectStart() {
+    this._selection.cancel();
+    this._selection.enable();
   }
 
-  selectStop () {
-    this._selection.cancel()
-    this._selection.disable()
+  selectStop() {
+    this._selection.cancel();
+    this._selection.disable();
   }
 
-  _sendMessage (msg) {
+  _sendMessage(msg) {
     // ensure the server is initialized for the current page
     window.eventRecorder.sendCurrentUrl();
 
@@ -206,38 +212,38 @@ export default class VoiceHandler {
       // poor man's way of detecting whether this script was injected by an actual extension, or is loaded for
       // testing purposes
       if (chrome.runtime && chrome.runtime.onMessage) {
-        chrome.runtime.sendMessage(msg)
+        chrome.runtime.sendMessage(msg);
       } else {
-        this._eventLog.push(msg)
+        this._eventLog.push(msg);
       }
     } catch (err) {
-      console.error('caught error', err)
+      console.error('caught error', err);
     }
   }
 
-  gestureRecognizer (trail) {
-    const selector = 'up' // 'down'
+  gestureRecognizer(trail) {
+    const selector = 'up'; // 'down'
     switch (selector) {
       case 'up':
-        this.selectColumn()
-        break
+        this.selectColumn();
+        break;
       case 'down':
-        this.selectRows()
-        this.selectList()
-        break
+        this.selectRows();
+        this.selectList();
+        break;
       default:
     }
   }
 
-  selectClear (selected) {
-    this._selection.cancel() 
+  selectClear(selected) {
+    this._selection.cancel();
   }
 
-  gestureStart (selector) {
-    console.log(this._mouse_x, this._mouse_y)
+  gestureStart(selector) {
+    console.log(this._mouse_x, this._mouse_y);
 
-    this._mouse_x_start = this._mouse_x
-    this._mouse_y_start = this._mouse_y
+    this._mouse_x_start = this._mouse_x;
+    this._mouse_y_start = this._mouse_y;
 
     // var element = document.elementFromPoint(this._mouse_x, this._mouse_y)
     // const type = element.is()
@@ -251,46 +257,66 @@ export default class VoiceHandler {
     // }
   }
 
-  nameProgram (varName) {
+  nameProgram(varName) {
     this._sendMessage({
       action: 'NAME_PROGRAM',
-      varName: varName
-    })
+      varName: varName,
+    });
   }
 
-  runProgram (progName, ...args) {
+  runProgram(progName, ...args) {
     this._sendMessage({
       action: 'RUN_PROGRAM',
       varName: progName,
-      args: args
-    })
+      args: args,
+    });
   }
 
-  tagVariable (varName) {
-    if (this._current_click && ['TEXTAREA', 'INPUT'].includes(this._current_click.target.tagName)) {
-      this._tagVariableForInput(varName)
+  scheduleProgram(progName, ...args) {
+    if (args.length < 1) {
+      throw Error('No time provided when scheduling program.');
+    }
+
+    const time = args.pop();
+
+    this._sendMessage({
+      action: 'SCHEDULE_PROGRAM',
+      varName: progName,
+      args: args,
+      time: time,
+    });
+  }
+
+  tagVariable(varName) {
+    if (
+      this._current_click &&
+      ['TEXTAREA', 'INPUT'].includes(this._current_click.target.tagName)
+    ) {
+      this._tagVariableForInput(varName);
     } else {
-      this._tagVariableForSelection(varName)
+      this._tagVariableForSelection(varName);
     }
   }
 
-  _getMultiSelector (elements) {
-    const selectors = []
+  _getMultiSelector(elements) {
+    const selectors = [];
     for (let el of elements) {
-      const optimizedMinLength = (el.id) ? 2 : 10 // if the target has an id, use that instead of multiple other selectors
-      selectors.push(finder(el, {
-        seedMinLength: 5,
-        optimizedMinLength: optimizedMinLength,
-        className (className) {
-          return className !== 'selected'
-        }
-      }))
+      const optimizedMinLength = el.id ? 2 : 10; // if the target has an id, use that instead of multiple other selectors
+      selectors.push(
+        finder(el, {
+          seedMinLength: 5,
+          optimizedMinLength: optimizedMinLength,
+          className(className) {
+            return className !== 'selected';
+          },
+        }),
+      );
     }
-    return selectors.join(', ')
+    return selectors.join(', ');
   }
 
-  _tagVariableForSelection (varName) {
-    const selector = this._getMultiSelector(this._selectedElements)
+  _tagVariableForSelection(varName) {
+    const selector = this._getMultiSelector(this._selectedElements);
 
     this._sendMessage({
       selector: selector,
@@ -301,71 +327,87 @@ export default class VoiceHandler {
       action: 'THIS_IS_A',
       varName: varName,
       keyCode: null,
-      href: null
-    })
+      href: null,
+    });
   }
 
-  _tagVariableForInput (varName) {
+  _tagVariableForInput(varName) {
     if (this._current_click.target.tagName === 'TEXTAREA') {
-      this._replaceSelectedTextArea(this._current_click.target, `[${varName}]`)
+      this._replaceSelectedTextArea(this._current_click.target, `[${varName}]`);
     }
 
     if (this._current_click.target.tagName === 'INPUT') {
-      this._replaceSelectedInput(this._current_click.target, `[${varName}]`)
+      this._replaceSelectedInput(this._current_click.target, `[${varName}]`);
     }
 
-    const optimizedMinLength = (this._current_click.target.id) ? 2 : 10 // if the target has an id, use that instead of multiple other selectors
-    const selector = finder(this._current_click.target, { seedMinLength: 5, optimizedMinLength: optimizedMinLength })
+    const optimizedMinLength = this._current_click.target.id ? 2 : 10; // if the target has an id, use that instead of multiple other selectors
+    const selector = finder(this._current_click.target, {
+      seedMinLength: 5,
+      optimizedMinLength: optimizedMinLength,
+    });
 
     this._sendMessage({
       selector: selector,
       value: this._current_click.target.value,
       tagName: this._current_click.target.tagName,
-      inputType: this._current_click.target.tagName === 'INPUT' ? this._current_click.target.type : null,
+      inputType:
+        this._current_click.target.tagName === 'INPUT'
+          ? this._current_click.target.type
+          : null,
       selection: null,
       action: 'THIS_IS_A',
       varName: varName,
       keyCode: null,
-      href: this._current_click.target.href ? this._current_click.target.href : null
-    })
+      href: this._current_click.target.href
+        ? this._current_click.target.href
+        : null,
+    });
   }
 
-  _getInputSelection (el) {
-    var start = 0; var end = 0; var normalizedValue; var range
+  _getInputSelection(el) {
+    var start = 0;
+    var end = 0;
+    var normalizedValue;
+    var range;
 
-    var textInputRange; var len; var endRange
+    var textInputRange;
+    var len;
+    var endRange;
 
-    if (typeof el.selectionStart === 'number' && typeof el.selectionEnd === 'number') {
-      start = el.selectionStart
-      end = el.selectionEnd
+    if (
+      typeof el.selectionStart === 'number' &&
+      typeof el.selectionEnd === 'number'
+    ) {
+      start = el.selectionStart;
+      end = el.selectionEnd;
     } else {
-      range = document.selection.createRange()
+      range = document.selection.createRange();
 
       if (range && range.parentElement() === el) {
-        len = el.value.length
-        normalizedValue = el.value.replace(/\r\n/g, '\n')
+        len = el.value.length;
+        normalizedValue = el.value.replace(/\r\n/g, '\n');
 
         // Create a working TextRange that lives only in the input
-        textInputRange = el.createTextRange()
-        textInputRange.moveToBookmark(range.getBookmark())
+        textInputRange = el.createTextRange();
+        textInputRange.moveToBookmark(range.getBookmark());
 
         // Check if the start and end of the selection are at the very end
         // of the input, since moveStart/moveEnd doesn't return what we want
         // in those cases
-        endRange = el.createTextRange()
-        endRange.collapse(false)
+        endRange = el.createTextRange();
+        endRange.collapse(false);
 
         if (textInputRange.compareEndPoints('StartToEnd', endRange) > -1) {
-          start = end = len
+          start = end = len;
         } else {
-          start = -textInputRange.moveStart('character', -len)
-          start += normalizedValue.slice(0, start).split('\n').length - 1
+          start = -textInputRange.moveStart('character', -len);
+          start += normalizedValue.slice(0, start).split('\n').length - 1;
 
           if (textInputRange.compareEndPoints('EndToEnd', endRange) > -1) {
-            end = len
+            end = len;
           } else {
-            end = -textInputRange.moveEnd('character', -len)
-            end += normalizedValue.slice(0, end).split('\n').length - 1
+            end = -textInputRange.moveEnd('character', -len);
+            end += normalizedValue.slice(0, end).split('\n').length - 1;
           }
         }
       }
@@ -373,17 +415,18 @@ export default class VoiceHandler {
 
     return {
       start: start,
-      end: end
-    }
+      end: end,
+    };
   }
 
-  _replaceSelectedInput (el, text) {
-    el.value = text
+  _replaceSelectedInput(el, text) {
+    el.value = text;
   }
 
-  _replaceSelectedTextArea (el, text) {
-    var sel = this._getInputSelection(el); var val = el.value
-    el.value = val.slice(0, sel.start) + text + val.slice(sel.end)
+  _replaceSelectedTextArea(el, text) {
+    var sel = this._getInputSelection(el);
+    var val = el.value;
+    el.value = val.slice(0, sel.start) + text + val.slice(sel.end);
   }
 }
 
