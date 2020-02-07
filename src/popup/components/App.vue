@@ -93,11 +93,6 @@ export default {
         if (msg.action === 'variableNamed'){
           console.log('variableNamed')
           // var person = prompt("Please Enter Your Variable Name");
-          var popupWindow = window.open(
-              chrome.extension.getURL("normal_popup.html"),
-              "exampleName",
-              "width=400,height=400"
-          );
         }
       })
     },

@@ -42,10 +42,8 @@ export default class VoiceHandler {
 
   start () {
 
-    console.log(" dfsdf asdf qeqwe s fsd ffsdf sdasdfasdf asdfasdf")
-    // console.log("1 1 1 1 1 1 1 1 1")
     // setTimeout(()=>{
-    //   // console.log("2 2 2 2 2 2 2 2 2 2")
+      console.log("2 2 2 2 sdf 2 2")
     //   var msg = new SpeechSynthesisUtterance('hi World');
     //   window.speechSynthesis.speak(msg);
     // }, 3000)
