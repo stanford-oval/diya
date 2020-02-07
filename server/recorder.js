@@ -30,6 +30,7 @@ const { ParserClient } = require('almond-dialog-agent');
 const crypto = require('crypto');
 const express = require('express');
 const stemmer = require('stemmer');
+const { parseTime } = require('./utils/time');
 const router = new express.Router();
 
 const Config = require('./config');
@@ -128,13 +129,7 @@ class ProgramBuilder {
   addStream(time) {
     const stream = 0;
 
-    this.addStatement(
-      new Ast.Statement.Rule(
-        null,
-        stream,
-        null,
-      )
-    );
+    this.addStatement(new Ast.Statement.Rule(null, stream, null));
   }
 }
 
@@ -327,11 +322,13 @@ class RecordingSession {
 
   async _scheduleProgram(progName, time, args) {
     console.log('_scheduleProgram', progName, time, args);
-    this._recordProgramCall(progName, args);
+    const parsedTime = await parseTime(time);
+    console.log(parsedTime);
+    // this._recordProgramCall(progName, args);
 
     if (!this._recordingMode) {
-      await this._doRunProgram();
-      this._builder = new ProgramBuilder();
+      // await this._doRunProgram();
+      // this._builder = new ProgramBuilder();
     }
   }
 
@@ -454,7 +451,7 @@ class RecordingSession {
 
       case 'SCHEDULE_PROGRAM':
         this._maybeFlushCurrentInput(event);
-        // this._scheduleProgram(event.varName, event.time, event.args);
+        this._scheduleProgram(event.varName, event.time, event.args);
         break;
 
       case 'keydown':
