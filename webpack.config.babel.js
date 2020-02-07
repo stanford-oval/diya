@@ -6,6 +6,7 @@ import { VueLoaderPlugin } from 'vue-loader'
 import path from 'path'
 
 const { NODE_ENV = 'development' } = process.env
+const ChromeExtensionReloader  = require('webpack-chrome-extension-reloader');
 
 const base = {
   context: __dirname,
@@ -59,6 +60,7 @@ const base = {
     ]
   },
   plugins: [
+    new ChromeExtensionReloader(),
     new CopyPlugin([
       { from: './src/manifest.json', to: './manifest.json' },
       { from: './src/images', to: 'images' }
