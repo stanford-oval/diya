@@ -25,6 +25,7 @@ const Tp = require('thingpedia');
 const ThingTalk = require('thingtalk');
 const Ast = ThingTalk.Ast;
 const Type = ThingTalk.Type;
+const Builtin = ThingTalk.Builtin;
 const { ParserClient } = require('almond-dialog-agent');
 
 const crypto = require('crypto');
@@ -126,10 +127,25 @@ class ProgramBuilder {
     this._declaredProcedures.set(decl.name, decl);
   }
 
-  addStream(time) {
-    const stream = 0;
+  addAtTimedAction(time, action) {
+    // Converting time to a nice format
+    //const ttTime = new Builtin.Time(time.getHours(), time.getMinutes(), time.getSeconds());
+    console.log('TIMER_STREAM!!!!!!!!!!!!!!!');
+    const ttTime = Ast.Value.fromJS(
+      Type.Time,
+      new Builtin.Time(time.getHours(), time.getMinutes(), time.getSeconds()),
+    );
+    const expiration = Ast.Value.fromJS(
+      Type.Time,
+      new Builtin.Time(
+        time.getHours(),
+        time.getMinutes(),
+        time.getSeconds() + 1,
+      ),
+    );
+    const stream = new Ast.Stream.AtTimer(null, [ttTime], null, null);
 
-    this.addStatement(new Ast.Statement.Rule(null, stream, null));
+    this.addStatement(new Ast.Statement.Rule(null, stream, [action]));
   }
 }
 
@@ -321,14 +337,14 @@ class RecordingSession {
   }
 
   async _scheduleProgram(progName, time, args) {
+    this._builder = new ProgramBuilder();
     console.log('_scheduleProgram', progName, time, args);
     const parsedTime = await parseTime(time);
     console.log(parsedTime);
-    // this._recordProgramCall(progName, args);
+    this._recordProgramCall(progName, args, parsedTime);
 
     if (!this._recordingMode) {
-      // await this._doRunProgram();
-      // this._builder = new ProgramBuilder();
+      await this._doRunProgram();
     }
   }
 
@@ -361,6 +377,13 @@ class RecordingSession {
 
     this._builder.addProcedure(decl);
     const action = new Ast.Action.VarRef(null, progName, in_params, null);
+
+    if (time) {
+      console.log('Added time!');
+      this._builder.addAtTimedAction(time, action);
+      return;
+    }
+
     if (args.length > 0) {
       const tables = args.map(
         arg => new Ast.Table.VarRef(null, wordsToVariable(arg, 't_'), [], null),
