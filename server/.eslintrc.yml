@@ -16,10 +16,6 @@ rules:
     - error
     - always
   consistent-return: warn
-  curly:
-    - error
-    - multi-or-nest
-    - consistent
   eqeqeq:
     - error
     - always
@@ -44,9 +40,6 @@ rules:
   no-lonely-if: off
   no-new-object: error
   arrow-body-style: off
-  arrow-parens:
-    - error
-    - always
   prefer-arrow-callback: warn
   prefer-numeric-literals: error
   require-atomic-updates: off

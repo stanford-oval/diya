@@ -24,7 +24,6 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
-const ThingTalk = require('thingtalk');
 
 const Engine = require('thingengine-core');
 const AssistantDispatcher = require('./almond/assistant');
