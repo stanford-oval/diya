@@ -46,12 +46,6 @@ export default class VoiceHandler {
 
     chrome.extension.connect({ name: 'recordControls - VoiceHandler' })
 
-    // setTimeout(()=>{
-    // console.log('2 2 2 2 sdf 2 2');
-    //   var msg = new SpeechSynthesisUtterance('hi World');
-    //   window.speechSynthesis.speak(msg);
-    // }, 3000)
-
     this._selection = Selection.create({
       // Class for the selection-area
       class: 'selection',
@@ -218,11 +212,22 @@ export default class VoiceHandler {
   }
 
   selectStart() {
+    console.log('selectStart')
+    this._sendMessage({
+      action: actions.SELECT_START,
+    });
+
     this._selection.cancel();
     this._selection.enable();
   }
 
   selectStop() {
+    console.log('selectStop')
+    this._sendMessage({
+      action: actions.SELECT_STOP,
+    });
+
+
     this._selection.cancel();
     this._selection.disable();
   }

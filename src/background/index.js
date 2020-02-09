@@ -14,6 +14,8 @@ class RecordingController {
     this._boundedMessageHandler = null
     this._boundedNavigationHandler = null
     this._boundedWaitHandler = null
+    this._boundedSelectStartHandler = null
+    this._boundedSelectStoptHandler = null
     this._boundedMenuHandler = null
     this._boundedKeyCommandHandler = null
     this._badgeState = ''
@@ -33,7 +35,7 @@ class RecordingController {
   }
 
   async boot () {
-    console.debug('background - BOOT')
+    console.debug('background - Boot')
     chrome.extension.onConnect.addListener(port => {
       console.debug('background - onConnect', port.name)
       port.onMessage.addListener(msg => {
@@ -56,6 +58,8 @@ class RecordingController {
     this._boundedMessageHandler = this.handleMessage.bind(this)
     this._boundedNavigationHandler = this.handleNavigation.bind(this)
     this._boundedWaitHandler = this.handleWait.bind(this)
+    // this._boundedSelectStartHandler = this.handleSelectStart.bind(this)
+    // this._boundedSelectStoptHandler = this.handleSelectStop.bind(this)
 
     chrome.runtime.onMessage.addListener(this._boundedMessageHandler)
     chrome.webNavigation.onCompleted.addListener(this._boundedNavigationHandler)
@@ -213,11 +217,14 @@ class RecordingController {
   }
 
   handleMessage (msg, sender) {
-    console.log("handleMessage:", msg)
+    // console.log("handleMessage:", msg)
     // console.log(sender)
 
     if (msg.action && msg.action === actions.START) this.start()
     if (msg.action && msg.action === actions.STOP) this.stop()
+
+    if (msg.action && msg.action === actions.SELECT_START) this.selectStart()
+    if (msg.action && msg.action === actions.SELECT_STOP) this.selectStop()
 
     if (msg.control) return this.handleControlMessage(msg, sender)
 
@@ -236,7 +243,7 @@ class RecordingController {
   }
 
   handleNavigation ({ frameId }) {
-    console.debug('frameId is:', frameId)
+    // console.debug('frameId is:', frameId)
     if (frameId === 0) {
       this.recordNavigation()
     }
@@ -278,10 +285,22 @@ class RecordingController {
   }
 
   toggleScreenShotMode (action) {
-    console.debug('toggling screenshot mode')
+    console.debug('toggleScreenShotMode')
     chrome.tabs.query({active: true, currentWindow: true}, tabs => {
       chrome.tabs.sendMessage(tabs[0].id, { action })
     })
+  }
+
+  selectStart () {
+    console.log('handleSelectStart')
+    this._badgeState = 'select'
+    chrome.browserAction.setBadgeText({ text: this._badgeState })
+  }
+
+  selectStop () {
+    console.log('handleSelectStop')
+    this._badgeState = ''
+    chrome.browserAction.setBadgeText({ text: this._badgeState })
   }
 
   handleWait () {
