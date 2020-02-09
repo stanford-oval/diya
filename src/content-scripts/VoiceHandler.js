@@ -22,6 +22,7 @@
 
 import annyang from 'annyang';
 import finder from '@medv/finder';
+import actions from '../models/extension-ui-actions'
 
 export default class VoiceHandler {
   constructor() {
@@ -41,8 +42,12 @@ export default class VoiceHandler {
   }
 
   start() {
+
+
+    chrome.extension.connect({ name: 'recordControls - VoiceHandler' })
+
     // setTimeout(()=>{
-    console.log('2 2 2 2 sdf 2 2');
+    // console.log('2 2 2 2 sdf 2 2');
     //   var msg = new SpeechSynthesisUtterance('hi World');
     //   window.speechSynthesis.speak(msg);
     // }, 3000)
@@ -157,6 +162,11 @@ export default class VoiceHandler {
       'call :prog_name': this.runProgram.bind(this),
       'run :prog_name': this.runProgram.bind(this),
 
+      'watch this': this.recordingStart.bind(this),
+      'start recording': this.recordingStart.bind(this),
+      'stop recording': this.recordingStop.bind(this),
+      'ok done': this.recordingStop.bind(this),
+
       // Run program with scheduling
       'run :prog_name at *time': this.scheduleProgram.bind(this),
       // 'run :prog_name with :var_name at *time': this.runProgram.bind(this),
@@ -191,6 +201,19 @@ export default class VoiceHandler {
 
     annyang.addCallback('soundstart', function() {
       document.getElementById('transcript').textContent = '[soundstart]';
+    });
+  }
+
+  recordingStart() {
+    console.log('recording start')
+    this._sendMessage({
+      action: actions.START,
+    });
+  }
+
+  recordingStop() {
+    this._sendMessage({
+      action: actions.STOP,
     });
   }
 
@@ -244,17 +267,6 @@ export default class VoiceHandler {
 
     this._mouse_x_start = this._mouse_x;
     this._mouse_y_start = this._mouse_y;
-
-    // var element = document.elementFromPoint(this._mouse_x, this._mouse_y)
-    // const type = element.is()
-    // switch (type) {
-    //   case 'LI':
-    //     break
-    //   case 'TR':
-    //     break
-    //   default:
-    //     break
-    // }
   }
 
   nameProgram(varName) {
@@ -265,6 +277,7 @@ export default class VoiceHandler {
   }
 
   runProgram(progName, ...args) {
+    console.log('run')
     this._sendMessage({
       action: 'RUN_PROGRAM',
       varName: progName,

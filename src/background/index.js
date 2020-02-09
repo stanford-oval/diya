@@ -33,9 +33,13 @@ class RecordingController {
   }
 
   async boot () {
+    console.debug('background - BOOT')
     chrome.extension.onConnect.addListener(port => {
-      console.debug('listeners connected')
+      console.debug('background - onConnect', port.name)
       port.onMessage.addListener(msg => {
+
+        console.log('got message got message got message')
+
         if (msg.action && msg.action === actions.START) this.start()
         if (msg.action && msg.action === actions.STOP) this.stop()
         if (msg.action && msg.action === actions.CLEAN_UP) this.cleanUp()
@@ -69,7 +73,7 @@ class RecordingController {
   }
 
   start () {
-    console.debug('start recording')
+    console.log('-------start recording-------------')
     this.cleanUp()
 
     this._badgeState = 'rec'
@@ -209,6 +213,12 @@ class RecordingController {
   }
 
   handleMessage (msg, sender) {
+    console.log("handleMessage:", msg)
+    // console.log(sender)
+
+    if (msg.action && msg.action === actions.START) this.start()
+    if (msg.action && msg.action === actions.STOP) this.stop()
+
     if (msg.control) return this.handleControlMessage(msg, sender)
 
     // to account for clicks etc. we need to record the frameId and url to later target the frame in playback
