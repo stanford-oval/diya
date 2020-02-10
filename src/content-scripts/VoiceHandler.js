@@ -163,7 +163,7 @@ export default class VoiceHandler {
 
       // Run program with scheduling
       'run :prog_name at *time': this.scheduleProgram.bind(this),
-      // 'run :prog_name with :var_name at *time': this.runProgram.bind(this),
+      'run :prog_name with :var_name at *time': this.scheduleProgram.bind(this),
 
       //'from here': this.gestureStart.bind(this),
       //'to here': this.gestureStop.bind(this),

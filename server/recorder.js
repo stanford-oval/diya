@@ -118,6 +118,7 @@ class ProgramBuilder {
   }
 
   addNamedQuery(name, query) {
+    console.log('ADDING NAMED QUERY!!!!!!');
     this.addStatement(
       new Ast.Statement.Assignment(null, name, query, query.schema),
     );
@@ -127,25 +128,11 @@ class ProgramBuilder {
     this._declaredProcedures.set(decl.name, decl);
   }
 
-  addAtTimedAction(time, action) {
-    // Converting time to a nice format
-    //const ttTime = new Builtin.Time(time.getHours(), time.getMinutes(), time.getSeconds());
+  addAtTimedAction(action, stream) {
     console.log('TIMER_STREAM!!!!!!!!!!!!!!!');
-    const ttTime = Ast.Value.fromJS(
-      Type.Time,
-      new Builtin.Time(time.getHours(), time.getMinutes(), time.getSeconds()),
-    );
-    const expiration = Ast.Value.fromJS(
-      Type.Time,
-      new Builtin.Time(
-        time.getHours(),
-        time.getMinutes(),
-        time.getSeconds() + 1,
-      ),
-    );
-    const stream = new Ast.Stream.AtTimer(null, [ttTime], null, null);
 
     this.addStatement(new Ast.Statement.Rule(null, stream, [action]));
+    console.log('FINISHED ADDING STATEMENT!!!');
   }
 }
 
@@ -177,6 +164,7 @@ class RecordingSession {
   }
 
   _addPuppeteerQuery(event, name, params, saveAs) {
+    console.log('ADDING QUERY!!!');
     if (event.frameUrl) {
       params.push(
         new Ast.InputParam(
@@ -349,8 +337,10 @@ class RecordingSession {
   }
 
   _recordProgramCall(progName, args, time) {
+    console.log(`RECORD PROGRAM CALL!!!`);
     progName = wordsToVariable(progName, 'p_');
     const prog = namedPrograms.get(progName);
+    console.log(`PROG: ${prog}`);
     if (!prog) throw new Error(`No such program ${progName}`);
 
     const parsed = ThingTalk.Grammar.parse(prog);
@@ -360,6 +350,8 @@ class RecordingSession {
         parsed.declarations[0].name === progName &&
         parsed.rules.length === 0,
     );
+
+    console.log(`Parsed: ${parsed}`);
 
     const decl = parsed.declarations[0];
 
@@ -374,17 +366,38 @@ class RecordingSession {
           new Ast.Value.VarRef('text'),
         ),
     );
+    console.log(`In Params: ${in_params}`);
 
     this._builder.addProcedure(decl);
     const action = new Ast.Action.VarRef(null, progName, in_params, null);
 
     if (time) {
-      console.log('Added time!');
-      this._builder.addAtTimedAction(time, action);
+      const ttTime = Ast.Value.fromJS(
+        Type.Time,
+        new Builtin.Time(time.getHours(), time.getMinutes(), time.getSeconds()),
+      );
+      let stream = new Ast.Stream.AtTimer(null, [ttTime], null, null);
+
+      if (args.length > 0) {
+        console.log('QUERY TIME!!!');
+        const tables = args.map(
+          arg => new Ast.Table.VarRef(null, wordsToVariable(arg, 't_'), [], null),
+        );
+        stream = tables.reduce(
+          (t1, t2) => new Ast.Stream.Join(null, t1, t2, [], null),
+          stream,
+        );
+
+        this._builder.addAtTimedAction(action, stream);
+      } else {
+        this._builder.addAtTimedAction(action, stream);
+      }
+
       return;
     }
 
     if (args.length > 0) {
+      console.log('QUERY WITHOUT TIME!!!');
       const tables = args.map(
         arg => new Ast.Table.VarRef(null, wordsToVariable(arg, 't_'), [], null),
       );
@@ -400,9 +413,11 @@ class RecordingSession {
   _handleThisIsA(event) {
     this._maybeFlushCurrentInput(event);
     if (event.tagName) {
+      console.log('TAGGED A VARIABLE!!!');
       // tagged a variable inside an input
       this._currentInput = event;
     } else {
+      console.log('TAGGED A SELECTION!!!');
       // tagged a selection
       this._addPuppeteerQuery(
         event,
