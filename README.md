@@ -8,6 +8,12 @@ Install necessary npm dependencies.
 npm install
 ```
 
+Build the project.
+
+```
+npm run build
+```
+
 Initialize Chrome Hot Plugin Server.
 
 ```
