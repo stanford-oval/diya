@@ -336,6 +336,17 @@ class RecordingSession {
     }
   }
 
+  _missingArgs(providedArgs, requiredArgs) {
+    const missingArgs = [];
+    for (let i = 0; i < requiredArgs.length; i++) {
+      if (!providedArgs.includes(requiredArgs[i])) {
+        missingArgs.push(requiredArgs[i]);
+      }
+    }
+
+    return missingArgs;
+  }
+
   _recordProgramCall(progName, args, time) {
     console.log(`RECORD PROGRAM CALL!!!`);
     progName = wordsToVariable(progName, 'p_');
@@ -351,9 +362,16 @@ class RecordingSession {
         parsed.rules.length === 0,
     );
 
-    console.log(`Parsed: ${parsed}`);
-
     const decl = parsed.declarations[0];
+
+    // check if enough args provided
+    const requiredArgs = Object.keys(decl.args).map(x => x.split('_')[1]);
+    const missingArgs = this._missingArgs(args, requiredArgs);
+    if (missingArgs.length !== 0) {
+      // TODO: send missing args
+      console.log(missingArgs);
+      throw Error(`Called procedure missing arguments: ${missingArgs}`);
+    }
 
     // FIXME we should use an alias here but aliases do not work
     //let in_params = args.map((arg) =>
@@ -381,7 +399,8 @@ class RecordingSession {
       if (args.length > 0) {
         console.log('QUERY TIME!!!');
         const tables = args.map(
-          arg => new Ast.Table.VarRef(null, wordsToVariable(arg, 't_'), [], null),
+          arg =>
+            new Ast.Table.VarRef(null, wordsToVariable(arg, 't_'), [], null),
         );
         stream = tables.reduce(
           (t1, t2) => new Ast.Stream.Join(null, t1, t2, [], null),
