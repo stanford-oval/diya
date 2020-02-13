@@ -89,6 +89,12 @@ export default {
           this.updateCode()
         }
       })
+      
+      this.bus.onMessage.addListener((msg) => {
+        if (msg.action === 'codeUpdated'){
+          this.updateCode()
+        }
+      })
       this.bus.onMessage.addListener((msg) => {
         if (msg.action === 'variableNamed'){
           console.log('variableNamed')

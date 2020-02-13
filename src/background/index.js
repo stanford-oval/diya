@@ -207,6 +207,14 @@ class RecordingController {
       token: this._sessionToken,
       event: event
     }).then((response) => {
+
+      if (response.data.params_missing) {
+        chrome.storage.local.set({ params_missing: response.data.params_missing }, () => {
+          console.debug('response.data.params_missing')
+          this._broadcastMessage({ action: 'paramsUpdated' })
+        })
+      }
+
       if (response.data.code) {
         chrome.storage.local.set({ thingtalk: response.data.code }, () => {
           console.debug('recording stored')
