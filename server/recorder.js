@@ -316,12 +316,14 @@ class RecordingSession {
 
   async _runProgram(progName, args) {
     console.log('_runProgram', progName, args);
-    this._recordProgramCall(progName, args);
+    const missingArgs = this._recordProgramCall(progName, args);
 
     if (!this._recordingMode) {
       await this._doRunProgram();
       this._builder = new ProgramBuilder();
     }
+
+    return missingArgs; 
   }
 
   async _scheduleProgram(progName, time, args) {
@@ -368,9 +370,8 @@ class RecordingSession {
     const requiredArgs = Object.keys(decl.args).map(x => x.split('_')[1]);
     const missingArgs = this._missingArgs(args, requiredArgs);
     if (missingArgs.length !== 0) {
-      // TODO: send missing args
-      console.log(missingArgs);
-      throw Error(`Called procedure missing arguments: ${missingArgs}`);
+      // send missing args
+      return missingArgs;
     }
 
     // FIXME we should use an alias here but aliases do not work
@@ -412,7 +413,7 @@ class RecordingSession {
         this._builder.addAtTimedAction(action, stream);
       }
 
-      return;
+      return undefined;
     }
 
     if (args.length > 0) {
@@ -427,6 +428,8 @@ class RecordingSession {
     } else {
       this._builder.addAction(action);
     }
+
+    return undefined;
   }
 
   _handleThisIsA(event) {
@@ -503,8 +506,9 @@ class RecordingSession {
 
       case 'RUN_PROGRAM':
         this._maybeFlushCurrentInput(event);
-        this._runProgram(event.varName, event.args);
-        break;
+        // eslint-disable-next-line no-case-declarations
+        const missingArgs = await this._runProgram(event.varName, event.args);
+        return { params_missing: missingArgs };
 
       case 'SCHEDULE_PROGRAM':
         this._maybeFlushCurrentInput(event);
@@ -624,6 +628,8 @@ router.post('/add-event', (req, res, next) => {
     .addRecordingEvent(req.body.event)
     .then((result = {}) => {
       result.status = 'ok';
+      console.log('RESULT!!!!');
+      console.log(result);
       res.json(result);
     })
     .catch(next);
