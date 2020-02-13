@@ -22,7 +22,7 @@
 
 import annyang from 'annyang';
 import finder from '@medv/finder';
-import actions from '../models/extension-ui-actions'
+import actions from '../models/extension-ui-actions';
 
 export default class VoiceHandler {
   constructor() {
@@ -42,9 +42,7 @@ export default class VoiceHandler {
   }
 
   start() {
-
-
-    chrome.extension.connect({ name: 'recordControls - VoiceHandler' })
+    chrome.extension.connect({ name: 'recordControls - VoiceHandler' });
 
     this._selection = Selection.create({
       // Class for the selection-area
@@ -156,6 +154,19 @@ export default class VoiceHandler {
       'call :prog_name': this.runProgram.bind(this),
       'run :prog_name': this.runProgram.bind(this),
 
+      // Conditionals
+      'call :prog_name if :var_name is greater than :value': this.runProgramIfGreater.bind(
+        this,
+      ),
+      'call :prog_name if :var_name equals :value': this.runProgramIfEqual.bind(
+        this,
+        ['=']
+      ),
+      'call :prog_name if :var_name is less than :value': this.runProgramIfLess.bind(
+        this,
+        ['<']
+      ),
+
       'watch this': this.recordingStart.bind(this),
       'start recording': this.recordingStart.bind(this),
       'stop recording': this.recordingStop.bind(this),
@@ -199,7 +210,7 @@ export default class VoiceHandler {
   }
 
   recordingStart() {
-    console.log('recording start')
+    console.log('recording start');
     this._sendMessage({
       action: actions.START,
     });
@@ -212,7 +223,7 @@ export default class VoiceHandler {
   }
 
   selectStart() {
-    console.log('selectStart')
+    console.log('selectStart');
     this._sendMessage({
       action: actions.SELECT_START,
     });
@@ -222,11 +233,10 @@ export default class VoiceHandler {
   }
 
   selectStop() {
-    console.log('selectStop')
+    console.log('selectStop');
     this._sendMessage({
       action: actions.SELECT_STOP,
     });
-
 
     this._selection.cancel();
     this._selection.disable();
@@ -282,11 +292,43 @@ export default class VoiceHandler {
   }
 
   runProgram(progName, ...args) {
-    console.log('run')
+    console.log('run');
     this._sendMessage({
       action: 'RUN_PROGRAM',
       varName: progName,
       args: args,
+    });
+  }
+
+  runProgramIfGreater(progName, ...args) {
+    this.runProgramIf(progName, '>', ...args);
+  }
+
+  runProgramIfEqual(progName, ...args) {
+    this.runProgramIf(progName, '=', ...args);
+  }
+
+  runProgramIfLess(progName, ...args) {
+    this.runProgramIf(progName, '<', ...args);
+  }
+
+  runProgramIf(progName, direction, ...args) {
+    if (args.length !== 2) {
+      throw Error('Not enough arguments.');
+    }
+
+    const value = args.pop();
+    const condVar = args.pop(); // variable being conditioned on
+
+    console.log('DETECTING CONDITIONAL RUN!!!');
+
+    this._sendMessage({
+      action: 'RUN_PROGRAM_IF',
+      varName: progName,
+      args: args,
+      condVar: condVar,
+      value: value,
+      direction: direction,
     });
   }
 

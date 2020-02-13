@@ -69,7 +69,7 @@ class PuppeteerSession {
         await frame.waitForSelector(selector);
 
         const values = await frame.$$eval(selector, (elements) => elements.map((el) => el.textContent));
-        return values.map((v) => ({ text: v }));
+        return values.map((v) => ({ text: v, number: parseInt(v) }));
     }
 }
 

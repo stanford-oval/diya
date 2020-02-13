@@ -13,7 +13,8 @@ class @com.google.puppeteer
 
   monitorable list query select(in req frame_url : Entity(tt:url) #_[canonical="frame url"],
                                 in req selector : String #_[canonical="selector"],
-                                out text : String #_[canonical="text"])
+                                out text : String #_[canonical="text"],
+                                out number : Number #_[canonical="number"])
   #_[canonical="element on screen"]
   #_[confirmation="the elements matched by ${selector}"]
   #[poll_interval=10min];

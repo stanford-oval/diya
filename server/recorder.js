@@ -161,6 +161,11 @@ class RecordingSession {
     this._currentInput = null;
 
     this._recordingMode = false;
+
+    // accumulated arguments in session (meant for auto argument passing)
+    this._accArgs = [];
+    // accumulated arguments while recording (meant for auto argument passing)
+    this._accRecArgs = [];
   }
 
   _addPuppeteerQuery(event, name, params, saveAs) {
@@ -320,10 +325,27 @@ class RecordingSession {
 
     if (!this._recordingMode) {
       await this._doRunProgram();
+      this._builder = new ProgramBuilder(); // To close window
+    }
+
+    return missingArgs ? missingArgs : [];
+  }
+
+  async _runProgramIf(progName, condVar, value, direction) {
+    // const args = this._recordingMode ? this._accRecArgs : this._accArgs;
+    const args = [];
+    const missingArgs = this._recordProgramCall(progName, args, null, {
+      condVar,
+      value,
+      direction,
+    });
+
+    if (!this._recordingMode) {
+      await this._doRunProgram();
       this._builder = new ProgramBuilder();
     }
 
-    return missingArgs; 
+    return missingArgs ? missingArgs : [];
   }
 
   async _scheduleProgram(progName, time, args) {
@@ -349,7 +371,7 @@ class RecordingSession {
     return missingArgs;
   }
 
-  _recordProgramCall(progName, args, time) {
+  _recordProgramCall(progName, args, time, condition) {
     console.log(`RECORD PROGRAM CALL!!!`);
     progName = wordsToVariable(progName, 'p_');
     const prog = namedPrograms.get(progName);
@@ -417,16 +439,52 @@ class RecordingSession {
     }
 
     if (args.length > 0) {
+      console.log(args);
       console.log('QUERY WITHOUT TIME!!!');
-      const tables = args.map(
+      let tables = args.map(
         arg => new Ast.Table.VarRef(null, wordsToVariable(arg, 't_'), [], null),
       );
+
+      if (condition.value) {
+        const { condVar, value, direction } = condition;
+        const condTable = new Ast.Table.Filter(
+          null,
+          new Ast.Table.VarRef(null, wordsToVariable(condVar, 't_'), [], null),
+          new Ast.BooleanExpression.Atom(
+            null,
+            'number',
+            '>=',
+            Ast.Value.Number(parseInt(value)),
+          ),
+          null,
+        );
+        tables = [condTable].concat(tables);
+      }
+
       const query = tables.reduce(
         (t1, t2) => new Ast.Table.Join(null, t1, t2, [], null),
       );
       this._builder.addQueryAction(query, action);
     } else {
-      this._builder.addAction(action);
+      console.log('CONDITION!!!');
+      console.log(condition);
+      if (condition.value) {
+        const { condVar, value, direction } = condition;
+        const condTable = new Ast.Table.Filter(
+          null,
+          new Ast.Table.VarRef(null, wordsToVariable(condVar, 't_'), [], null),
+          new Ast.BooleanExpression.Atom(
+            null,
+            'number',
+            '>=',
+            Ast.Value.Number(parseInt(value)),
+          ),
+          null,
+        );
+        this._builder.addQueryAction(condTable, action);
+      } else {
+        this._builder.addAction(action);
+      }
     }
 
     return undefined;
@@ -448,11 +506,19 @@ class RecordingSession {
         wordsToVariable(event.varName, 't_'),
       );
     }
+
+    // Keep track of args for auto argument passing
+    if (this._recordingMode) {
+      this._accRecArgs.push(event.varName);
+    } else {
+      this._accArgs.push(event.varName);
+    }
   }
 
   async addRecordingEvent(event) {
     switch (event.action) {
       case 'START_RECORDING':
+        this._accRecArgs = [];
         // reset the selection state when the user clicks start
         this._currentInput = null;
         this._currentSelection = null;
@@ -462,6 +528,7 @@ class RecordingSession {
 
       case 'STOP_RECORDING':
         this._recordingMode = false;
+        this._accRecArgs = [];
         return { code: this._builder.finish() };
 
       case 'GOTO':
@@ -506,9 +573,21 @@ class RecordingSession {
 
       case 'RUN_PROGRAM':
         this._maybeFlushCurrentInput(event);
-        // eslint-disable-next-line no-case-declarations
-        const missingArgs = await this._runProgram(event.varName, event.args);
-        return { params_missing: missingArgs };
+
+        return {
+          params_missing: await this._runProgramIf(event.varName, event.args),
+        };
+
+      case 'RUN_PROGRAM_IF':
+        this._maybeFlushCurrentInput(event);
+        return {
+          params_missing: await this._runProgramIf(
+            event.varName,
+            event.condVar,
+            event.value,
+            event.direction,
+          ),
+        };
 
       case 'SCHEDULE_PROGRAM':
         this._maybeFlushCurrentInput(event);
