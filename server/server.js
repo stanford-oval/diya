@@ -18,7 +18,7 @@
 //
 // Author: Michael Fischer <mfischer@cs.stanford.edu>
 //         Giovanni Campagna <gcampagn@cs.stanford.edu>
-"use strict";
+'use strict';
 
 const express = require('express');
 const path = require('path');
@@ -31,82 +31,89 @@ const platform = require('./almond/platform');
 const Config = require('./config');
 
 async function runThingTalk(engine, code) {
-    const app = await engine.createApp(code, {});
+  const app = await engine.createApp(code, {});
 
-    // drain the queue of results from the app
-    let results = [];
-    let errors = [];
-    if (!app)
-        return { results, errors };
+  // drain the queue of results from the app
+  let results = [];
+  let errors = [];
+  if (!app) return { results, errors };
 
-    for (;;) {
-        let { item: next, resolve, reject } = await app.mainOutput.next();
+  for (;;) {
+    let { item: next, resolve, reject } = await app.mainOutput.next();
 
-        if (next.isDone) {
-            resolve();
-            break;
-        }
-
-        if (next.isNotification) {
-            try {
-                results.push({ value: next.outputValue, type: next.outputType });
-                resolve();
-            } catch (e) {
-                reject(e);
-            }
-        } else if (next.isError) {
-            errors.push(next.error);
-            resolve();
-        } else if (next.isQuestion) {
-            let e = new Error('User cancelled');
-            e.code = 'ECANCELLED';
-            reject(e);
-        }
+    if (next.isDone) {
+      resolve();
+      break;
     }
 
-    return { results, errors };
+    if (next.isNotification) {
+      try {
+        results.push({ value: next.outputValue, type: next.outputType });
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
+    } else if (next.isError) {
+      errors.push(next.error);
+      resolve();
+    } else if (next.isQuestion) {
+      let e = new Error('User cancelled');
+      e.code = 'ECANCELLED';
+      reject(e);
+    }
+  }
+
+  return { results, errors };
 }
 
 function initFrontend() {
-    const app = express();
-    const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-    app.set('port', port);
+  const app = express();
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+  app.set('port', port);
 
-    app.use('/css', express.static(path.join(path.dirname(module.filename), 'css')));
-    app.use('/js', express.static(path.join(path.dirname(module.filename), 'js')));
+  app.use(
+    '/css',
+    express.static(path.join(path.dirname(module.filename), 'css')),
+  );
+  app.use(
+    '/js',
+    express.static(path.join(path.dirname(module.filename), 'js')),
+  );
 
-    // logger
-    app.use(morgan('dev'));
-    app.use(bodyParser.urlencoded({ extended: true }));
-    app.use(bodyParser.json());
+  // logger
+  app.use(morgan('dev'));
+  app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(bodyParser.json());
 
-    app.use('/recorder', require('./recorder'));
+  app.use('/recorder', require('./recorder'));
 
-    app.get('/', (req, res) => {
-        res.sendFile(path.join(__dirname+'/index.html'));
+  app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname + '/index.html'));
+  });
+
+  app.get('/sheets', (req, res) => {
+    res.sendFile(path.join(__dirname + '/sheets.html'));
+  });
+
+  app.post('/devices/create', (req, res, next) => {
+    app.engine.devices.addSerialized(req.body).then(d => {
+      res.json({ status: 'ok', data: app.engine.getDeviceInfo(d.uniqueId) });
     });
+  });
 
-    app.get('/sheets', (req, res) => {
-        res.sendFile(path.join(__dirname+'/sheets.html'));
-    });
+  app.post('/run', (req, res, next) => {
+    if (!req.body.code) {
+      res.status(400).json({ error: 'Missing code', code: 'EINVAL' });
+      return;
+    }
 
-    app.post('/devices/create', (req, res, next) => {
-        app.engine.devices.addSerialized(req.body).then((d) => {
-            res.json({ status: 'ok', data: app.engine.getDeviceInfo(d.uniqueId) });
-        });
-    });
+    runThingTalk(app.engine, req.body.code)
+      .then(result => {
+        res.json({ status: 'ok', data: result });
+      })
+      .catch(next);
 
-    app.post('/run', (req, res, next) => {
-        if (!req.body.code) {
-            res.status(400).json({ error: 'Missing code', code: 'EINVAL' });
-            return;
-        }
-
-        runThingTalk(app.engine, req.body.code).then((result) => {
-            res.json({ status: 'ok', data: result });
-        }).catch(next);
-
-        /*const names = req.body.names
+    /*const names = req.body.names
         // const code = req.body.code
 
 	    code = `
@@ -144,84 +151,81 @@ function initFrontend() {
 	    // res.send('run response')
 	    // res.send(req.query)
 	    */
-    });
-    
+  });
 
-    // app.all('/get_thingtalk', urlencodedparser, function (req, res){
-    // 	command = req.body.command
-    // 	log_command(command)
-    // 	$.ajax({
-    // 		url: "https://nlp-staging.almond.stanford.edu/@demo.css.models/en-US/query?q="+command,
-    // 		// url: "https://almond-dev.stanford.edu/nnparser/en-US/query?q="+command,
-    // 		type: "GET",
-    // 		success: function(response){
-    // 			// console.log(response['candidates'][0])
-    // 			res.send(response)
-    // 			return
-    // 		},
-    // 		error: function(response){
-    // 			console.log("error")
-    // 			res.send(response)
-    // 			return
-    // 		}
-    // 	});
-    // });
+  // app.all('/get_thingtalk', urlencodedparser, function (req, res){
+  // 	command = req.body.command
+  // 	log_command(command)
+  // 	$.ajax({
+  // 		url: "https://nlp-staging.almond.stanford.edu/@demo.css.models/en-US/query?q="+command,
+  // 		// url: "https://almond-dev.stanford.edu/nnparser/en-US/query?q="+command,
+  // 		type: "GET",
+  // 		success: function(response){
+  // 			// console.log(response['candidates'][0])
+  // 			res.send(response)
+  // 			return
+  // 		},
+  // 		error: function(response){
+  // 			console.log("error")
+  // 			res.send(response)
+  // 			return
+  // 		}
+  // 	});
+  // });
 
-
-
-    return app;
+  return app;
 }
 
 async function main() {
-    let stopped = false;
-    let running = false;
-    let engine, frontend, ad;
+  let stopped = false;
+  let running = false;
+  let engine, frontend, ad;
 
-    function handleStop() {
-        if (running)
-            engine.stop();
-        else
-            stopped = true;
-    }
+  function handleStop() {
+    if (running) engine.stop();
+    else stopped = true;
+  }
 
-    process.on('SIGINT', handleStop);
-    process.on('SIGTERM', handleStop);
+  process.on('SIGINT', handleStop);
+  process.on('SIGTERM', handleStop);
 
-    engine = new Engine(platform, { thingpediaUrl: Config.THINGPEDIA_URL });
-    frontend = initFrontend();
-    frontend.engine = engine;
+  engine = new Engine(platform, { thingpediaUrl: Config.THINGPEDIA_URL });
+  frontend = initFrontend();
+  frontend.engine = engine;
 
-    ad = new AssistantDispatcher(engine);
-    platform.setAssistant(ad);
-    await engine.open();
+  ad = new AssistantDispatcher(engine);
+  platform.setAssistant(ad);
+  await engine.open();
 
-    frontend.listen(frontend.get('port'), () => {
-        console.log('Nightmare server listening on port 3000! Go to http://localhost:3000/');
-    });
+  frontend.listen(frontend.get('port'), () => {
+    console.log(
+      'Nightmare server listening on port 3000! Go to http://localhost:3000/',
+    );
+  });
 
+  try {
     try {
-        try {
-            console.log('Ready');
-            if (!stopped) {
-                running = true;
-                await ad.startConversation();
-                await engine.run();
-            }
-        } finally {
-            try {
-                await engine.close();
-            } catch(error) {
-                console.log('Exception during stop: ' + error.message);
-                console.log(error.stack);
-            }
-        }
-    } catch(error) {
-        console.error('Uncaught exception: ' + error.message);
-        console.error(error.stack);
+      console.log('Ready');
+      if (!stopped) {
+        running = true;
+        await ad.startConversation();
+        await engine.run();
+      }
     } finally {
-        console.log('Cleaning up');
-        platform.exit();
+      try {
+        await engine.close();
+      } catch (error) {
+        console.log('Exception during stop: ' + error.message);
+        console.log(error.stack);
+      }
     }
+  } catch (error) {
+    console.error('Uncaught exception: ' + error.message);
+    console.error(error.stack);
+  } finally {
+    console.log('Cleaning up');
+    platform.exit();
+  }
 }
 
 main();
