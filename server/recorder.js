@@ -163,9 +163,9 @@ class RecordingSession {
     this._recordingMode = false;
 
     // accumulated arguments in session (meant for auto argument passing)
-    this._accArgs = [];
+    this._accArgs = new Set();
     // accumulated arguments while recording (meant for auto argument passing)
-    this._accRecArgs = [];
+    this._accRecArgs = new Set();
   }
 
   _addPuppeteerQuery(event, name, params, saveAs) {
@@ -360,6 +360,17 @@ class RecordingSession {
     }
   }
 
+  _getRelevantStoredArgs(neededArgs) {
+    const argSet = this._recordingMode ? this._accRecArgs : this._accArgs; // accumulated args
+    const result = [];
+    // Get args in argSet that are also needed
+    for (let item of argSet) {
+      if (neededArgs.includes(item)) result.push(item);
+    }
+
+    return result;
+  }
+
   _missingArgs(providedArgs, requiredArgs) {
     const missingArgs = [];
     for (let i = 0; i < requiredArgs.length; i++) {
@@ -371,7 +382,7 @@ class RecordingSession {
     return missingArgs;
   }
 
-  _recordProgramCall(progName, args, time, condition) {
+  _recordProgramCall(progName, givenArgs, time, condition) {
     console.log(`RECORD PROGRAM CALL!!!`);
     progName = wordsToVariable(progName, 'p_');
     const prog = namedPrograms.get(progName);
@@ -390,6 +401,12 @@ class RecordingSession {
 
     // check if enough args provided
     const requiredArgs = Object.keys(decl.args).map(x => x.split('_')[1]);
+    let args = givenArgs;
+    if (condition.value && (requiredArgs.length > 0)) {
+      // Handling implicit arguments for conditional 
+      args = this._getRelevantStoredArgs(requiredArgs); 
+      console.log(`RETRIEVED ARGS: ${args}`);
+    }
     const missingArgs = this._missingArgs(args, requiredArgs);
     if (missingArgs.length !== 0) {
       // send missing args
@@ -453,7 +470,7 @@ class RecordingSession {
           new Ast.BooleanExpression.Atom(
             null,
             'number',
-            '>=',
+            direction,
             Ast.Value.Number(parseInt(value)),
           ),
           null,
@@ -476,7 +493,7 @@ class RecordingSession {
           new Ast.BooleanExpression.Atom(
             null,
             'number',
-            '>=',
+            direction,
             Ast.Value.Number(parseInt(value)),
           ),
           null,
@@ -509,9 +526,9 @@ class RecordingSession {
 
     // Keep track of args for auto argument passing
     if (this._recordingMode) {
-      this._accRecArgs.push(event.varName);
+      this._accRecArgs.add(event.varName);
     } else {
-      this._accArgs.push(event.varName);
+      this._accArgs.add(event.varName);
     }
   }
 
@@ -575,7 +592,7 @@ class RecordingSession {
         this._maybeFlushCurrentInput(event);
 
         return {
-          params_missing: await this._runProgramIf(event.varName, event.args),
+          params_missing: await this._runProgram(event.varName, event.args),
         };
 
       case 'RUN_PROGRAM_IF':

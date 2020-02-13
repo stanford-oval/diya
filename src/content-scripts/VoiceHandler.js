@@ -155,16 +155,14 @@ export default class VoiceHandler {
       'run :prog_name': this.runProgram.bind(this),
 
       // Conditionals
-      'call :prog_name if :var_name is greater than :value': this.runProgramIfGreater.bind(
+      'call :prog_name if :var_name is at least :value': this.runProgramIfAtLeast.bind(
         this,
       ),
       'call :prog_name if :var_name equals :value': this.runProgramIfEqual.bind(
         this,
-        ['=']
       ),
-      'call :prog_name if :var_name is less than :value': this.runProgramIfLess.bind(
+      'call :prog_name if :var_name is at most :value': this.runProgramIfAtMost.bind(
         this,
-        ['<']
       ),
 
       'watch this': this.recordingStart.bind(this),
@@ -300,16 +298,16 @@ export default class VoiceHandler {
     });
   }
 
-  runProgramIfGreater(progName, ...args) {
-    this.runProgramIf(progName, '>', ...args);
+  runProgramIfAtLeast(progName, ...args) {
+    this.runProgramIf(progName, '>=', ...args);
   }
 
   runProgramIfEqual(progName, ...args) {
-    this.runProgramIf(progName, '=', ...args);
+    this.runProgramIf(progName, '==', ...args);
   }
 
-  runProgramIfLess(progName, ...args) {
-    this.runProgramIf(progName, '<', ...args);
+  runProgramIfAtMost(progName, ...args) {
+    this.runProgramIf(progName, '<=', ...args);
   }
 
   runProgramIf(progName, direction, ...args) {
