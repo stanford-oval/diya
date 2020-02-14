@@ -402,7 +402,7 @@ class RecordingSession {
     // check if enough args provided
     const requiredArgs = Object.keys(decl.args).map(x => x.split('_')[1]);
     let args = givenArgs;
-    if (condition.value && (requiredArgs.length > 0)) {
+    if (condition && condition.value && (requiredArgs.length > 0)) {
       // Handling implicit arguments for conditional 
       args = this._getRelevantStoredArgs(requiredArgs); 
       console.log(`RETRIEVED ARGS: ${args}`);
