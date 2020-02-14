@@ -205,6 +205,24 @@ export default class VoiceHandler {
     annyang.addCallback('soundstart', function() {
       document.getElementById('transcript').textContent = '[soundstart]';
     });
+
+    annyang.addCallback('error', function(str) {
+      document.getElementById('transcript').textContent = '[error] ' + str;
+      console.log(str)
+    });
+
+    annyang.addCallback('errorNetwork', function() {
+      document.getElementById('transcript').textContent = '[errorNetwork]';
+    });
+
+    annyang.addCallback('errorPermissionBlocked', function() {
+      document.getElementById('transcript').textContent = '[errorPermissionBlocked]';
+    });
+
+    annyang.addCallback('errorPermissionDenied', function() {
+      document.getElementById('transcript').textContent = '[errorPermissionDenied]';
+    });
+
   }
 
   recordingStart() {
