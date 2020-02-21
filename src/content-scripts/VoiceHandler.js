@@ -45,10 +45,13 @@ export default class VoiceHandler {
   start() {
 
     var port = chrome.runtime.connect();
-    port.postMessage({joke: "Knock knock"});
+    // port.postMessage({joke: "Knock knock"});
     port.onMessage.addListener((msg) => {
       if (msg.action == "STOP_RECORDING"){
         this._speak("what would you like to name this program?")
+      }
+      if (msg.action == "paramsUpdated"){
+        console.log("missing parsms")
       }
     })
 

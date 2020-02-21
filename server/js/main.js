@@ -33,18 +33,18 @@ $(function() {
         stock()
     })
 
-    function speak(message) {
-      var msg = new SpeechSynthesisUtterance(message)
-      window.speechSynthesis.speak(msg)
-    }
+    // function speak(message) {
+    //   var msg = new SpeechSynthesisUtterance(message)
+    //   window.speechSynthesis.speak(msg)
+    // }
 
-    $("button[name='say']").on('click', (event)=>{
-        speak($(event.target).text())
-    })
+    // $("button[name='say']").on('click', (event)=>{
+    //     speak($(event.target).text())
+    // })
 
     $("#send").on('click', ()=>{
         $('textarea').val('')
         $('input').val('')
-        speak('Yeah I like it when you click that button')
+        // speak('Yeah I like it when you click that button')
     })
 })
