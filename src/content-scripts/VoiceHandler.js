@@ -42,7 +42,14 @@ export default class VoiceHandler {
   }
 
   start() {
-    chrome.extension.connect({ name: 'recordControls - VoiceHandler' });
+
+    var port = chrome.runtime.connect();
+    port.postMessage({joke: "Knock knock"});
+    port.onMessage.addListener((msg) => {
+      if (msg.action == "STOP_RECORDING"){
+        this._speak("what would you like to name this program?")
+      }
+    })
 
     this._selection = Selection.create({
       // Class for the selection-area
@@ -94,25 +101,6 @@ export default class VoiceHandler {
       });
     this._selection.disable();
 
-    // const background_style = 'background-color:#CCF'
-    // const $table = $("#restaurants")
-    // $table.find("td").click(function(){
-    //     $('table tr > td, table tr > th').attr('style', 'background-color:none;')
-    //     const $this = $(this)
-    //     const index = $this.parent().children().index($this) + 1
-    //     $('table tr > td:nth-child(' + index + ')').attr('style', background_style)
-    //     $('table tr > th:nth-child(' + index + ')').addClass('selected')
-    // })
-    // let $select = $("#groceries")
-    // $select.click((event)=>{
-    //     $('.selected').removeClass('.selected')
-    //     $(event.currentTarget).find("li").addClass('selected')
-    // })
-    // $select = $("#directions")
-    // $select.click((event)=>{
-    //     $('.selected').removeClass('.selected')
-    //     $(event.currentTarget).find("li").addClass('selected')
-    // })
 
     document.addEventListener('keyup', event => {
       if (event.key === 'Escape') {
@@ -155,15 +143,16 @@ export default class VoiceHandler {
       'run :prog_name': this.runProgram.bind(this),
 
       // Conditionals
-      'call :prog_name if :var_name is at least :value': this.runProgramIfAtLeast.bind(
-        this,
-      ),
-      'call :prog_name if :var_name equals :value': this.runProgramIfEqual.bind(
-        this,
-      ),
-      'call :prog_name if :var_name is at most :value': this.runProgramIfAtMost.bind(
-        this,
-      ),
+      'call :prog_name if :var_name is at least :value': this.runProgramIfAtLeast.bind(this),
+      'run :prog_name if :var_name is at least :value': this.runProgramIfAtLeast.bind(this),
+      'call :prog_name if :var_name equals :value': this.runProgramIfEqual.bind(this),
+      'run :prog_name if :var_name equals :value': this.runProgramIfEqual.bind(this),
+      'call :prog_name if :var_name is at most :value': this.runProgramIfAtMost.bind(this),
+      'run :prog_name if :var_name is at most :value': this.runProgramIfAtMost.bind(this),
+      'call :prog_name if :var_name more than :value': this.runProgramIfAtMost.bind(this),
+      'run :prog_name if :var_name more than :value': this.runProgramIfAtMost.bind(this),
+      'call :prog_name if :var_name greater than :value': this.runProgramIfAtMost.bind(this),
+      'run :prog_name if :var_name greater than :value': this.runProgramIfAtMost.bind(this),
 
       'watch this': this.recordingStart.bind(this),
       'start recording': this.recordingStart.bind(this),
@@ -222,11 +211,16 @@ export default class VoiceHandler {
     annyang.addCallback('errorPermissionDenied', function() {
       document.getElementById('transcript').textContent = '[errorPermissionDenied]';
     });
+  }
 
+  _speak(message) {
+    var msg = new SpeechSynthesisUtterance(message)
+    msg.rate = 1.4
+    window.speechSynthesis.speak(msg)
   }
 
   recordingStart() {
-    console.log('recording start');
+    this._speak("Recording started.  Do the actions you would like me to record.")
     this._sendMessage({
       action: actions.START,
     });
@@ -301,6 +295,9 @@ export default class VoiceHandler {
   }
 
   nameProgram(varName) {
+    this._speak("I have named this program " + varName)
+    this._speak("Would you like to run " + varName"?")
+
     this._sendMessage({
       action: 'NAME_PROGRAM',
       varName: varName,

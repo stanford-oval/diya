@@ -485,7 +485,7 @@ class RecordingSession {
     } else {
       console.log('CONDITION!!!');
       console.log(condition);
-      if (condition.value) {
+      if (condition && condition.value) {
         const { condVar, value, direction } = condition;
         const condTable = new Ast.Table.Filter(
           null,

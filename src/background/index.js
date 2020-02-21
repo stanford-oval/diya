@@ -57,13 +57,13 @@ class RecordingController {
 
     this._boundedMessageHandler = this.handleMessage.bind(this)
     this._boundedNavigationHandler = this.handleNavigation.bind(this)
-    this._boundedWaitHandler = this.handleWait.bind(this)
+    // this._boundedWaitHandler = this.handleWait.bind(this)
     // this._boundedSelectStartHandler = this.handleSelectStart.bind(this)
     // this._boundedSelectStoptHandler = this.handleSelectStop.bind(this)
 
     chrome.runtime.onMessage.addListener(this._boundedMessageHandler)
     chrome.webNavigation.onCompleted.addListener(this._boundedNavigationHandler)
-    chrome.webNavigation.onBeforeNavigate.addListener(this._boundedWaitHandler)
+    // chrome.webNavigation.onBeforeNavigate.addListener(this._boundedWaitHandler)
 
     axios.post(SERVER_URL + '/recorder/start').then(({ data }) => {
       this._sessionToken = data.token
@@ -155,6 +155,8 @@ class RecordingController {
     chrome.browserAction.setBadgeText({ text: this._badgeState })
     chrome.browserAction.setBadgeBackgroundColor({color: '#45C8F1'})
 
+
+
     this._sendEvent({ action: 'STOP_RECORDING' })
   }
 
@@ -185,6 +187,7 @@ class RecordingController {
     }
   }
 
+  
   recordCurrentViewportSize (value) {
     if (!this._hasViewPort) {
       this.handleMessage({selector: undefined, value, action: pptrActions.VIEWPORT})
@@ -203,6 +206,10 @@ class RecordingController {
   _sendEvent (event) {
     if (this._isPaused || !this._sessionToken) return
 
+
+    this._broadcastMessage( event )
+
+
     axios.post(SERVER_URL + '/recorder/add-event', {
       token: this._sessionToken,
       event: event
@@ -210,7 +217,7 @@ class RecordingController {
 
       if (response.data.params_missing) {
         chrome.storage.local.set({ params_missing: response.data.params_missing }, () => {
-          console.debug('response.data.params_missing')
+          console.debug('response.data.params_missing', response.data.params_missing)
           this._broadcastMessage({ action: 'paramsUpdated' })
         })
       }
@@ -311,9 +318,9 @@ class RecordingController {
     chrome.browserAction.setBadgeText({ text: this._badgeState })
   }
 
-  handleWait () {
-    chrome.browserAction.setBadgeText({ text: 'wait' })
-  }
+  // handleWait () {
+  //   chrome.browserAction.setBadgeText({ text: 'wait' })
+  // }
 }
 
 console.debug('booting recording controller')

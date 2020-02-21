@@ -1,12 +1,10 @@
 "use strict";
 $(function() {
 
-
     $(".button_reserve").on("click", (e)=>{
         let restaurant_name = $(e.target).attr('name')
         $("#reservation_result").text('Reserved "' + restaurant_name + '"')
     })
-
 
     function get_row(){
         
@@ -31,14 +29,13 @@ $(function() {
         }
     });
 
-
     $("#stock_button").on('click', ()=>{
         stock()
     })
 
     function speak(message) {
-      // var msg = new SpeechSynthesisUtterance(message)
-      // window.speechSynthesis.speak(msg)
+      var msg = new SpeechSynthesisUtterance(message)
+      window.speechSynthesis.speak(msg)
     }
 
     $("button[name='say']").on('click', (event)=>{
@@ -48,6 +45,6 @@ $(function() {
     $("#send").on('click', ()=>{
         $('textarea').val('')
         $('input').val('')
-        // speak('Hello, world')
+        speak('Yeah I like it when you click that button')
     })
 })
