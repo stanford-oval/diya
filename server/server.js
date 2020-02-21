@@ -71,6 +71,9 @@ function initFrontend() {
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
   app.set('port', port);
 
+  app.set('view engine', 'ejs')
+
+
   app.use(
     '/css',
     express.static(path.join(path.dirname(module.filename), 'css')),
@@ -87,12 +90,29 @@ function initFrontend() {
 
   app.use('/recorder', require('./recorder'));
 
-  app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname + '/index.html'));
+
+  app.get('/stocks', (req, res) => {
+    res.render('stocks');
+  });
+
+  app.get('/emails', (req, res) => {
+    res.render('emails');
+  });
+
+  app.get('/restaurants', (req, res) => {
+    res.render('restaurants');
+  });
+
+  app.get('/other', (req, res) => {
+    res.render('other');
   });
 
   app.get('/sheets', (req, res) => {
-    res.sendFile(path.join(__dirname + '/sheets.html'));
+    res.render(path.join(__dirname + '/sheets.html'));
+  });
+
+  app.get('/', (req, res) => {
+    res.render('home');
   });
 
   app.post('/devices/create', (req, res, next) => {

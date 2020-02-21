@@ -37,6 +37,7 @@ export default class VoiceHandler {
     this._current_click = null;
     this._selection = null;
     this._selectedElements = new Set();
+    this._programNameCurrent = "";
 
     this._eventLog = [];
   }
@@ -294,13 +295,14 @@ export default class VoiceHandler {
     this._mouse_y_start = this._mouse_y;
   }
 
-  nameProgram(varName) {
-    this._speak("I have named this program " + varName)
-    this._speak("Would you like to run " + varName"?")
+  nameProgram(progName) {
+    this._speak("I have named this program " + progName)
+    this._speak("Would you like to run " + progName + "?")
+    this._programNameCurrent = progName
 
     this._sendMessage({
       action: 'NAME_PROGRAM',
-      varName: varName,
+      varName: progName,
     });
   }
 
