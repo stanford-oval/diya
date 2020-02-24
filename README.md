@@ -23,7 +23,7 @@ npm run dev
 Initialize local Nightmare server.
 
 ```
-node ./server/server.js
+npm run start-server
 ```
 
 Now install Nightmare browser extension on Google Chrome. Go to `chrome://extensions` via your address bar on Chrome. Set "Developer Mode" to on in the top-right corner of your window. Click "Load Unpacked" and select the `./build` directory.

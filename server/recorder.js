@@ -759,10 +759,8 @@ router.post('/destroy', (req, res, next) => {
 router.get('/procedures', (req, res) => {
   const programsObj = new Tp.Helpers.FilePreferences('./named-programs.json');
   const programs = programsObj.keys();
-  console.log(programs);
   const procedures = programs.map(procName => {
     const proc = programsObj.get(procName);
-    console.log(proc);
     const parsed = ThingTalk.Grammar.parse(proc);
     assert(
       parsed.classes.length === 0 &&
@@ -777,7 +775,21 @@ router.get('/procedures', (req, res) => {
       args: Object.keys(decl.args),
     };
   });
-  res.json(procedures);
+
+  // Used for sorting programs by name
+  const comparePrograms = (a, b) => {
+    const aName = a.name.split('_')[1];
+    const bName = b.name.split('_')[1];
+    if (aName < bName) {
+      return -1;
+    } else if (aName > bName) {
+      return 1;
+    } else {
+      return 0;
+    }
+  };
+
+  res.json(procedures.sort((a, b) => comparePrograms(a, b)));
 });
 
 module.exports = router;

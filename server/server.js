@@ -117,6 +117,10 @@ function initFrontend() {
     res.render('cheatsheet');
   });
 
+  app.get('/state', (req, res) => {
+    res.render('state/state');
+  });
+
   app.get('/', (req, res) => {
     res.render('about');
   });

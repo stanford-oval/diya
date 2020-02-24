@@ -50,4 +50,15 @@ const getProcedures = async () => {
     return data;
 };
 
-getProcedures();
+const updateProcedures = async () => {
+    const procedures = await getProcedures();
+
+    $('#procedure-list').empty();
+    procedures.map(proc => {
+        $('#procedure-list').append(
+            `<li>${proc.name}</li>`
+        );
+    });
+};
+
+updateProcedures();
