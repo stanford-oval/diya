@@ -71,8 +71,7 @@ function initFrontend() {
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
   app.set('port', port);
 
-  app.set('view engine', 'ejs')
-
+  app.set('view engine', 'ejs');
 
   app.use(
     '/css',
@@ -89,7 +88,6 @@ function initFrontend() {
   app.use(bodyParser.json());
 
   app.use('/recorder', require('./recorder'));
-
 
   app.get('/stocks', (req, res) => {
     res.render('stocks');
