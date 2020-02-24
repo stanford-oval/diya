@@ -111,8 +111,16 @@ function initFrontend() {
     res.render(path.join(__dirname + '/sheets.html'));
   });
 
+  app.get('/about', (req, res) => {
+    res.render('about');
+  });
+
+  app.get('/cheatsheet', (req, res) => {
+    res.render('cheatsheet');
+  });
+
   app.get('/', (req, res) => {
-    res.render('home');
+    res.render('about');
   });
 
   app.post('/devices/create', (req, res, next) => {

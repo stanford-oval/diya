@@ -40,14 +40,14 @@ class RecordingController {
       console.debug('background - onConnect', port.name)
       port.onMessage.addListener(msg => {
 
-        console.log('got message got message got message')
-
         if (msg.action && msg.action === actions.START) this.start()
         if (msg.action && msg.action === actions.STOP) this.stop()
         if (msg.action && msg.action === actions.CLEAN_UP) this.cleanUp()
         if (msg.action && msg.action === actions.PAUSE) this.pause()
         if (msg.action && msg.action === actions.UN_PAUSE) this.unPause()
+
       })
+
       port.onDisconnect.addListener(() => {
         this._allPorts.delete(port)
       })
@@ -218,7 +218,10 @@ class RecordingController {
       if (response.data.params_missing) {
         chrome.storage.local.set({ params_missing: response.data.params_missing }, () => {
           console.debug('response.data.params_missing', response.data.params_missing)
-          this._broadcastMessage({ action: 'paramsUpdated' })
+          this._broadcastMessage({ 
+            action: 'paramsMissing',
+            paramsMissing: response.data.params_missing,
+          })
         })
       }
 

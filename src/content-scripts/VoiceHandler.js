@@ -44,16 +44,32 @@ export default class VoiceHandler {
 
   start() {
 
+
     var port = chrome.runtime.connect();
-    // port.postMessage({joke: "Knock knock"});
+    port.postMessage({joke: "Knock knock"});
     port.onMessage.addListener((msg) => {
       if (msg.action == "STOP_RECORDING"){
         this._speak("what would you like to name this program?")
       }
-      if (msg.action == "paramsUpdated"){
-        console.log("missing parsms")
+      if (msg.action == "paramsMissing"){
+        const input = msg.paramsMissing;
+        const last = input.pop();
+        const result = input.join(', ') + ' and ' + last;
+
+        this._speak("Please select the " + result)
+        this.selectStart()
+
       }
     })
+
+    // var port2 = chrome.extension.connect({ name: 'recordControls' })
+    // port2.onMessage.addListener((msg) => {
+    //   if (msg.action == "paramsUpdated"){
+    //     console.log("missing parsms")
+    //   }
+    // })
+
+
 
     this._selection = Selection.create({
       // Class for the selection-area
