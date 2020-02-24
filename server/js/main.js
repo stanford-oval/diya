@@ -46,9 +46,8 @@ $(function() {
 const axios = require('axios');
 
 const getProcedures = async () => {
-    const procedures = [];
-
-    const res = await axios.get('/procedures');
-
-    return procedures;
+    const { data } = await axios.get('/recorder/procedures');
+    return data;
 };
+
+getProcedures();
