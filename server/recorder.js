@@ -402,9 +402,9 @@ class RecordingSession {
     // check if enough args provided
     const requiredArgs = Object.keys(decl.args).map(x => x.split('_')[1]);
     let args = givenArgs;
-    if (condition && condition.value && (requiredArgs.length > 0)) {
-      // Handling implicit arguments for conditional 
-      args = this._getRelevantStoredArgs(requiredArgs); 
+    if (condition && condition.value && requiredArgs.length > 0) {
+      // Handling implicit arguments for conditional
+      args = this._getRelevantStoredArgs(requiredArgs);
       console.log(`RETRIEVED ARGS: ${args}`);
     }
     const missingArgs = this._missingArgs(args, requiredArgs);
@@ -754,6 +754,30 @@ router.post('/destroy', (req, res, next) => {
     });
   }
   res.json({ status: 'ok' });
+});
+
+router.get('/procedures', (req, res) => {
+  const programsObj = new Tp.Helpers.FilePreferences('./named-programs.json');
+  const programs = programsObj.keys();
+  console.log(programs);
+  const procedures = programs.map(procName => {
+    const proc = programsObj.get(procName);
+    console.log(proc);
+    const parsed = ThingTalk.Grammar.parse(proc);
+    assert(
+      parsed.classes.length === 0 &&
+        parsed.declarations.length === 1 &&
+        parsed.rules.length === 0,
+    );
+
+    const decl = parsed.declarations[0];
+
+    return {
+      name: decl.name,
+      args: Object.keys(decl.args),
+    };
+  });
+  res.json(procedures);
 });
 
 module.exports = router;

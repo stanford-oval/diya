@@ -11,9 +11,6 @@ rules:
     - unix
   quotes: off
   no-console: off
-  semi:
-    - error
-    - never
   consistent-return: warn
   curly:
     - error
