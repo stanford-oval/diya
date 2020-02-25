@@ -710,6 +710,7 @@ const _sessions = new Map();
 
 router.post('/start', (req, res) => {
   const token = makeRandom();
+  console.log(`TOKEN: ${token}`);
   _sessions.set(token, new RecordingSession(req.app.engine));
   res.json({ status: 'ok', token });
 });
@@ -792,6 +793,12 @@ router.get('/procedures', (req, res) => {
   };
 
   res.json(procedures.sort((a, b) => comparePrograms(a, b)));
+});
+
+router.get('/token', (req, res) => {
+  res.json({
+    token: _sessions,
+  });
 });
 
 module.exports = router;
