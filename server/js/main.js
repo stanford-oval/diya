@@ -56,7 +56,15 @@ const updateProcedures = async () => {
     $('#procedure-list').empty();
     procedures.map(proc => {
         $('#procedure-list').append(
-            `<li>${proc.name}</li>`
+            `<li>
+                <div id='procedure-card' class='card'>
+                    <div class='card-body'>
+                        <h5 class='card-title'>${proc.prettyName}</h5>
+                        <p><b>Required arguments:</b> ${proc.args.length > 0 ? proc.args.join(', ') : 'None'}</p>
+                        <pre>${proc.code}</pre>
+                    </div>
+                </div>
+            </li>`
         );
     });
 };

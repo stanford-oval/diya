@@ -772,14 +772,16 @@ router.get('/procedures', (req, res) => {
 
     return {
       name: decl.name,
+      prettyName: decl.name.split('_')[1],
       args: Object.keys(decl.args),
+      code: proc,
     };
   });
 
   // Used for sorting programs by name
   const comparePrograms = (a, b) => {
-    const aName = a.name.split('_')[1];
-    const bName = b.name.split('_')[1];
+    const aName = a.prettyName;
+    const bName = b.prettyName;
     if (aName < bName) {
       return -1;
     } else if (aName > bName) {
