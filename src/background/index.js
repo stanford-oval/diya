@@ -67,6 +67,8 @@ class RecordingController {
 
     axios.post(SERVER_URL + '/recorder/start').then(({ data }) => {
       this._sessionToken = data.token
+      // Send session token to browser
+      document.dispatchEvent(new CustomEvent('newSessionToken', {token: data.token}))
     })
   }
 

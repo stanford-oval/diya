@@ -1,4 +1,13 @@
 'use strict';
+
+// Handle session token sent from extension
+let sessionToken;
+
+document.addEventListener('NewSessionToken', function (event) {
+    sessionToken = event.token;
+});
+
+
 $(function() {
   $('.button_reserve').on('click', e => {
     let restaurant_name = $(e.target).attr('name');
@@ -46,27 +55,47 @@ $(function() {
 const axios = require('axios');
 
 const getProcedures = async () => {
-    const { data } = await axios.get('/recorder/procedures');
-    return data;
+  const { data } = await axios.get('/recorder/procedures');
+  return data;
+};
+
+const executeProcedure = async progName => {
+    console.log(sessionToken);
+    await axios.post('/recorder/add-event', {
+        action: 'RUN_PROGRAM',
+        varName: progName,
+        token: sessionToken,
+    });
 };
 
 const updateProcedures = async () => {
-    const procedures = await getProcedures();
+  const procedures = await getProcedures();
 
-    $('#procedure-list').empty();
-    procedures.map(proc => {
-        $('#procedure-list').append(
-            `<li>
-                <div id='procedure-card' class='card'>
-                    <div class='card-body'>
-                        <h5 class='card-title'>${proc.prettyName}</h5>
-                        <p><b>Required arguments:</b> ${proc.args.length > 0 ? proc.args.join(', ') : 'None'}</p>
-                        <pre>${proc.code}</pre>
-                    </div>
+  $('#procedure-list').empty();
+  procedures.map(proc => {
+    $('#procedure-list').append(
+      `<li>
+            <div id='procedure-card' class='card'>
+                <div class='card-body'>
+                    <h5 class='card-title procedure-card-title'>
+                        <a data-name='${proc.name}'>${proc.prettyName}</a>
+                    </h5>
+                    <p><b>Required arguments:</b> ${
+                        proc.args.length > 0 ? proc.args.join(', ') : 'None'
+                    }</p>
+                    <pre>${proc.code}</pre>
                 </div>
-            </li>`
-        );
+            </div>
+        </li>`,
+    );
+  });
+
+  // Add click listeners to handle procedure execution
+  document.querySelectorAll('.procedure-card-title').forEach(card => {
+    card.addEventListener('click', (e) => {
+        executeProcedure(e.srcElement.getAttribute('data-name'));
     });
+  });
 };
 
 updateProcedures();
