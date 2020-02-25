@@ -44,7 +44,6 @@ export default class VoiceHandler {
 
   start() {
 
-
     var port = chrome.runtime.connect();
     port.postMessage({joke: "Knock knock"});
     port.onMessage.addListener((msg) => {
@@ -235,7 +234,7 @@ export default class VoiceHandler {
 
   _speak(message) {
     var msg = new SpeechSynthesisUtterance(message)
-    msg.rate = 1.4
+    msg.rate = 1.2
     window.speechSynthesis.speak(msg)
   }
 
