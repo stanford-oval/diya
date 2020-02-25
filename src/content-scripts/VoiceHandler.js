@@ -251,6 +251,8 @@ export default class VoiceHandler {
   }
 
   selectStart() {
+    this._speak("Select the variables you want to name.")
+
     console.log('selectStart');
     this._sendMessage({
       action: actions.SELECT_START,
@@ -261,6 +263,7 @@ export default class VoiceHandler {
   }
 
   selectStop() {
+    this._speak("Selection stopped.")
     console.log('selectStop');
     this._sendMessage({
       action: actions.SELECT_STOP,
