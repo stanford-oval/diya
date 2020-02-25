@@ -66,3 +66,11 @@
 .card-title {
   font-weight: bold;
 }
+
+.procedure-name {
+  color: blue;
+}
+
+.procedure-arg {
+  color: green;
+}

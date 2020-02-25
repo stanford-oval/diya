@@ -15,7 +15,7 @@ const base = {
     'content-script': ["./src/content-scripts/index.js"],
     popup: './src/popup/index.js',
     options: './src/options/index.js',
-    '../server/js/frontend.bundle': './server/js/main.js',
+    '../server/js/bundle/frontend': './server/js/main.js',
   },
   resolve: {
     alias: {

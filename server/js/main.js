@@ -73,16 +73,20 @@ const updateProcedures = async () => {
 
   $('#procedure-list').empty();
   procedures.map(proc => {
+    const args = proc.prettyArgs.reduce((acc, p, i) => {
+      const and = i === 0 ? '' : ' and ';
+      return `${acc}${and}<span class='procedure-arg'>${p}</span>`
+    }, '')
+    proc.prettyArgs.join(' and ');
     $('#procedure-list').append(
       `<li>
             <div id='procedure-card' class='card'>
                 <div class='card-body'>
-                    <h5 class='card-title procedure-card-title'>
-                        <a data-name='${proc.name}'>${proc.prettyName}</a>
+                    <h5 class='card-title procedure-card-title text-muted'>
+                        <a data-name='${proc.name}'>
+                            Call <span class='procedure-name'>${proc.prettyName}</span>${args ? ' with ' + args : ''}
+                        </a>
                     </h5>
-                    <p><b>Required arguments:</b> ${
-                        proc.args.length > 0 ? proc.args.join(', ') : 'None'
-                    }</p>
                     <pre>${proc.code}</pre>
                 </div>
             </div>

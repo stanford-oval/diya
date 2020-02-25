@@ -775,6 +775,7 @@ router.get('/procedures', (req, res) => {
       name: decl.name,
       prettyName: decl.name.split('_')[1],
       args: Object.keys(decl.args),
+      prettyArgs: Object.keys(decl.args).map(a => a.split('_')[1]),
       code: proc,
     };
   });
