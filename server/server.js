@@ -121,6 +121,10 @@ function initFrontend() {
     res.render('state/state');
   });
 
+  app.get('/survey', (req, res) => {
+    res.render('survey');
+  });
+
   app.get('/', (req, res) => {
     res.render('about');
   });
