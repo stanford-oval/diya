@@ -46,9 +46,27 @@ $(function() {
 const axios = require('axios');
 
 const getProcedures = async () => {
-    const procedures = [];
-
-    const res = await axios.get('/procedures');
-
-    return procedures;
+    const { data } = await axios.get('/recorder/procedures');
+    return data;
 };
+
+const updateProcedures = async () => {
+    const procedures = await getProcedures();
+
+    $('#procedure-list').empty();
+    procedures.map(proc => {
+        $('#procedure-list').append(
+            `<li>
+                <div id='procedure-card' class='card'>
+                    <div class='card-body'>
+                        <h5 class='card-title'>${proc.prettyName}</h5>
+                        <p><b>Required arguments:</b> ${proc.args.length > 0 ? proc.args.join(', ') : 'None'}</p>
+                        <pre>${proc.code}</pre>
+                    </div>
+                </div>
+            </li>`
+        );
+    });
+};
+
+updateProcedures();
