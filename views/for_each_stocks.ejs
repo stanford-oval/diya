@@ -2,27 +2,31 @@
 
     <div class="row">
         <div class="col-sm">
-            <h3>Emails</h3>
+            <h3>Stocks</h3>
             <section class="box-wrap">
-                <div>michael@michael.com</div>
-                <div>sam@sam.com</div>
-                <div>tom@tom.com</div>
+                <div>AAPL</div>
+                <div>VMWARE</div>
+                <div>MSFT</div>
+                <div>GOOG</div>
+                <div>TSLA</div>
+                <div>AMZN</div>
+                <div>VZ</div>
             </section>
         </div>
         <div class="col-sm">
-            <h3>GMail</h3>
-            email:
+            <h3>E-Trade</h3>
+
+            <input id='stock_input' value='apple'>
+            <button type='submit' id='stock_button'>search</button>
+            <div>name: <span id='stock_name'></span></div>
+            <div>price: <span id='stock_price'></span></div>
             <br>
-            <input>
-            <br>
-            <br>
-            body:
-            <br>
-            <textarea rows="4" cols="50"></textarea>
-            <br>
-            <br>
-            <button id='send'>Send</button>
-            <br>
+
+            <button id='button_stock_buy'>Buy</button>
+
+            <div id='stock_status' style="color:red;"></div>
+
+
         </div>
     </div>
 

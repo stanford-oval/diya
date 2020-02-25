@@ -14,18 +14,45 @@ $(function() {
     $('#reservation_result').text('Reserved "' + restaurant_name + '"');
   });
 
+
   function stock() {
     const name = $('#stock_input').val();
-    if (name === 'apple') {
-      $('#stock_name').text('apple');
+    $('#stock_name').text(name);
+
+    if (name === 'AAPL') {
       $('#stock_price').text('$318.00');
     }
 
-    if (name === 'vm') {
-      $('#stock_name').text('vm');
+    if (name === 'VMWARE') {
       $('#stock_price').text('$150.00');
     }
+
+    if (name === 'MSFT') {
+      $('#stock_price').text('$168.00');
+    }
+
+    if (name === 'GOOG') {
+      $('#stock_price').text('$150.00');
+    }
+
+    if (name === 'TSLA') {
+      $('#stock_price').text('$1,388.00');
+    }
+
+    if (name === 'AMZN') {
+      $('#stock_price').text('$1,972.00');
+    }
+
+    if (name === 'VZ') {
+      $('#stock_price').text('$57.00');
+    }
+
   }
+
+  $('#button_stock_buy').on('click', function(e) {
+    $("#stock_status").html("bought")
+  });
+
 
   $('#stock_input').on('keyup', function(e) {
     if (e.keyCode === 13) stock();
