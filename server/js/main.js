@@ -49,6 +49,15 @@ $(function() {
 
   }
 
+  $('#button_simple').on('click', function(e) {
+    $("#simple_status").html("clicked")
+  });
+
+
+  $('#simple_button').on('click', function(e) {
+    $("#simple_status").html("clicked")
+  });
+
   $('#button_stock_buy').on('click', function(e) {
     $("#stock_status").html("bought")
   });

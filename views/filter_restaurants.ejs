@@ -19,22 +19,73 @@
   <hr>
 
   <h3>Restaurants</h3>
-  <table id='restaurants' style="width:50%">
-    <tr>
-      <td>Italian Pizza</td>
-      <td>⭐⭐⭐</td>
-      <td>$$$$</td>
-    </tr>
-    <tr>
-      <td>Chinese Food</td>
-      <td>⭐⭐⭐⭐</td>
-      <td>$$$</td>
-    </tr>
-    <tr>
-      <td>Japanese Sushi</td>
-      <td>⭐⭐</td>
-      <td>$</td>
-    </tr>
-  </table>
+
+  <div class="row">
+      <div class="col-sm">
+          <h3>Script:</h3>
+          <div class="col-sm">
+              <div class="row">
+                  <b>Say</b>: "start recording"
+              </div>
+          </div>
+          <div class="col-sm">
+              <div class="row">
+                  <b>Action</b>: [in the `email` field type] almond@stanford.edu 
+              </div>
+          </div>
+          <div class="col-sm">
+              <div class="row">
+                  <b>Action</b>: [in the `body` field type] Hello! 
+              </div>
+          </div>
+          <div class="col-sm">
+              <div class="row">
+                  <b>Action</b>: [triple click `almond@stanford.edu`] 
+              </div>
+          </div>
+          <div class="col-sm">
+              <div class="row">
+                  <b>Say</b>: this is an email 
+              </div>
+          </div>
+          <div class="col-sm">
+              <div class="row">
+                  <b>Action</b>: [press tab] 
+              </div>
+          </div>
+          <div class="col-sm">
+              <div class="row">
+                  <b>Action</b>: [click send] 
+              </div>
+          </div>
+          <div class="col-sm">
+              <div class="row">
+                  <b>Say</b>: "stop recording" 
+              </div>
+          </div>
+
+          <div class="col-sm">
+              <div class="row">
+                  <b>Say</b>: "name this program email"
+              </div>
+          </div>
+          <div class="col-sm">
+              <div class="row">
+                  <b>Say</b>: run email 
+              </div>
+          </div>
+          <div class="col-sm">
+              <div class="row">
+                  <b>Action</b>: select emails on left side using the mouse
+              </div>
+          </div>
+      </div>
+      <div class="col-sm">
+          <h3>Video:</h3>
+
+          <iframe width="560" height="315" src="https://www.youtube.com/embed/5JUtTe00yGc" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+  </div>
+
   
 <%- include('footer'); -%>
