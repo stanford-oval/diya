@@ -57,7 +57,6 @@ export default class VoiceHandler {
 
         this._speak("Please select the " + result)
         this.selectStart()
-
       }
     })
 

@@ -323,12 +323,14 @@ class RecordingSession {
     console.log('_runProgram', progName, args);
     const missingArgs = this._recordProgramCall(progName, args);
 
+    if (missingArgs.length > 0) return missingArgs;
+
     if (!this._recordingMode) {
       await this._doRunProgram();
       this._builder = new ProgramBuilder(); // To close window
     }
 
-    return missingArgs ? missingArgs : [];
+    return [];
   }
 
   async _runProgramIf(progName, condVar, value, direction) {
@@ -356,7 +358,7 @@ class RecordingSession {
     this._recordProgramCall(progName, args, parsedTime);
 
     if (!this._recordingMode) {
-      await this._doRunProgram();
+      await this._doRunProgram();Engine.createApp
     }
   }
 
