@@ -6,3 +6,4 @@ dist
 dist-zip
 *.pem
 *.crx
+named-programs.json
