@@ -89,20 +89,45 @@ function initFrontend() {
 
   app.use('/recorder', require('./recorder'));
 
+  app.get('/for_each_emails', (req, res) => {
+    res.render('for_each_emails');
+  });
+
   app.get('/for_each_stocks', (req, res) => {
     res.render('for_each_stocks');
   });
+
+  app.get('/if_stocks', (req, res) => {
+    res.render('if_stocks');
+  });
+
+  app.get('/if_restaurants', (req, res) => {
+    res.render('if_restaurants');
+  });
+
+  app.get('/trigger_action_restaurants', (req, res) => {
+    res.render('trigger_action_restaurants');
+  });
+
 
   app.get('/trigger_action_stocks', (req, res) => {
     res.render('trigger_action_stocks');
   });
 
-  app.get('/for_each_emails', (req, res) => {
-    res.render('for_each_emails');
+  app.get('/filter_restaurants', (req, res) => {
+    res.render('filter_restaurants');
   });
 
-  app.get('/restaurants', (req, res) => {
-    res.render('restaurants');
+  app.get('/filter_stocks', (req, res) => {
+    res.render('filter_stocks');
+  });
+
+  app.get('/nlp_stocks', (req, res) => {
+    res.render('nlp_stocks');
+  });
+
+  app.get('/nlp_restaurants', (req, res) => {
+    res.render('nlp_restaurants');
   });
 
   app.get('/other', (req, res) => {
