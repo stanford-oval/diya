@@ -89,12 +89,16 @@ function initFrontend() {
 
   app.use('/recorder', require('./recorder'));
 
-  app.get('/stocks', (req, res) => {
-    res.render('stocks');
+  app.get('/for_each_stocks', (req, res) => {
+    res.render('for_each_stocks');
   });
 
-  app.get('/emails', (req, res) => {
-    res.render('emails');
+  app.get('/trigger_action_stocks', (req, res) => {
+    res.render('trigger_action_stocks');
+  });
+
+  app.get('/for_each_emails', (req, res) => {
+    res.render('for_each_emails');
   });
 
   app.get('/restaurants', (req, res) => {
