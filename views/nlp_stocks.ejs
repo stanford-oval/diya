@@ -1,43 +1,35 @@
 <%- include('header'); -%>
 
-  <h3>Reservations</h3>
-  <table>
-    <tr>
-      <td>French Laundry</td>
-      <td><button name='French Laundry' class='button_reserve'>Reserve</button></td>
-    </tr>
-    <tr>
-      <td>CoHo</td>
-      <td><button name='CoHo' class='button_reserve'>Reserve</button></td>
-    </tr>
-  </table>
+  <div class="row">
+      <div class="col-sm">
+          <h3>Stocks</h3>
+          <section class="box-wrap">
+              <div>AAPL</div>
+              <div>VMWARE</div>
+              <div>MSFT</div>
+              <div>GOOG</div>
+              <div>TSLA</div>
+              <div>AMZN</div>
+              <div>VZ</div>
+          </section>
+      </div>
+      <div class="col-sm">
+          <h3>E-Trade</h3>
 
-  <div id='reservation_result'style='color:lightblue'>
-      &nbsp;
+          <input id='stock_input' value='AAPL'>
+          <button type='submit' id='stock_button'>search</button>
+          <div>name: <span id='stock_name'></span></div>
+          <div>price: <span id='stock_price'></span></div>
+          <br>
+
+          <button id='button_stock_buy'>Buy</button>
+
+          <div id='stock_status' style="color:red;"></div>
+
+      </div>
   </div>
-
   <hr>
 
-  <h3>Restaurants</h3>
-  <table id='restaurants' style="width:50%">
-    <tr>
-      <td>Italian Pizza</td>
-      <td>⭐⭐⭐</td>
-      <td>$$$$</td>
-    </tr>
-    <tr>
-      <td>Chinese Food</td>
-      <td>⭐⭐⭐⭐</td>
-      <td>$$$</td>
-    </tr>
-    <tr>
-      <td>Japanese Sushi</td>
-      <td>⭐⭐</td>
-      <td>$</td>
-    </tr>
-  </table>
-
-  <hr>
 
   <div class="row">
       <div class="col-sm">
