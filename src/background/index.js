@@ -217,7 +217,7 @@ class RecordingController {
       event: event
     }).then((response) => {
 
-      if (response.data.params_missing) {
+      if (response.data.params_missing.length > 0) {
         chrome.storage.local.set({ params_missing: response.data.params_missing }, () => {
           console.debug('response.data.params_missing', response.data.params_missing)
           this._broadcastMessage({ 
