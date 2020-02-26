@@ -29,6 +29,10 @@ const base = {
   module: {
     rules: [
       {
+        test: /\.txt$/,
+        use: 'raw-loader'
+      },
+      {
         test: /\.js$/,
         exclude: /node_modules/,
         loader: 'babel-loader',
@@ -55,10 +59,6 @@ const base = {
           },
         ],
       },
-      {
-        test: /\.md$/,
-        use: 'raw-loader'
-      }
     ],
   },
   plugins: [

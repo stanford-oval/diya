@@ -1,1 +1,93 @@
-<div id="script-container" data-name="<%= name %>"></div>
+<div id="script-container"></div>
+
+<script>
+   var scripts = {
+        'for_each_stocks': `
+            **Say:** “start recording” \t
+            **Action:** [In the “symbol” field, type] PINS \t
+            **Action:** [Triple click “PINS”] \t
+            **Say:** “This is a symbol.” \t
+            **Action:** [press tab] \t
+            **Action:** [click buy] \t
+            **Say:** “stop recording” \t
+            **Say:** “Name this program purchase” \t
+            **Action:** [Select stocks on left side] \t
+            **Say:** “These are stocks” \t
+            **Say:** “Run purchase with stocks”
+        `.trim(),
+        'if_stocks': `
+            **Say:** “start recording”\t
+            **Action:** [In the “symbol” field, type] AMZN\t
+            **Action:** [Triple click “AMZN”]\t
+            **Say:** “This is a symbol.”\t
+            **Action:** [press tab]\t
+            **Action:** [click buy]\t
+            **Say:** “stop recording”\t
+            **Say:** “Name this program purchase”\t
+            **Action:** [Select price.]\t
+            **Say:** “This is a price”\t
+            **Say:** “Run purchase if is less than 2000”\t
+        `.trim(),
+        'if_restaurants': `
+            **Say:** “start recording”\t
+            **Action:** Click “reserve” next to “French Laundry”\t
+            **Say:** “stop recording”\t
+            **Say:** “name this program reserve”\t
+            **Action:** [Select review rating next to “French Laundry”]\t
+            **Say:** “This is a rating”\t
+            **Say:** “Run reserve if rating is greater than 3.”\t
+        `.trim(),
+        'trigger_stocks': `
+            **Say:** “start recording”\t
+            **Action:** [Click “buy”]\t
+            **Say:** “stop recording”\t
+            **Say:** “name this program purchase”\t
+            **Say:** “Run purchase at [current time + 1 minute]”\t
+        `.trim(),
+        'trigger_restaurants': `
+            **Say:** “start recording”\t
+            **Action:** [Click “reserve” next to “CoHo”]\t
+            **Say:** “stop recording”\t
+            **Say:** “name this program coffee”\t
+            **Say:** “Run coffee at [current time + 1 minute]”\t
+        `.trim(),
+        'filter_stocks': `
+            **Action:** [Triple click on stock symbol “AAPL”]\t
+            **Say:** “this is a stock”\t
+            **Action:** [Select price next to “AAPL”]\t
+            **Say:** “This is a price”\t
+            **Say:** “Show me stocks that have a price greater than 300.”\t
+        `.trim(),
+        'filter_restaurants': `\t
+            **Action:** [Triple click on restaurant name “French Laundry”]\t
+            **Say:** “this is a restaurant”\t
+            **Action:** [Select review rating next to “French Laundry”]\t
+            **Say:** “This is a rating”\t
+            **Say:** “Show me restaurants that have a rating greater than 3.”\t
+        `.trim(),
+        'nlp_stocks': `
+            **Say:** “start recording”\t
+            **Action:** [in search field, type] AMZN\t
+            **Action:** [triple click on AMZN]\t
+            **Say:** “This is a stock”\t
+            **Action:** [Click “get price” button]\t
+            **Say:** “stop recording”\t
+            **Say:** “name this program query”\t
+            **Say:** “run query and then tweet the result”\t
+        `.trim(),
+        'nlp_restaurants': `\t
+            **Say:** “start recording”\t
+            **Action:** [in search field, type] French Laundry\t
+            **Action:** [triple click on French Laundry]\t
+            **Say:** “This is a restaurant”\t
+            **Action:** [Click “search” button]\t
+            **Say:** “stop recording”\t
+            **Say:** “name this program food”\t
+            **Say:** “run food and then tweet the result”\t
+        `.trim(),
+    };
+
+    console.log(encodeURI(scripts['for_each_stocks']));
+
+    document.getElementById('script-container').innerHTML = marked(scripts['<%= scriptName %>']);
+</script>
