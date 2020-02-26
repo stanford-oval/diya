@@ -89,12 +89,12 @@ function initFrontend() {
 
   app.use('/recorder', require('./recorder'));
 
-  app.get('/simple_1', (req, res) => {
-    res.render('simple_1');
+  app.get('/simple_button', (req, res) => {
+    res.render('simple_button');
   });
 
-  app.get('/simple_2', (req, res) => {
-    res.render('simple_2');
+  app.get('/simple_text', (req, res) => {
+    res.render('simple_text');
   });
 
   app.get('/for_each_emails', (req, res) => {
