@@ -53,7 +53,7 @@ async function runThingTalk(engine, code) {
       } catch (e) {
         reject(e);
       }
-    } else if (next.isError) {
+    } else if (next.isError) {  // If Thingtalk command fails
       errors.push(next.error);
       resolve();
     } else if (next.isQuestion) {

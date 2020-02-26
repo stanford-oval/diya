@@ -1,0 +1,11 @@
+**Say:** “start recording”
+Action: [In the “symbol” field, type] PINS
+Action: [Triple click “PINS”]
+Say: “This is a symbol.”
+Action: [press tab]
+Action: [click buy]
+Say: “stop recording”
+Say: “Name this program purchase”
+Action: [Select stocks on left side]
+Say: “These are stocks”
+Say: “Run purchase with stocks”

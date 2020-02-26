@@ -323,6 +323,8 @@ class RecordingSession {
     console.log('_runProgram', progName, args);
     const missingArgs = this._recordProgramCall(progName, args);
 
+    console.log(missingArgs);
+
     if (missingArgs.length > 0) return missingArgs;
 
     if (!this._recordingMode) {
