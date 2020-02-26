@@ -46,7 +46,7 @@ $(function() {
     if (name === 'VZ') {
       $('#stock_price').text('$57.00');
     }
-
+    
   }
 
   $('#button_simple').on('click', function(e) {
