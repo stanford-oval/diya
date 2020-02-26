@@ -9,18 +9,15 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/annyang/2.6.0/annyang.min.js"></script>
+<script src="/js/bundle/frontend.js"></script>
 <!-- <script src="https://cdn.jsdelivr.net/npm/@simonwep/selection-js/dist/selection.min.js"></script> -->
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
 
 </head>
 
 <body>
 
-
-
-
     <div class="container">
-
 
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
       <a class="navbar-brand" href="#">Nightmare</a>
@@ -41,11 +38,11 @@
           </li>
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              Loops
+              for Eachs
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-              <a class="dropdown-item" href="#">Action</a>
-              <a class="dropdown-item" href="#">Another action</a>
+              <a class="dropdown-item" href="/for_each_emails">Emails</a>
+              <a class="dropdown-item" href="/for_each_stocks">Stocks</a>
             </div>
           </li>
           <li class="nav-item dropdown">
@@ -53,8 +50,8 @@
               Ifs
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-              <a class="dropdown-item" href="#">Action</a>
-              <a class="dropdown-item" href="#">Another action</a>
+              <a class="dropdown-item" href="/if_stocks">Stocks>
+              <a class="dropdown-item" href="/if_restaurants">Restaurants</a>
             </div>
           </li>
           <li class="nav-item dropdown">
@@ -62,8 +59,8 @@
               Triggers
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-              <a class="dropdown-item" href="#">Action</a>
-              <a class="dropdown-item" href="#">Another action</a>
+              <a class="dropdown-item" href="/trigger_action_restaurants">Restaurants</a>
+              <a class="dropdown-item" href="/trigger_action_stocks">Stocks</a>
             </div>
           </li>
           <li class="nav-item dropdown">
@@ -71,8 +68,8 @@
               Filters
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-              <a class="dropdown-item" href="#">Action</a>
-              <a class="dropdown-item" href="#">Another action</a>
+              <a class="dropdown-item" href="/filter_restaurants">Restaurants</a>
+              <a class="dropdown-item" href="/filter_stocks">Stocks</a>
             </div>
           </li>
           <li class="nav-item dropdown">
@@ -80,92 +77,37 @@
               NLP
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-              <a class="dropdown-item" href="#">Action</a>
-              <a class="dropdown-item" href="#">Another action</a>
+              <a class="dropdown-item" href="/nlp_stocks">Stocks</a>
+              <a class="dropdown-item" href="/nlp_restaurants">Restaurants</a>
             </div>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/other">Other</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/cheatsheet">Cheatsheet</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/state">Apps</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/about">About</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/survey">Survey</a>
+          </li>
         </ul>
-        <form class="form-inline my-2 my-lg-0">
-          <input class="form-control mr-sm-2" type="search" placeholder="speech" aria-label="Search">
+        <!-- <form class="form-inline my-2 my-lg-0"> -->
+          <!-- <input class="form-control mr-sm-2" type="search" placeholder="speech" aria-label="Search"> -->
           <!-- <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button> -->
-        </form>
+        <!-- </form> -->
       </div>
     </nav>
 
-        <div class="row">
-
-            <div class="col-1">
-                <a href="/simple_1">[simple - 1]</a>
-            </div>
-
-            <div class="col-1">
-                <a href="/simple_2">[simple - 2]</a>
-            </div>
-
-            <div class="col-1">
-                <a href="/for_each_emails">[for Each - emails]</a>
-            </div>
-
-            <div class="col-1">
-                <a href="/for_each_stocks">[for Each - stocks]</a>
-            </div>
-
-            <div class="col-1">
-                <a href="/if_stocks">[if - stocks]</a>
-            </div>
-
-            <div class="col-1">
-                <a href="/if_restaurants">[if - resteruants]</a>
-            </div>
-
-            <div class="col-1">
-                <a href="/trigger_action_restaurants">[trigger action restaurants]</a>
-            </div>
-
-            <div class="col-1">
-                <a href="/trigger_action_stocks">[trigger action stocks]</a>
-            </div>
-
-            <div class="col-1">
-                <a href="/filter_restaurants">[filter restaurants]</a>
-            </div>
-
-            <div class="col-1">
-                <a href="/filter_stocks">[filter stocks]</a>
-            </div>
-
-            <div class="col-1">
-                <a href="/nlp_stocks">[nlp stocks]</a>
-            </div>
-
-            <div class="col-1">
-                <a href="/nlp_restaurants">[nlp restaurants]</a>
-            </div>
-
-
-            <div class="col-1">
-                <a href="/other">[other]</a>
-            </div>
-
-            <div class="col-1">
-                <a href="/cheatsheet">[cheatsheet]</a>
-            </div>
-
-            <div class="col-1">
-                <a href="/state">[state]</a>
-            </div>
-
-            <div class="col-1">
-                <a href="/survey">[survey]</a>
-            </div>
-
-            <div class="col-1">
-                <a href="/about">[about]</a>
-            </div>
-
-            <div class="col-4">
-                <div id='transcript'>###</div>
-            </div>
-
+    <div class="row">
+        <div class="col-sm">
+            <div id='transcript'>###</div>
         </div>
-        <hr>
+    </div>
+
+    <hr>
