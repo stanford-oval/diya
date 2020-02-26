@@ -83,10 +83,14 @@ $(function() {
 });
 
 /* Markdown */
+/*
 const markdown = require('markdown').markdown;
 
 const loadScriptMarkdown = () => {
   const scriptContainer = document.getElementById('script-container');
+
+  if (!scriptContainer) return;
+
   const p = `../content/${scriptContainer.getAttribute('data-name')}.txt`;
   const content = require(p); 
   //const content = require('../content/simple1.md'); 
@@ -94,6 +98,7 @@ const loadScriptMarkdown = () => {
 };
 
 loadScriptMarkdown();
+*/
 
 /* State display stuff (i.e. App Store) */
 const axios = require('axios');
