@@ -314,7 +314,10 @@ class RecordingSession {
   }
 
   async _doRunProgram() {
-    await this._engine.createApp(this._builder.finish(), {
+    console.log('RUNNING PROGRAM!!!');
+    const code = this._builder.finish();
+    console.log('CODE (_doRunProgram)', code);
+    await this._engine.createApp(code, {
       description: 'a program created with Nightmare', // there is a bug in thingtalk where we fail to describe certain programs...
     });
   }
@@ -323,9 +326,8 @@ class RecordingSession {
     console.log('_runProgram', progName, args);
     const missingArgs = this._recordProgramCall(progName, args);
 
-    console.log(missingArgs);
-
-    if (missingArgs.length > 0) return missingArgs;
+    if (missingArgs && missingArgs.length > 0) return missingArgs;
+    console.log('missingArgs', missingArgs);
 
     if (!this._recordingMode) {
       await this._doRunProgram();
@@ -360,7 +362,7 @@ class RecordingSession {
     this._recordProgramCall(progName, args, parsedTime);
 
     if (!this._recordingMode) {
-      await this._doRunProgram();Engine.createApp
+      await this._doRunProgram();
     }
   }
 
@@ -417,6 +419,8 @@ class RecordingSession {
       return missingArgs;
     }
 
+    console.log('I"M HERE', decl);
+
     // FIXME we should use an alias here but aliases do not work
     //let in_params = args.map((arg) =>
     //    new Ast.InputParam(null, wordsToVariable(arg, 'v_'), new Ast.Value.VarRef(wordsToVariable(arg, '__t_') + '.text')));
@@ -460,7 +464,7 @@ class RecordingSession {
     }
 
     if (args.length > 0) {
-      console.log(args);
+      console.log('query without time args', args);
       console.log('QUERY WITHOUT TIME!!!');
       let tables = args.map(
         arg => new Ast.Table.VarRef(null, wordsToVariable(arg, 't_'), [], null),
@@ -488,7 +492,7 @@ class RecordingSession {
       this._builder.addQueryAction(query, action);
     } else {
       console.log('CONDITION!!!');
-      console.log(condition);
+      console.log('condition', condition);
       if (condition && condition.value) {
         const { condVar, value, direction } = condition;
         const condTable = new Ast.Table.Filter(
@@ -553,7 +557,7 @@ class RecordingSession {
         return { code: this._builder.finish() };
 
       case 'GOTO':
-        console.log(event);
+        console.log('GOTO', event);
         this._maybeFlushCurrentInput(event);
         this._addPuppeteerAction(event, 'load', [
           new Ast.InputParam(
@@ -730,7 +734,7 @@ router.post('/add-event', (req, res, next) => {
     .then((result = {}) => {
       result.status = 'ok';
       console.log('RESULT!!!!');
-      console.log(result);
+      console.log('result', result);
       res.json(result);
     })
     .catch(next);

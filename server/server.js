@@ -31,6 +31,7 @@ const platform = require('./almond/platform');
 const Config = require('./config');
 
 async function runThingTalk(engine, code) {
+  console.log('*****RUNNING THINGTALK*****');
   const app = await engine.createApp(code, {});
 
   // drain the queue of results from the app
@@ -173,6 +174,8 @@ function initFrontend() {
   });
 
   app.post('/run', (req, res, next) => {
+    console.log('RUN ENDPOINT');
+
     if (!req.body.code) {
       res.status(400).json({ error: 'Missing code', code: 'EINVAL' });
       return;

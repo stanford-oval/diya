@@ -133,6 +133,7 @@ module.exports = class Assistant extends events.EventEmitter {
         return this._api.parse(sentence, target);
     }
     createApp(data) {
+        console.log('CREATING APP');
         return this._api.createApp(data);
     }
     addOutput(out) {

@@ -17,6 +17,7 @@ class PuppeteerSession {
     }
 
     async init() {
+        console.log('PUPPETEER LAUNCH!');
         this._browser = await puppeteer.launch({
             // debugging:
             headless: false,
