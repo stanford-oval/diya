@@ -31,163 +31,169 @@ const platform = require('./almond/platform');
 const Config = require('./config');
 
 async function runThingTalk(engine, code) {
-  console.log('*****RUNNING THINGTALK*****');
-  const app = await engine.createApp(code, {});
+    console.log('*****RUNNING THINGTALK*****');
+    const app = await engine.createApp(code, {});
 
-  // drain the queue of results from the app
-  let results = [];
-  let errors = [];
-  if (!app) return { results, errors };
+    // drain the queue of results from the app
+    let results = [];
+    let errors = [];
+    if (!app) return { results, errors };
 
-  for (;;) {
-    let { item: next, resolve, reject } = await app.mainOutput.next();
+    for (;;) {
+        let { item: next, resolve, reject } = await app.mainOutput.next();
 
-    if (next.isDone) {
-      resolve();
-      break;
+        if (next.isDone) {
+            resolve();
+            break;
+        }
+
+        if (next.isNotification) {
+            try {
+                results.push({
+                    value: next.outputValue,
+                    type: next.outputType,
+                });
+                resolve();
+            } catch (e) {
+                reject(e);
+            }
+        } else if (next.isError) {
+            // If Thingtalk command fails
+            errors.push(next.error);
+            resolve();
+        } else if (next.isQuestion) {
+            let e = new Error('User cancelled');
+            e.code = 'ECANCELLED';
+            reject(e);
+        }
     }
 
-    if (next.isNotification) {
-      try {
-        results.push({ value: next.outputValue, type: next.outputType });
-        resolve();
-      } catch (e) {
-        reject(e);
-      }
-    } else if (next.isError) {  // If Thingtalk command fails
-      errors.push(next.error);
-      resolve();
-    } else if (next.isQuestion) {
-      let e = new Error('User cancelled');
-      e.code = 'ECANCELLED';
-      reject(e);
-    }
-  }
-
-  return { results, errors };
+    return { results, errors };
 }
 
 function initFrontend() {
-  const app = express();
-  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-  app.set('port', port);
+    const app = express();
+    const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+    app.set('port', port);
 
-  app.set('view engine', 'ejs');
+    app.set('view engine', 'ejs');
 
-  app.use(
-    '/css',
-    express.static(path.join(path.dirname(module.filename), 'css')),
-  );
-  app.use(
-    '/js',
-    express.static(path.join(path.dirname(module.filename), 'js')),
-  );
+    app.use(
+        '/css',
+        express.static(path.join(path.dirname(module.filename), 'css')),
+    );
+    app.use(
+        '/js',
+        express.static(path.join(path.dirname(module.filename), 'js')),
+    );
 
-  // logger
-  app.use(morgan('dev'));
-  app.use(bodyParser.urlencoded({ extended: true }));
-  app.use(bodyParser.json());
+    // logger
+    app.use(morgan('dev'));
+    app.use(bodyParser.urlencoded({ extended: true }));
+    app.use(bodyParser.json());
 
-  app.use('/recorder', require('./recorder'));
+    app.use('/recorder', require('./recorder'));
 
-  app.get('/simple_button', (req, res) => {
-    res.render('simple_button');
-  });
-
-  app.get('/simple_text', (req, res) => {
-    res.render('simple_text');
-  });
-
-  app.get('/for_each_emails', (req, res) => {
-    res.render('for_each_emails');
-  });
-
-  app.get('/for_each_stocks', (req, res) => {
-    res.render('for_each_stocks');
-  });
-
-  app.get('/if_stocks', (req, res) => {
-    res.render('if_stocks');
-  });
-
-  app.get('/if_restaurants', (req, res) => {
-    res.render('if_restaurants');
-  });
-
-  app.get('/trigger_action_restaurants', (req, res) => {
-    res.render('trigger_action_restaurants');
-  });
-
-
-  app.get('/trigger_action_stocks', (req, res) => {
-    res.render('trigger_action_stocks');
-  });
-
-  app.get('/filter_restaurants', (req, res) => {
-    res.render('filter_restaurants');
-  });
-
-  app.get('/filter_stocks', (req, res) => {
-    res.render('filter_stocks');
-  });
-
-  app.get('/nlp_stocks', (req, res) => {
-    res.render('nlp_stocks');
-  });
-
-  app.get('/nlp_restaurants', (req, res) => {
-    res.render('nlp_restaurants');
-  });
-
-  app.get('/other', (req, res) => {
-    res.render('other');
-  });
-
-  app.get('/sheets', (req, res) => {
-    res.render(path.join(__dirname + '/sheets.html'));
-  });
-
-  app.get('/about', (req, res) => {
-    res.render('about');
-  });
-
-  app.get('/cheatsheet', (req, res) => {
-    res.render('cheatsheet');
-  });
-
-  app.get('/state', (req, res) => {
-    res.render('state/state');
-  });
-
-  app.get('/survey', (req, res) => {
-    res.render('survey');
-  });
-
-  app.get('/', (req, res) => {
-    res.render('about');
-  });
-
-  app.post('/devices/create', (req, res, next) => {
-    app.engine.devices.addSerialized(req.body).then(d => {
-      res.json({ status: 'ok', data: app.engine.getDeviceInfo(d.uniqueId) });
+    app.get('/simple_button', (req, res) => {
+        res.render('simple_button');
     });
-  });
 
-  app.post('/run', (req, res, next) => {
-    console.log('RUN ENDPOINT');
+    app.get('/simple_text', (req, res) => {
+        res.render('simple_text');
+    });
 
-    if (!req.body.code) {
-      res.status(400).json({ error: 'Missing code', code: 'EINVAL' });
-      return;
-    }
+    app.get('/for_each_emails', (req, res) => {
+        res.render('for_each_emails');
+    });
 
-    runThingTalk(app.engine, req.body.code)
-      .then(result => {
-        res.json({ status: 'ok', data: result });
-      })
-      .catch(next);
+    app.get('/for_each_stocks', (req, res) => {
+        res.render('for_each_stocks');
+    });
 
-    /*const names = req.body.names
+    app.get('/if_stocks', (req, res) => {
+        res.render('if_stocks');
+    });
+
+    app.get('/if_restaurants', (req, res) => {
+        res.render('if_restaurants');
+    });
+
+    app.get('/trigger_action_restaurants', (req, res) => {
+        res.render('trigger_action_restaurants');
+    });
+
+    app.get('/trigger_action_stocks', (req, res) => {
+        res.render('trigger_action_stocks');
+    });
+
+    app.get('/filter_restaurants', (req, res) => {
+        res.render('filter_restaurants');
+    });
+
+    app.get('/filter_stocks', (req, res) => {
+        res.render('filter_stocks');
+    });
+
+    app.get('/nlp_stocks', (req, res) => {
+        res.render('nlp_stocks');
+    });
+
+    app.get('/nlp_restaurants', (req, res) => {
+        res.render('nlp_restaurants');
+    });
+
+    app.get('/other', (req, res) => {
+        res.render('other');
+    });
+
+    app.get('/sheets', (req, res) => {
+        res.render(path.join(__dirname + '/sheets.html'));
+    });
+
+    app.get('/about', (req, res) => {
+        res.render('about');
+    });
+
+    app.get('/cheatsheet', (req, res) => {
+        res.render('cheatsheet');
+    });
+
+    app.get('/state', (req, res) => {
+        res.render('state/state');
+    });
+
+    app.get('/survey', (req, res) => {
+        res.render('survey');
+    });
+
+    app.get('/', (req, res) => {
+        res.render('about');
+    });
+
+    app.post('/devices/create', (req, res, next) => {
+        app.engine.devices.addSerialized(req.body).then(d => {
+            res.json({
+                status: 'ok',
+                data: app.engine.getDeviceInfo(d.uniqueId),
+            });
+        });
+    });
+
+    app.post('/run', (req, res, next) => {
+        console.log('RUN ENDPOINT');
+
+        if (!req.body.code) {
+            res.status(400).json({ error: 'Missing code', code: 'EINVAL' });
+            return;
+        }
+
+        runThingTalk(app.engine, req.body.code)
+            .then(result => {
+                res.json({ status: 'ok', data: result });
+            })
+            .catch(next);
+
+        /*const names = req.body.names
         // const code = req.body.code
 
 	    code = `
@@ -225,81 +231,81 @@ function initFrontend() {
 	    // res.send('run response')
 	    // res.send(req.query)
 	    */
-  });
+    });
 
-  // app.all('/get_thingtalk', urlencodedparser, function (req, res){
-  // 	command = req.body.command
-  // 	log_command(command)
-  // 	$.ajax({
-  // 		url: "https://nlp-staging.almond.stanford.edu/@demo.css.models/en-US/query?q="+command,
-  // 		// url: "https://almond-dev.stanford.edu/nnparser/en-US/query?q="+command,
-  // 		type: "GET",
-  // 		success: function(response){
-  // 			// console.log(response['candidates'][0])
-  // 			res.send(response)
-  // 			return
-  // 		},
-  // 		error: function(response){
-  // 			console.log("error")
-  // 			res.send(response)
-  // 			return
-  // 		}
-  // 	});
-  // });
+    // app.all('/get_thingtalk', urlencodedparser, function (req, res){
+    // 	command = req.body.command
+    // 	log_command(command)
+    // 	$.ajax({
+    // 		url: "https://nlp-staging.almond.stanford.edu/@demo.css.models/en-US/query?q="+command,
+    // 		// url: "https://almond-dev.stanford.edu/nnparser/en-US/query?q="+command,
+    // 		type: "GET",
+    // 		success: function(response){
+    // 			// console.log(response['candidates'][0])
+    // 			res.send(response)
+    // 			return
+    // 		},
+    // 		error: function(response){
+    // 			console.log("error")
+    // 			res.send(response)
+    // 			return
+    // 		}
+    // 	});
+    // });
 
-  return app;
+    return app;
 }
 
 async function main() {
-  let stopped = false;
-  let running = false;
-  let engine, frontend, ad;
+    let stopped = false;
+    let running = false;
+    let engine, frontend, ad;
 
-  function handleStop() {
-    if (running) engine.stop();
-    else stopped = true;
-  }
-
-  process.on('SIGINT', handleStop);
-  process.on('SIGTERM', handleStop);
-
-  engine = new Engine(platform, { thingpediaUrl: Config.THINGPEDIA_URL });
-  frontend = initFrontend();
-  frontend.engine = engine;
-
-  ad = new AssistantDispatcher(engine);
-  platform.setAssistant(ad);
-  await engine.open();
-
-  frontend.listen(frontend.get('port'), () => {
-    console.log(
-      'Nightmare server listening on port 3000! Go to http://localhost:3000/',
-    );
-  });
-
-  try {
-    try {
-      console.log('Ready');
-      if (!stopped) {
-        running = true;
-        await ad.startConversation();
-        await engine.run();
-      }
-    } finally {
-      try {
-        await engine.close();
-      } catch (error) {
-        console.log('Exception during stop: ' + error.message);
-        console.log(error.stack);
-      }
+    function handleStop() {
+        if (running) engine.stop();
+        else stopped = true;
     }
-  } catch (error) {
-    console.error('Uncaught exception: ' + error.message);
-    console.error(error.stack);
-  } finally {
-    console.log('Cleaning up');
-    platform.exit();
-  }
+
+    process.on('SIGINT', handleStop);
+    process.on('SIGTERM', handleStop);
+
+    engine = new Engine(platform, { thingpediaUrl: Config.THINGPEDIA_URL });
+    frontend = initFrontend();
+    frontend.engine = engine;
+
+    ad = new AssistantDispatcher(engine);
+    platform.setAssistant(ad);
+    await engine.open();
+
+    frontend.listen(frontend.get('port'), () => {
+        console.log(
+            'Nightmare server listening on port 3000! Go to http://localhost:3000/',
+        );
+    });
+
+    try {
+        try {
+            console.log('Ready');
+            if (!stopped) {
+                running = true;
+                await ad.startConversation();
+                await engine.run();
+            }
+        } finally {
+            try {
+                await engine.close();
+            } catch (error) {
+                console.log('Exception during stop: ' + error.message);
+                console.log(error.stack);
+            }
+        }
+    } catch (error) {
+        console.error('Uncaught exception: ' + error.message);
+        console.error(error.stack);
+    } finally {
+        console.log('Cleaning up');
+        platform.exit();
+    }
 }
 
 main();
