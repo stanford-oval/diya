@@ -317,9 +317,43 @@ class RecordingSession {
     console.log('RUNNING PROGRAM!!!');
     const code = this._builder.finish();
     console.log('CODE (_doRunProgram)', code);
-    await this._engine.createApp(code, {
+    const app = await this._engine.createApp(code, {
       description: 'a program created with Nightmare', // there is a bug in thingtalk where we fail to describe certain programs...
     });
+
+    let results = [];
+    let errors = [];
+    if (!app) return { results, errors };
+
+    for (;;) {
+      let { item: next, resolve, reject } = await app.mainOutput.next();
+
+      if (next.isDone) {
+        resolve();
+        break;
+      }
+
+      if (next.isNotification) {
+        try {
+          results.push({ value: next.outputValue, type: next.outputType });
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      } else if (next.isError) {  // If Thingtalk command fails
+        errors.push(next.error);
+        resolve();
+      } else if (next.isQuestion) {
+        let e = new Error('User cancelled');
+        e.code = 'ECANCELLED';
+        reject(e);
+      }
+    }
+
+    if (errors.length > 0)
+      console.error(errors);
+
+    return { results, errors };
   }
 
   async _runProgram(progName, args) {
