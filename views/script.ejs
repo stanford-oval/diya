@@ -52,18 +52,16 @@
             **Say:** “Run coffee at [current time + 1 minute]”\t
         `.trim(),
         'filter_stocks': `
-            **Action:** [Triple click on stock symbol “AAPL”]\t
-            **Say:** “this is a stock”\t
-            **Action:** [Select price next to “AAPL”]\t
-            **Say:** “This is a price”\t
-            **Say:** “Show me stocks that have a price greater than 300.”\t
+            **Action:** [Highlight stocks listed in table.]\t
+            **Say:** “this table contains stocks”\t
+            **Say:** “Show me stocks with price greater than 1,000”\t
+            **Say:** “Show me stocks with price less than 1,000”\t
         `.trim(),
         'filter_restaurants': `\t
-            **Action:** [Triple click on restaurant name “French Laundry”]\t
-            **Say:** “this is a restaurant”\t
-            **Action:** [Select review rating next to “French Laundry”]\t
-            **Say:** “This is a rating”\t
-            **Say:** “Show me restaurants that have a rating greater than 3.”\t
+            **Action:** [Highlight restaurants listed in table.]\t
+            **Say:** “this table contains restaurants”\t
+            **Say:** “Show me restaurants with rating greater than 3”\t
+            **Say:** “Show me restaurants with rating equal to 2.9”\t
         `.trim(),
         'nlp_stocks': `
             **Say:** “start recording”\t

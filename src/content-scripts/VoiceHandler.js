@@ -38,6 +38,7 @@ export default class VoiceHandler {
     this._selection = null;
     this._selectedElements = new Set();
     this._programNameCurrent = "";
+    this._namedTables = {};
 
     this._eventLog = [];
   }
@@ -191,6 +192,12 @@ export default class VoiceHandler {
       'stop selection': this.selectStop.bind(this),
       'stop select': this.selectStop.bind(this),
       'end selection': this.selectStop.bind(this),
+
+      // Table
+      'this table contains :table_name': this.selectTable.bind(this),
+      'show me :table_name with :var_name greater than :value': this.filterGreaterThanTable.bind(this),
+      'show me :table_name with :var_name less than :value': this.filterLessThanTable.bind(this),
+      'show me :table_name with :var_name equal to :value': this.filterEqualsTable.bind(this),
     };
 
     annyang.addCommands(commands);
@@ -380,6 +387,55 @@ export default class VoiceHandler {
       args: args,
       time: time,
     });
+  }
+
+  selectTable(tableName) {
+    // Get table from selection
+    this._namedTables[tableName] = window.getSelection().anchorNode.parentNode.parentNode.parentNode.parentNode;
+  }
+
+  filterTable(tableName, varName, value, comparisonFunc) {
+    const table = this._namedTables[tableName];
+    const headers = table.children[0].children[0].children;
+    const rows = table.children[0].children;
+    value = parseFloat(value);
+
+    console.log('varName', varName);
+    console.log('value', value);
+    console.log('headers', headers);
+    console.log('rows', rows);
+
+    // Get index of filtered column
+    let colIndex;
+    for (let i=0; i < headers.length; i++) {
+      if (headers[i].textContent.toLowerCase() === varName) {
+        colIndex = i;
+        break;
+      }
+    }
+    console.log('colIndex', colIndex);
+    
+    // filter rows (ignoring header)
+    for (let i=1; i < rows.length; i++) {
+      const row = rows[i];
+      row.style.border = null;
+      const rowVal = parseFloat(row.children[colIndex].textContent);
+      if (comparisonFunc(rowVal, value)) {
+        row.style.border = '1px solid red';
+      }
+    }
+  }
+
+  filterGreaterThanTable(tableName, varName, value) {
+    this.filterTable(tableName, varName, value, (a, b) => a > b);
+  }
+
+  filterLessThanTable(tableName, varName, value) {
+    this.filterTable(tableName, varName, value, (a, b) => a < b);
+  }
+
+  filterEqualsTable(tableName, varName, value) {
+    this.filterTable(tableName, varName, value, (a, b) => a === b);
   }
 
   tagVariable(varName) {
