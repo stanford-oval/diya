@@ -148,6 +148,7 @@ function wordsToVariable(words, prefix = '') {
 class RecordingSession {
     constructor(engine) {
         this._builder = new ProgramBuilder();
+        console.log('BUILDER!!!', this._builder);
 
         this._engine = engine;
         this._platform = engine.platform;
@@ -319,7 +320,7 @@ class RecordingSession {
         const code = this._builder.finish();
         console.log('CODE (_doRunProgram)', code);
         const app = await this._engine.createApp(code, {
-            description: 'a program created with Nightmare', // there is a bug in thingtalk where we fail to describe certain programs...
+            description: 'this is a thingtalk program', // there is a bug in thingtalk where we fail to describe certain programs...
         });
 
         let results = [];
@@ -328,6 +329,7 @@ class RecordingSession {
 
         for (;;) {
             let { item: next, resolve, reject } = await app.mainOutput.next();
+            console.log(String(next));
 
             if (next.isDone) {
                 resolve();
@@ -356,6 +358,9 @@ class RecordingSession {
         }
 
         if (errors.length > 0) console.error(errors);
+
+        console.log('doRunProgram Error!!!', errors);
+        console.log('doRunProgram Results!!!', results);
 
         return { results, errors };
     }
@@ -523,7 +528,7 @@ class RecordingSession {
                     ),
             );
 
-            if (condition.value) {
+            if (condition && condition.value) {
                 const { condVar, value, direction } = condition;
                 const condTable = new Ast.Table.Filter(
                     null,

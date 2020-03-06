@@ -468,8 +468,7 @@ export default class VoiceHandler {
 
   _tagVariableForSelection(varName) {
     const selector = this._getMultiSelector(this._selectedElements);
-
-    this._sendMessage({
+    const msg = {
       selector: selector,
       value: null,
       tagName: null,
@@ -479,7 +478,10 @@ export default class VoiceHandler {
       varName: varName,
       keyCode: null,
       href: null,
-    });
+    };
+    console.log('Selection message', msg);
+
+    this._sendMessage(msg);
   }
 
   _tagVariableForInput(varName) {

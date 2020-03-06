@@ -74,14 +74,19 @@ class PuppeteerSession {
     }
 }
 
-module.exports = class PuppeeterDevice extends Tp.BaseDevice {
+module.exports = class PuppeteerDevice extends Tp.BaseDevice {
     constructor(engine, state) {
         super(engine, state);
 
         this._sessions = new Map;
+
+
+        console.log('created puppeteer device');
     }
 
     async _getSession(env) {
+        console.log('puppeteer getSession');
+
         const appId = env.app.uniqueId;
         let session = this._sessions.get(appId);
         if (session)
@@ -109,6 +114,7 @@ module.exports = class PuppeeterDevice extends Tp.BaseDevice {
     }
 
     async do_load({ url }, env) {
+        console.log('do_load');
         return (await this._getSession(env)).load(String(url));
     }
 
