@@ -391,13 +391,16 @@ export default class VoiceHandler {
 
   selectTable(tableName) {
     // Get table from selection
-    this._namedTables[tableName] = window.getSelection().anchorNode.parentNode.parentNode.parentNode.parentNode;
+    const firstElem = this._selectedElements.values().next().value;
+    this._namedTables[tableName] = firstElem.parentNode.parentNode.parentNode;
   }
 
   filterTable(tableName, varName, value, comparisonFunc) {
     const table = this._namedTables[tableName];
-    const headers = table.children[0].children[0].children;
-    const rows = table.children[0].children;
+    const header = table.children[0].children[0];
+    const headers = header.children;
+    const rowParent = table.children[0];
+    const rows = rowParent.children;
     value = parseFloat(value);
 
     console.log('varName', varName);
@@ -422,6 +425,13 @@ export default class VoiceHandler {
       const rowVal = parseFloat(row.children[colIndex].textContent);
       if (comparisonFunc(rowVal, value)) {
         row.style.border = '1px solid red';
+
+        // Reorder row by cloning to be at top
+        const newRow = row.cloneNode(true);
+        header.after(newRow);
+
+        // delete old row
+        row.remove();
       }
     }
   }
