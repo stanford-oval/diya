@@ -164,14 +164,16 @@ export default class VoiceHandler {
       // Conditionals
       'call :prog_name if :var_name is at least :value': this.runProgramIfAtLeast.bind(this),
       'run :prog_name if :var_name is at least :value': this.runProgramIfAtLeast.bind(this),
+      'call :prog_name if :var_name more than :value': this.runProgramIfAtLeast.bind(this),
+      'run :prog_name if :var_name more than :value': this.runProgramIfAtLeast.bind(this),
+      'call :prog_name if :var_name is greater than :value': this.runProgramIfAtLeast.bind(this),
+      'run :prog_name if :var_name is greater than :value': this.runProgramIfAtLeast.bind(this),
       'call :prog_name if :var_name equals :value': this.runProgramIfEqual.bind(this),
       'run :prog_name if :var_name equals :value': this.runProgramIfEqual.bind(this),
       'call :prog_name if :var_name is at most :value': this.runProgramIfAtMost.bind(this),
       'run :prog_name if :var_name is at most :value': this.runProgramIfAtMost.bind(this),
-      'call :prog_name if :var_name more than :value': this.runProgramIfAtMost.bind(this),
-      'run :prog_name if :var_name more than :value': this.runProgramIfAtMost.bind(this),
-      'call :prog_name if :var_name greater than :value': this.runProgramIfAtMost.bind(this),
-      'run :prog_name if :var_name greater than :value': this.runProgramIfAtMost.bind(this),
+      'call :prog_name if :var_name is less than :value': this.runProgramIfAtMost.bind(this),
+      'run :prog_name if :var_name is less than :value': this.runProgramIfAtMost.bind(this),
 
       'watch this': this.recordingStart.bind(this),
       'start recording': this.recordingStart.bind(this),
@@ -281,6 +283,7 @@ export default class VoiceHandler {
   }
 
   _sendMessage(msg) {
+    /*
     // ensure the server is initialized for the current page
     window.eventRecorder.sendCurrentUrl();
 
@@ -295,6 +298,7 @@ export default class VoiceHandler {
     } catch (err) {
       console.error('caught error', err);
     }
+    */
   }
 
   gestureRecognizer(trail) {
@@ -323,8 +327,7 @@ export default class VoiceHandler {
   }
 
   nameProgram(progName) {
-    this._speak("I have named this program " + progName)
-    this._speak("Would you like to run " + progName + "?")
+    this._speak(`I have named this program ${progName}. Would you like to run ${progName}?`);
     this._programNameCurrent = progName
 
     this._sendMessage({
@@ -334,6 +337,7 @@ export default class VoiceHandler {
   }
 
   runProgram(progName, ...args) {
+    this._speak(`Running ${progName}.`);
     console.log('run');
     this._sendMessage({
       action: 'RUN_PROGRAM',
@@ -362,6 +366,8 @@ export default class VoiceHandler {
     const value = args.pop();
     const condVar = args.pop(); // variable being conditioned on
 
+    this._speak(`Running ${progName} if ${condVar} ${direction[0]} ${value}`);
+
     console.log('DETECTING CONDITIONAL RUN!!!');
 
     this._sendMessage({
@@ -381,6 +387,8 @@ export default class VoiceHandler {
 
     const time = args.pop();
 
+    this._speak(`Running ${progName} at ${time}.`);
+
     this._sendMessage({
       action: 'SCHEDULE_PROGRAM',
       varName: progName,
@@ -390,12 +398,15 @@ export default class VoiceHandler {
   }
 
   selectTable(tableName) {
+    this._speak('Stored table.');
+
     // Get table from selection
     const firstElem = this._selectedElements.values().next().value;
     this._namedTables[tableName] = firstElem.parentNode.parentNode.parentNode;
   }
 
   filterTable(tableName, varName, value, comparisonFunc) {
+    this._speak('Here are your filtered results.');
     const table = this._namedTables[tableName];
     const header = table.children[0].children[0];
     const headers = header.children;
@@ -449,6 +460,7 @@ export default class VoiceHandler {
   }
 
   tagVariable(varName) {
+    this._speak('I have stored that variable.');
     if (
       this._current_click &&
       ['TEXTAREA', 'INPUT'].includes(this._current_click.target.tagName)

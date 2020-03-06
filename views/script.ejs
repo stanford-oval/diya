@@ -8,10 +8,14 @@
             **Action:** [Triple click “PINS”] \t
             **Say:** “This is a symbol.” \t
             **Action:** [press tab] \t
+            **Action:** [click search] \t
+            **Action:** [press tab] \t
             **Action:** [click buy] \t
             **Say:** “stop recording” \t
             **Say:** “Name this program purchase” \t
+            **Say:** "Start selection" \t
             **Action:** [Select stocks on left side] \t
+            **Say:** "Stop selection" \t
             **Say:** “This is a stock” \t
             **Say:** “Run purchase with stock”
         `.trim(),
@@ -25,16 +29,20 @@
             **Action:** [click buy]\t
             **Say:** “stop recording”\t
             **Say:** “Name this program purchase”\t
+            **Say:** "Start selection" \t
             **Action:** [Select price.]\t
+            **Say:** "Stop selection" \t
             **Say:** “This is a price”\t
-            **Say:** “Run purchase if is less than 2000”\t
+            **Say:** “Run purchase if price is less than 2000”\t
         `.trim(),
         'if_restaurants': `
             **Say:** “start recording”\t
-            **Action:** Click “Reserve” next to “French Laundry”\t
+            **Action:** Click “Reserve” next to “Italian Pizza”\t
             **Say:** “stop recording”\t
             **Say:** “name this program reserve”\t
-            **Action:** [Select review rating next to “French Laundry”]\t
+            **Say:** "Start selection" \t
+            **Action:** [Select review rating next to “Italian Pizza”]\t
+            **Say:** "Stop selection" \t
             **Say:** “This is a rating”\t
             **Say:** “Run reserve if rating is greater than 3.”\t
         `.trim(),
@@ -44,14 +52,14 @@
             **Action:** [Click “Buy”]\t
             **Say:** “stop recording”\t
             **Say:** “name this program purchase”\t
-            **Say:** “Run purchase at [current time + 1 minute]”\t
+            **Say:** “Run purchase at 7:20 a.m.”\t
         `.trim(),
         'trigger_restaurants': `
             **Say:** “start recording”\t
             **Action:** [Click “Reserve” next to “CoHo”]\t
             **Say:** “stop recording”\t
             **Say:** “name this program coffee”\t
-            **Say:** “Run coffee at [current time + 1 minute]”\t
+            **Say:** “Run coffee at 1:35 p.m.”\t
         `.trim(),
         'filter_stocks': `
             **Say:** Start selection\t
