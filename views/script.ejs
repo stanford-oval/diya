@@ -12,8 +12,8 @@
             **Say:** “stop recording” \t
             **Say:** “Name this program purchase” \t
             **Action:** [Select stocks on left side] \t
-            **Say:** “These are stocks” \t
-            **Say:** “Run purchase with stocks”
+            **Say:** “This is a stock” \t
+            **Say:** “Run purchase with stock”
         `.trim(),
         'if_stocks': `
             **Say:** “start recording”\t
@@ -21,6 +21,7 @@
             **Action:** [Triple click “AMZN”]\t
             **Say:** “This is a symbol.”\t
             **Action:** [press tab]\t
+            **Action:** [click search]\t
             **Action:** [click buy]\t
             **Say:** “stop recording”\t
             **Say:** “Name this program purchase”\t
@@ -30,7 +31,7 @@
         `.trim(),
         'if_restaurants': `
             **Say:** “start recording”\t
-            **Action:** Click “reserve” next to “French Laundry”\t
+            **Action:** Click “Reserve” next to “French Laundry”\t
             **Say:** “stop recording”\t
             **Say:** “name this program reserve”\t
             **Action:** [Select review rating next to “French Laundry”]\t
@@ -39,14 +40,15 @@
         `.trim(),
         'trigger_stocks': `
             **Say:** “start recording”\t
-            **Action:** [Click “buy”]\t
+            **Action:** [Click “Search”]\t
+            **Action:** [Click “Buy”]\t
             **Say:** “stop recording”\t
             **Say:** “name this program purchase”\t
             **Say:** “Run purchase at [current time + 1 minute]”\t
         `.trim(),
         'trigger_restaurants': `
             **Say:** “start recording”\t
-            **Action:** [Click “reserve” next to “CoHo”]\t
+            **Action:** [Click “Reserve” next to “CoHo”]\t
             **Say:** “stop recording”\t
             **Say:** “name this program coffee”\t
             **Say:** “Run coffee at [current time + 1 minute]”\t
