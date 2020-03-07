@@ -37,6 +37,7 @@
     "bufferutil": "^4.0.1",
     "crx-hotreload": "^1.0.4",
     "date-fns": "^2.9.0",
+    "easytimer.js": "^4.1.1",
     "ejs": "^3.0.1",
     "events": "^3.0.0",
     "jquery": "^3.4.1",

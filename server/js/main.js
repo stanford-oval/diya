@@ -153,3 +153,11 @@ const updateProcedures = async () => {
 };
 
 updateProcedures();
+
+/* Digital Timer */
+const { Timer } = require('easytimer.js');
+const timer = new Timer();
+timer.start();
+timer.addEventListener('secondsUpdated', _ => {
+  document.getElementById('timer').innerHTML = timer.getTimeValues().toString();
+});
