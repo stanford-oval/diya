@@ -5,9 +5,12 @@
   "description": "A Chrome extension for recording browser interaction and generating Puppeteer scripts",
   "permissions": [
     "http://localhost:3000/*",
+    "http://localhost:5000/*",
     "http://127.0.0.1:3000/*",
     "http://127.0.0.1:3000/*/*",
     "http://voiceassistantturk.herokuapp.com//**/*",
+    "https://voiceassistantturk.herokuapp.com/*",
+    "https://voiceassistantturk.herokuapp.com/*/*",
     "storage",
     "webNavigation",
     "tabs",
@@ -42,7 +45,11 @@
   },
   "content_scripts": [
     {
-      "matches": ["http://localhost:3000/*", "http://127.0.0.1:3000/*", "http://voiceassistantturk.herokuapp.com/*"],
+      "matches": [
+        "http://localhost:5000/*",
+        "http://localhost:3000/*",
+        "http://127.0.0.1:3000/*",
+        "https://voiceassistantturk.herokuapp.com/*"],
       "js": ["content-script.js"]
     }
   ],
