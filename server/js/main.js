@@ -101,6 +101,7 @@ loadScriptMarkdown();
 */
 
 /* State display stuff (i.e. App Store) */
+/*
 const axios = require('axios');
 
 const getProcedures = async () => {
@@ -153,4 +154,5 @@ const updateProcedures = async () => {
 };
 
 updateProcedures();
+*/
 
