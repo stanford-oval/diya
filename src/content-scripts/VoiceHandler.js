@@ -23,6 +23,7 @@
 import annyang from 'annyang';
 import finder from '@medv/finder';
 import actions from '../models/extension-ui-actions';
+import { Timer } from 'easytimer.js';
 
 export default class VoiceHandler {
   constructor() {
@@ -250,6 +251,12 @@ export default class VoiceHandler {
     this._speak("Recording started.  Do the actions you would like me to record.")
     this._sendMessage({
       action: actions.START,
+    });
+    /* Digital Timer */
+    const timer = new Timer();
+    timer.start();
+    timer.addEventListener('secondsUpdated', _ => {
+      document.getElementById('timer').innerHTML = timer.getTimeValues().toString();
     });
   }
 
