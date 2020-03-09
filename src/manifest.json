@@ -1,21 +1,18 @@
 {
   "name": "Nightmare Recorder",
-  "version": "0.7.1",
+  "version": "1.0.1",
   "manifest_version": 2,
-  "description": "A Chrome extension for recording browser interaction and generating Puppeteer scripts",
+  "description": "A Chrome extension for automating tasks in the browser.",
   "permissions": [
     "http://localhost:3000/*",
     "http://localhost:5000/*",
     "http://127.0.0.1:3000/*",
     "http://127.0.0.1:3000/*/*",
-    "http://voiceassistantturk.herokuapp.com//**/*",
     "https://voiceassistantturk.herokuapp.com/*",
     "https://voiceassistantturk.herokuapp.com/*/*",
     "storage",
-    "webNavigation",
-    "tabs",
-    "contextMenus",
-    "tts"
+    "activeTab",
+    "contextMenus"
   ],
   "icons" : {
     "16": "images/app_icon_16.png",

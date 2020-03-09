@@ -40,7 +40,7 @@ export default class VoiceHandler {
     this._selectedElements = new Set();
     this._programNameCurrent = "";
     this._namedTables = {};
-
+    this.timer = "";
     this._eventLog = [];
   }
 
@@ -253,10 +253,10 @@ export default class VoiceHandler {
       action: actions.START,
     });
     /* Digital Timer */
-    const timer = new Timer();
-    timer.start();
-    timer.addEventListener('secondsUpdated', _ => {
-      document.getElementById('timer').innerHTML = timer.getTimeValues().toString();
+    this.timer = new Timer();
+    this.timer.start();
+    this.timer.addEventListener('secondsUpdated', _ => {
+      document.getElementById('timer').innerHTML = this.timer.getTimeValues().toString();
     });
   }
 
@@ -264,6 +264,7 @@ export default class VoiceHandler {
     this._sendMessage({
       action: actions.STOP,
     });
+    this.timer.stop()
   }
 
   selectStart() {
