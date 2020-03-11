@@ -29,273 +29,324 @@ import { Timer } from 'easytimer.js';
 const serverUrl = 'http://localhost:3000';
 
 export default class VoiceHandler {
-  constructor() {
-    this._mouse_x_current = 0;
-    this._mouse_y_current = 0;
-    this._mouse_x_start = 0;
-    this._mouse_y_start = 0;
-    this._mouse_x_stop = 0;
-    this._mouse_y_stop = 0;
-    this._delta_x = 0;
-    this._delta_y = 0;
-    this._current_click = null;
-    this._selection = null;
-    this._selectedElements = new Set();
-    this._programNameCurrent = "";
-    this._namedTables = {};
-    this.timer = "";
-    this._eventLog = [];
-  }
+    constructor() {
+        this._mouse_x_current = 0;
+        this._mouse_y_current = 0;
+        this._mouse_x_start = 0;
+        this._mouse_y_start = 0;
+        this._mouse_x_stop = 0;
+        this._mouse_y_stop = 0;
+        this._delta_x = 0;
+        this._delta_y = 0;
+        this._current_click = null;
+        this._selection = null;
+        this._selectedElements = new Set();
+        this._programNameCurrent = '';
+        this._namedTables = {};
+        this.timer = '';
+        this._eventLog = [];
+    }
 
-  start() {
+    start() {
+        var port = chrome.runtime.connect();
+        port.postMessage({ joke: 'Knock knock' });
+        port.onMessage.addListener(msg => {
+            if (msg.action == 'STOP_RECORDING') {
+                this._speak('what would you like to name this program?');
+            }
+            if (msg.action == 'paramsMissing') {
+                const input = msg.paramsMissing;
+                const last = input.pop();
+                const result = input.join(', ') + ' and ' + last;
 
-    var port = chrome.runtime.connect();
-    port.postMessage({joke: "Knock knock"});
-    port.onMessage.addListener((msg) => {
-      if (msg.action == "STOP_RECORDING"){
-        this._speak("what would you like to name this program?")
-      }
-      if (msg.action == "paramsMissing"){
-        const input = msg.paramsMissing;
-        const last = input.pop();
-        const result = input.join(', ') + ' and ' + last;
+                this._speak('Please select the ' + result);
+                this.selectStart();
+            }
+        });
 
-        this._speak("Please select the " + result)
-        this.selectStart()
-      }
-    })
+        // var port2 = chrome.extension.connect({ name: 'recordControls' })
+        // port2.onMessage.addListener((msg) => {
+        //   if (msg.action == "paramsUpdated"){
+        //     console.log("missing parsms")
+        //   }
+        // })
 
-    // var port2 = chrome.extension.connect({ name: 'recordControls' })
-    // port2.onMessage.addListener((msg) => {
-    //   if (msg.action == "paramsUpdated"){
-    //     console.log("missing parsms")
-    //   }
-    // })
+        this._selection = Selection.create({
+            // Class for the selection-area
+            class: 'selection',
 
+            // All elements in this container can be selected
+            // selectables: ['div'],
+            selectables: ['.box-wrap > div', 'li', 'td', 'a'],
 
+            // The container is also the boundary in this case
+            // boundaries: ['.box-wrap']
+        })
+            .on('start', ({ inst, selected, oe }) => {
+                // Remove class if the user isn't pressing the control key or ⌘ key
+                if (!oe.ctrlKey && !oe.metaKey) {
+                    // Clear previous selection
+                    for (let el of this._selectedElements) {
+                        el.classList.remove('selected');
+                    }
+                    this._selectedElements.clear();
+                    inst.clearSelection();
+                }
+            })
+            .on('move', event => {
+                // {changed: {removed, added}}
 
-    this._selection = Selection.create({
-      // Class for the selection-area
-      class: 'selection',
+                let removed = event.changed.removed;
+                let added = event.changed.added;
 
-      // All elements in this container can be selected
-      // selectables: ['div'],
-      selectables: ['.box-wrap > div', 'li', 'td', 'a'],
+                // Add a custom class to the elements that where selected.
+                for (const el of added) {
+                    this._selectedElements.add(el);
+                    el.classList.add('selected');
+                }
 
-      // The container is also the boundary in this case
-      // boundaries: ['.box-wrap']
-    })
-      .on('start', ({ inst, selected, oe }) => {
-        // Remove class if the user isn't pressing the control key or ⌘ key
-        if (!oe.ctrlKey && !oe.metaKey) {
-          // Clear previous selection
-          for (let el of this._selectedElements) {
-            el.classList.remove('selected');
-          }
-          this._selectedElements.clear();
-          inst.clearSelection();
-        }
-      })
-      .on('move', event => {
-        // {changed: {removed, added}}
+                // Remove the class from elements that where removed
+                // since the last selection
+                for (const el of removed) {
+                    this._selectedElements.remove(el);
+                    el.classList.remove('selected');
+                }
+            })
+            .on('stop', ({ inst }) => {
+                // Remember selection in case the user wants to add smth in the next one
+                inst.keepSelection();
 
-        let removed = event.changed.removed;
-        let added = event.changed.added;
+                // console.log(this._selection.option('class'))
+                // console.log(this._selection.option('class', 'selection_2'))
+            });
+        this._selection.disable();
 
-        // Add a custom class to the elements that where selected.
-        for (const el of added) {
-          this._selectedElements.add(el);
-          el.classList.add('selected');
-        }
+        document.addEventListener('keyup', event => {
+            if (event.key === 'Escape') {
+                // escape key maps to keycode `27`
+                this.selectClear();
+            }
+        });
 
-        // Remove the class from elements that where removed
-        // since the last selection
-        for (const el of removed) {
-          this._selectedElements.remove(el);
-          el.classList.remove('selected');
-        }
-      })
-      .on('stop', ({ inst }) => {
-        // Remember selection in case the user wants to add smth in the next one
-        inst.keepSelection();
+        // always track mouse position
+        document.addEventListener('mousemove', event => {
+            this._mouse_x = event.pageX;
+            this._mouse_y = event.pageY;
+        });
+        document.body.addEventListener('click', event => {
+            this._current_click = event;
+        });
 
-        // console.log(this._selection.option('class'))
-        // console.log(this._selection.option('class', 'selection_2'))
-      });
-    this._selection.disable();
+        const commands = {
+            'this is a *var_name': this.tagVariable.bind(this),
+            'this is an *var_name': this.tagVariable.bind(this),
+            'these are *var_name': this.tagVariable.bind(this),
+            'this variable is a *var_name': this.tagVariable.bind(this),
 
+            'call this program :var_name': this.nameProgram.bind(this),
+            'call this command :var_name': this.nameProgram.bind(this),
+            'name this command :var_name': this.nameProgram.bind(this),
+            'name this program :var_name': this.nameProgram.bind(this),
+            'this program is :var_name': this.nameProgram.bind(this),
+            'this program is called :var_name': this.nameProgram.bind(this),
+            'this program should be called :var_name': this.nameProgram.bind(
+                this,
+            ),
 
-    document.addEventListener('keyup', event => {
-      if (event.key === 'Escape') {
-        // escape key maps to keycode `27`
-        this.selectClear();
-      }
-    });
+            'call :prog_name with :var_name': this.runProgram.bind(this),
+            'run :prog_name with :var_name': this.runProgram.bind(this),
+            'call :prog_name using :var_name': this.runProgram.bind(this),
+            'run :prog_name using :var_name': this.runProgram.bind(this),
+            'call :prog_name using :v1 and :v2': this.runProgram.bind(this),
+            'call :prog_name with :v1 and :v2': this.runProgram.bind(this),
+            'run :prog_name using :v1 and :v2': this.runProgram.bind(this),
+            'call :prog_name': this.runProgram.bind(this),
+            'run :prog_name': this.runProgram.bind(this),
 
-    // always track mouse position
-    document.addEventListener('mousemove', event => {
-      this._mouse_x = event.pageX;
-      this._mouse_y = event.pageY;
-    });
-    document.body.addEventListener('click', event => {
-      this._current_click = event;
-    });
+            // Conditionals
+            'call :prog_name if :var_name is at least :value': this.runProgramIfAtLeast.bind(
+                this,
+            ),
+            'run :prog_name if :var_name is at least :value': this.runProgramIfAtLeast.bind(
+                this,
+            ),
+            'call :prog_name if :var_name more than :value': this.runProgramIfAtLeast.bind(
+                this,
+            ),
+            'run :prog_name if :var_name more than :value': this.runProgramIfAtLeast.bind(
+                this,
+            ),
+            'call :prog_name if :var_name is greater than :value': this.runProgramIfAtLeast.bind(
+                this,
+            ),
+            'run :prog_name if :var_name is greater than :value': this.runProgramIfAtLeast.bind(
+                this,
+            ),
+            'call :prog_name if :var_name equals :value': this.runProgramIfEqual.bind(
+                this,
+            ),
+            'run :prog_name if :var_name equals :value': this.runProgramIfEqual.bind(
+                this,
+            ),
+            'call :prog_name if :var_name is at most :value': this.runProgramIfAtMost.bind(
+                this,
+            ),
+            'run :prog_name if :var_name is at most :value': this.runProgramIfAtMost.bind(
+                this,
+            ),
+            'call :prog_name if :var_name is less than :value': this.runProgramIfAtMost.bind(
+                this,
+            ),
+            'run :prog_name if :var_name is less than :value': this.runProgramIfAtMost.bind(
+                this,
+            ),
 
-    const commands = {
-      'this is a *var_name': this.tagVariable.bind(this),
-      'this is an *var_name': this.tagVariable.bind(this),
-      'these are *var_name': this.tagVariable.bind(this),
-      'this variable is a *var_name': this.tagVariable.bind(this),
+            'watch this': this.recordingStart.bind(this),
+            'start recording': this.recordingStart.bind(this),
+            'stop recording': this.recordingStop.bind(this),
+            'ok done': this.recordingStop.bind(this),
 
-      'call this program :var_name': this.nameProgram.bind(this),
-      'call this command :var_name': this.nameProgram.bind(this),
-      'name this command :var_name': this.nameProgram.bind(this),
-      'name this program :var_name': this.nameProgram.bind(this),
-      'this program is :var_name': this.nameProgram.bind(this),
-      'this program is called :var_name': this.nameProgram.bind(this),
-      'this program should be called :var_name': this.nameProgram.bind(this),
+            // Run program with scheduling
+            'run :prog_name at *time': this.scheduleProgram.bind(this),
+            'run :prog_name with :var_name at *time': this.scheduleProgram.bind(
+                this,
+            ),
 
-      'call :prog_name with :var_name': this.runProgram.bind(this),
-      'run :prog_name with :var_name': this.runProgram.bind(this),
-      'call :prog_name using :var_name': this.runProgram.bind(this),
-      'run :prog_name using :var_name': this.runProgram.bind(this),
-      'call :prog_name using :v1 and :v2': this.runProgram.bind(this),
-      'call :prog_name with :v1 and :v2': this.runProgram.bind(this),
-      'run :prog_name using :v1 and :v2': this.runProgram.bind(this),
-      'call :prog_name': this.runProgram.bind(this),
-      'run :prog_name': this.runProgram.bind(this),
+            //'from here': this.gestureStart.bind(this),
+            //'to here': this.gestureStop.bind(this),
+            //'more like this': this.selectClass.bind(this),
+            //'clear selected': this.selectClear.bind(this),
+            'begin selection': this.selectStart.bind(this),
+            'start selection': this.selectStart.bind(this),
+            'start select': this.selectStart.bind(this),
+            'stop selection': this.selectStop.bind(this),
+            'stop select': this.selectStop.bind(this),
+            'end selection': this.selectStop.bind(this),
 
-      // Conditionals
-      'call :prog_name if :var_name is at least :value': this.runProgramIfAtLeast.bind(this),
-      'run :prog_name if :var_name is at least :value': this.runProgramIfAtLeast.bind(this),
-      'call :prog_name if :var_name more than :value': this.runProgramIfAtLeast.bind(this),
-      'run :prog_name if :var_name more than :value': this.runProgramIfAtLeast.bind(this),
-      'call :prog_name if :var_name is greater than :value': this.runProgramIfAtLeast.bind(this),
-      'run :prog_name if :var_name is greater than :value': this.runProgramIfAtLeast.bind(this),
-      'call :prog_name if :var_name equals :value': this.runProgramIfEqual.bind(this),
-      'run :prog_name if :var_name equals :value': this.runProgramIfEqual.bind(this),
-      'call :prog_name if :var_name is at most :value': this.runProgramIfAtMost.bind(this),
-      'run :prog_name if :var_name is at most :value': this.runProgramIfAtMost.bind(this),
-      'call :prog_name if :var_name is less than :value': this.runProgramIfAtMost.bind(this),
-      'run :prog_name if :var_name is less than :value': this.runProgramIfAtMost.bind(this),
+            // Table
+            'this table contains :table_name': this.selectTable.bind(this),
+            'show me :table_name with :var_name greater than :value': this.filterGreaterThanTable.bind(
+                this,
+            ),
+            'show me :table_name with :var_name less than :value': this.filterLessThanTable.bind(
+                this,
+            ),
+            'show me :table_name with :var_name equal to :value': this.filterEqualsTable.bind(
+                this,
+            ),
+        };
 
-      'watch this': this.recordingStart.bind(this),
-      'start recording': this.recordingStart.bind(this),
-      'stop recording': this.recordingStop.bind(this),
-      'ok done': this.recordingStop.bind(this),
+        annyang.addCommands(commands);
+        annyang.start();
 
-      // Run program with scheduling
-      'run :prog_name at *time': this.scheduleProgram.bind(this),
-      'run :prog_name with :var_name at *time': this.scheduleProgram.bind(this),
+        annyang.addCallback('result', function(whatWasHeardArray, ...data) {
+            console.log('annyang result', data);
+            document.getElementById('transcript').textContent =
+                whatWasHeardArray[0];
+            axios
+                .post(`${serverUrl}/record-utterance`, {
+                    utterance: whatWasHeardArray[0],
+                })
+                .then(_ => {
+                  console.log('Recorded utterance:', whatWasHeardArray[0]);
+                })
+                .catch(e => {
+                  console.log('Failed to record utterance.', e);
+                });
+        });
+        annyang.addCallback('resultNoMatch', function(
+            whatWasHeardArray,
+            ...data
+        ) {
+            // ship to almond for processing...
+            console.log('no match', whatWasHeardArray, data);
+        });
 
-      //'from here': this.gestureStart.bind(this),
-      //'to here': this.gestureStop.bind(this),
-      //'more like this': this.selectClass.bind(this),
-      //'clear selected': this.selectClear.bind(this),
-      'begin selection': this.selectStart.bind(this),
-      'start selection': this.selectStart.bind(this),
-      'start select': this.selectStart.bind(this),
-      'stop selection': this.selectStop.bind(this),
-      'stop select': this.selectStop.bind(this),
-      'end selection': this.selectStop.bind(this),
+        annyang.addCallback('start', function(whatWasHeardArray) {
+            document.getElementById('transcript').textContent = '[start]';
+        });
 
-      // Table
-      'this table contains :table_name': this.selectTable.bind(this),
-      'show me :table_name with :var_name greater than :value': this.filterGreaterThanTable.bind(this),
-      'show me :table_name with :var_name less than :value': this.filterLessThanTable.bind(this),
-      'show me :table_name with :var_name equal to :value': this.filterEqualsTable.bind(this),
-    };
+        annyang.addCallback('soundstart', function() {
+            document.getElementById('transcript').textContent = '[soundstart]';
+        });
 
-    annyang.addCommands(commands);
-    annyang.start();
+        annyang.addCallback('error', function(str) {
+            document.getElementById('transcript').textContent =
+                '[error] ' + str;
+            console.log(str);
+        });
 
-    annyang.addCallback('result', function(whatWasHeardArray, ...data) {
-      console.log('annyang result', data);
-      document.getElementById('transcript').textContent = whatWasHeardArray[0];
-      axios.post(`${serverUrl}/record-utterance`);
-    });
-    annyang.addCallback('resultNoMatch', function(whatWasHeardArray, ...data) {
-      // ship to almond for processing...
-      console.log('no match', whatWasHeardArray, data);
-    });
+        annyang.addCallback('errorNetwork', function() {
+            document.getElementById('transcript').textContent =
+                '[errorNetwork]';
+        });
 
-    annyang.addCallback('start', function(whatWasHeardArray) {
-      document.getElementById('transcript').textContent = '[start]';
-    });
+        annyang.addCallback('errorPermissionBlocked', function() {
+            document.getElementById('transcript').textContent =
+                '[errorPermissionBlocked]';
+        });
 
-    annyang.addCallback('soundstart', function() {
-      document.getElementById('transcript').textContent = '[soundstart]';
-    });
+        annyang.addCallback('errorPermissionDenied', function() {
+            document.getElementById('transcript').textContent =
+                '[errorPermissionDenied]';
+        });
+    }
 
-    annyang.addCallback('error', function(str) {
-      document.getElementById('transcript').textContent = '[error] ' + str;
-      console.log(str)
-    });
+    _speak(message) {
+        var msg = new SpeechSynthesisUtterance(message);
+        msg.rate = 1.2;
+        window.speechSynthesis.speak(msg);
+    }
 
-    annyang.addCallback('errorNetwork', function() {
-      document.getElementById('transcript').textContent = '[errorNetwork]';
-    });
+    recordingStart() {
+        this._speak(
+            'Recording started.  Do the actions you would like me to record.',
+        );
+        this._sendMessage({
+            action: actions.START,
+        });
+        /* Digital Timer */
+        this.timer = new Timer();
+        this.timer.start();
+        this.timer.addEventListener('secondsUpdated', _ => {
+            document.getElementById(
+                'timer',
+            ).innerHTML = this.timer.getTimeValues().toString();
+        });
+    }
 
-    annyang.addCallback('errorPermissionBlocked', function() {
-      document.getElementById('transcript').textContent = '[errorPermissionBlocked]';
-    });
+    recordingStop() {
+        this._sendMessage({
+            action: actions.STOP,
+        });
+        this.timer.stop();
+    }
 
-    annyang.addCallback('errorPermissionDenied', function() {
-      document.getElementById('transcript').textContent = '[errorPermissionDenied]';
-    });
-  }
+    selectStart() {
+        this._speak('Select the variables you want to name.');
 
-  _speak(message) {
-    var msg = new SpeechSynthesisUtterance(message)
-    msg.rate = 1.2
-    window.speechSynthesis.speak(msg)
-  }
+        console.log('selectStart');
+        this._sendMessage({
+            action: actions.SELECT_START,
+        });
 
-  recordingStart() {
-    this._speak("Recording started.  Do the actions you would like me to record.")
-    this._sendMessage({
-      action: actions.START,
-    });
-    /* Digital Timer */
-    this.timer = new Timer();
-    this.timer.start();
-    this.timer.addEventListener('secondsUpdated', _ => {
-      document.getElementById('timer').innerHTML = this.timer.getTimeValues().toString();
-    });
-  }
+        this._selection.cancel();
+        this._selection.enable();
+    }
 
-  recordingStop() {
-    this._sendMessage({
-      action: actions.STOP,
-    });
-    this.timer.stop()
-  }
+    selectStop() {
+        this._speak('Selection stopped.');
+        console.log('selectStop');
+        this._sendMessage({
+            action: actions.SELECT_STOP,
+        });
 
-  selectStart() {
-    this._speak("Select the variables you want to name.")
+        this._selection.cancel();
+        this._selection.disable();
+    }
 
-    console.log('selectStart');
-    this._sendMessage({
-      action: actions.SELECT_START,
-    });
-
-    this._selection.cancel();
-    this._selection.enable();
-  }
-
-  selectStop() {
-    this._speak("Selection stopped.")
-    console.log('selectStop');
-    this._sendMessage({
-      action: actions.SELECT_STOP,
-    });
-
-    this._selection.cancel();
-    this._selection.disable();
-  }
-
-  _sendMessage(msg) {
-    /*
+    _sendMessage(msg) {
+        /*
     // ensure the server is initialized for the current page
     window.eventRecorder.sendCurrentUrl();
 
@@ -311,310 +362,329 @@ export default class VoiceHandler {
       console.error('caught error', err);
     }
     */
-  }
-
-  gestureRecognizer(trail) {
-    const selector = 'up'; // 'down'
-    switch (selector) {
-      case 'up':
-        this.selectColumn();
-        break;
-      case 'down':
-        this.selectRows();
-        this.selectList();
-        break;
-      default:
-    }
-  }
-
-  selectClear(selected) {
-    this._selection.cancel();
-  }
-
-  gestureStart(selector) {
-    console.log(this._mouse_x, this._mouse_y);
-
-    this._mouse_x_start = this._mouse_x;
-    this._mouse_y_start = this._mouse_y;
-  }
-
-  nameProgram(progName) {
-    this._speak(`I have named this program ${progName}. Would you like to run ${progName}?`);
-    this._programNameCurrent = progName
-
-    this._sendMessage({
-      action: 'NAME_PROGRAM',
-      varName: progName,
-    });
-  }
-
-  runProgram(progName, ...args) {
-    this._speak(`Running ${progName}.`);
-    console.log('run');
-    this._sendMessage({
-      action: 'RUN_PROGRAM',
-      varName: progName,
-      args: args,
-    });
-  }
-
-  runProgramIfAtLeast(progName, ...args) {
-    this.runProgramIf(progName, '>=', ...args);
-  }
-
-  runProgramIfEqual(progName, ...args) {
-    this.runProgramIf(progName, '==', ...args);
-  }
-
-  runProgramIfAtMost(progName, ...args) {
-    this.runProgramIf(progName, '<=', ...args);
-  }
-
-  runProgramIf(progName, direction, ...args) {
-    if (args.length !== 2) {
-      throw Error('Not enough arguments.');
     }
 
-    const value = args.pop();
-    const condVar = args.pop(); // variable being conditioned on
-
-    this._speak(`Running ${progName} if ${condVar} ${direction[0]} ${value}`);
-
-    console.log('DETECTING CONDITIONAL RUN!!!');
-
-    this._sendMessage({
-      action: 'RUN_PROGRAM_IF',
-      varName: progName,
-      args: args,
-      condVar: condVar,
-      value: value,
-      direction: direction,
-    });
-  }
-
-  scheduleProgram(progName, ...args) {
-    if (args.length < 1) {
-      throw Error('No time provided when scheduling program.');
-    }
-
-    const time = args.pop();
-
-    this._speak(`Running ${progName} at ${time}.`);
-
-    this._sendMessage({
-      action: 'SCHEDULE_PROGRAM',
-      varName: progName,
-      args: args,
-      time: time,
-    });
-  }
-
-  selectTable(tableName) {
-    this._speak('Stored table.');
-
-    // Get table from selection
-    const firstElem = this._selectedElements.values().next().value;
-    this._namedTables[tableName] = firstElem.parentNode.parentNode.parentNode;
-  }
-
-  filterTable(tableName, varName, value, comparisonFunc) {
-    this._speak('Here are your filtered results.');
-    const table = this._namedTables[tableName];
-    const header = table.children[0].children[0];
-    const headers = header.children;
-    const rowParent = table.children[0];
-    const rows = rowParent.children;
-    value = parseFloat(value);
-
-    console.log('varName', varName);
-    console.log('value', value);
-    console.log('headers', headers);
-    console.log('rows', rows);
-
-    // Get index of filtered column
-    let colIndex;
-    for (let i=0; i < headers.length; i++) {
-      if (headers[i].textContent.toLowerCase() === varName) {
-        colIndex = i;
-        break;
-      }
-    }
-    console.log('colIndex', colIndex);
-    
-    // filter rows (ignoring header)
-    for (let i=1; i < rows.length; i++) {
-      const row = rows[i];
-      row.style.border = null;
-      const rowVal = parseFloat(row.children[colIndex].textContent);
-      if (comparisonFunc(rowVal, value)) {
-        row.style.border = '1px solid red';
-
-        // Reorder row by cloning to be at top
-        const newRow = row.cloneNode(true);
-        header.after(newRow);
-
-        // delete old row
-        row.remove();
-      }
-    }
-  }
-
-  filterGreaterThanTable(tableName, varName, value) {
-    this.filterTable(tableName, varName, value, (a, b) => a > b);
-  }
-
-  filterLessThanTable(tableName, varName, value) {
-    this.filterTable(tableName, varName, value, (a, b) => a < b);
-  }
-
-  filterEqualsTable(tableName, varName, value) {
-    this.filterTable(tableName, varName, value, (a, b) => a === b);
-  }
-
-  tagVariable(varName) {
-    this._speak('I have stored that variable.');
-    if (
-      this._current_click &&
-      ['TEXTAREA', 'INPUT'].includes(this._current_click.target.tagName)
-    ) {
-      this._tagVariableForInput(varName);
-    } else {
-      this._tagVariableForSelection(varName);
-    }
-  }
-
-  _getMultiSelector(elements) {
-    const selectors = [];
-    for (let el of elements) {
-      const optimizedMinLength = el.id ? 2 : 10; // if the target has an id, use that instead of multiple other selectors
-      selectors.push(
-        finder(el, {
-          seedMinLength: 5,
-          optimizedMinLength: optimizedMinLength,
-          className(className) {
-            return className !== 'selected';
-          },
-        }),
-      );
-    }
-    return selectors.join(', ');
-  }
-
-  _tagVariableForSelection(varName) {
-    const selector = this._getMultiSelector(this._selectedElements);
-    const msg = {
-      selector: selector,
-      value: null,
-      tagName: null,
-      inputType: null,
-      selection: null,
-      action: 'THIS_IS_A',
-      varName: varName,
-      keyCode: null,
-      href: null,
-    };
-    console.log('Selection message', msg);
-
-    this._sendMessage(msg);
-  }
-
-  _tagVariableForInput(varName) {
-    if (this._current_click.target.tagName === 'TEXTAREA') {
-      this._replaceSelectedTextArea(this._current_click.target, `[${varName}]`);
-    }
-
-    if (this._current_click.target.tagName === 'INPUT') {
-      this._replaceSelectedInput(this._current_click.target, `[${varName}]`);
-    }
-
-    const optimizedMinLength = this._current_click.target.id ? 2 : 10; // if the target has an id, use that instead of multiple other selectors
-    const selector = finder(this._current_click.target, {
-      seedMinLength: 5,
-      optimizedMinLength: optimizedMinLength,
-    });
-
-    this._sendMessage({
-      selector: selector,
-      value: this._current_click.target.value,
-      tagName: this._current_click.target.tagName,
-      inputType:
-        this._current_click.target.tagName === 'INPUT'
-          ? this._current_click.target.type
-          : null,
-      selection: null,
-      action: 'THIS_IS_A',
-      varName: varName,
-      keyCode: null,
-      href: this._current_click.target.href
-        ? this._current_click.target.href
-        : null,
-    });
-  }
-
-  _getInputSelection(el) {
-    var start = 0;
-    var end = 0;
-    var normalizedValue;
-    var range;
-
-    var textInputRange;
-    var len;
-    var endRange;
-
-    if (
-      typeof el.selectionStart === 'number' &&
-      typeof el.selectionEnd === 'number'
-    ) {
-      start = el.selectionStart;
-      end = el.selectionEnd;
-    } else {
-      range = document.selection.createRange();
-
-      if (range && range.parentElement() === el) {
-        len = el.value.length;
-        normalizedValue = el.value.replace(/\r\n/g, '\n');
-
-        // Create a working TextRange that lives only in the input
-        textInputRange = el.createTextRange();
-        textInputRange.moveToBookmark(range.getBookmark());
-
-        // Check if the start and end of the selection are at the very end
-        // of the input, since moveStart/moveEnd doesn't return what we want
-        // in those cases
-        endRange = el.createTextRange();
-        endRange.collapse(false);
-
-        if (textInputRange.compareEndPoints('StartToEnd', endRange) > -1) {
-          start = end = len;
-        } else {
-          start = -textInputRange.moveStart('character', -len);
-          start += normalizedValue.slice(0, start).split('\n').length - 1;
-
-          if (textInputRange.compareEndPoints('EndToEnd', endRange) > -1) {
-            end = len;
-          } else {
-            end = -textInputRange.moveEnd('character', -len);
-            end += normalizedValue.slice(0, end).split('\n').length - 1;
-          }
+    gestureRecognizer(trail) {
+        const selector = 'up'; // 'down'
+        switch (selector) {
+            case 'up':
+                this.selectColumn();
+                break;
+            case 'down':
+                this.selectRows();
+                this.selectList();
+                break;
+            default:
         }
-      }
     }
 
-    return {
-      start: start,
-      end: end,
-    };
-  }
+    selectClear(selected) {
+        this._selection.cancel();
+    }
 
-  _replaceSelectedInput(el, text) {
-    el.value = text;
-  }
+    gestureStart(selector) {
+        console.log(this._mouse_x, this._mouse_y);
 
-  _replaceSelectedTextArea(el, text) {
-    var sel = this._getInputSelection(el);
-    var val = el.value;
-    el.value = val.slice(0, sel.start) + text + val.slice(sel.end);
-  }
+        this._mouse_x_start = this._mouse_x;
+        this._mouse_y_start = this._mouse_y;
+    }
+
+    nameProgram(progName) {
+        this._speak(
+            `I have named this program ${progName}. Would you like to run ${progName}?`,
+        );
+        this._programNameCurrent = progName;
+
+        this._sendMessage({
+            action: 'NAME_PROGRAM',
+            varName: progName,
+        });
+    }
+
+    runProgram(progName, ...args) {
+        this._speak(`Running ${progName}.`);
+        console.log('run');
+        this._sendMessage({
+            action: 'RUN_PROGRAM',
+            varName: progName,
+            args: args,
+        });
+    }
+
+    runProgramIfAtLeast(progName, ...args) {
+        this.runProgramIf(progName, '>=', ...args);
+    }
+
+    runProgramIfEqual(progName, ...args) {
+        this.runProgramIf(progName, '==', ...args);
+    }
+
+    runProgramIfAtMost(progName, ...args) {
+        this.runProgramIf(progName, '<=', ...args);
+    }
+
+    runProgramIf(progName, direction, ...args) {
+        if (args.length !== 2) {
+            throw Error('Not enough arguments.');
+        }
+
+        const value = args.pop();
+        const condVar = args.pop(); // variable being conditioned on
+
+        this._speak(
+            `Running ${progName} if ${condVar} ${direction[0]} ${value}`,
+        );
+
+        console.log('DETECTING CONDITIONAL RUN!!!');
+
+        this._sendMessage({
+            action: 'RUN_PROGRAM_IF',
+            varName: progName,
+            args: args,
+            condVar: condVar,
+            value: value,
+            direction: direction,
+        });
+    }
+
+    scheduleProgram(progName, ...args) {
+        if (args.length < 1) {
+            throw Error('No time provided when scheduling program.');
+        }
+
+        const time = args.pop();
+
+        this._speak(`Running ${progName} at ${time}.`);
+
+        this._sendMessage({
+            action: 'SCHEDULE_PROGRAM',
+            varName: progName,
+            args: args,
+            time: time,
+        });
+    }
+
+    selectTable(tableName) {
+        this._speak('Stored table.');
+
+        // Get table from selection
+        const firstElem = this._selectedElements.values().next().value;
+        this._namedTables[tableName] =
+            firstElem.parentNode.parentNode.parentNode;
+    }
+
+    filterTable(tableName, varName, value, comparisonFunc) {
+        this._speak('Here are your filtered results.');
+        const table = this._namedTables[tableName];
+        const header = table.children[0].children[0];
+        const headers = header.children;
+        const rowParent = table.children[0];
+        const rows = rowParent.children;
+        value = parseFloat(value);
+
+        console.log('varName', varName);
+        console.log('value', value);
+        console.log('headers', headers);
+        console.log('rows', rows);
+
+        // Get index of filtered column
+        let colIndex;
+        for (let i = 0; i < headers.length; i++) {
+            if (headers[i].textContent.toLowerCase() === varName) {
+                colIndex = i;
+                break;
+            }
+        }
+        console.log('colIndex', colIndex);
+
+        // filter rows (ignoring header)
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            row.style.border = null;
+            const rowVal = parseFloat(row.children[colIndex].textContent);
+            if (comparisonFunc(rowVal, value)) {
+                row.style.border = '1px solid red';
+
+                // Reorder row by cloning to be at top
+                const newRow = row.cloneNode(true);
+                header.after(newRow);
+
+                // delete old row
+                row.remove();
+            }
+        }
+    }
+
+    filterGreaterThanTable(tableName, varName, value) {
+        this.filterTable(tableName, varName, value, (a, b) => a > b);
+    }
+
+    filterLessThanTable(tableName, varName, value) {
+        this.filterTable(tableName, varName, value, (a, b) => a < b);
+    }
+
+    filterEqualsTable(tableName, varName, value) {
+        this.filterTable(tableName, varName, value, (a, b) => a === b);
+    }
+
+    tagVariable(varName) {
+        this._speak('I have stored that variable.');
+        if (
+            this._current_click &&
+            ['TEXTAREA', 'INPUT'].includes(this._current_click.target.tagName)
+        ) {
+            this._tagVariableForInput(varName);
+        } else {
+            this._tagVariableForSelection(varName);
+        }
+    }
+
+    _getMultiSelector(elements) {
+        const selectors = [];
+        for (let el of elements) {
+            const optimizedMinLength = el.id ? 2 : 10; // if the target has an id, use that instead of multiple other selectors
+            selectors.push(
+                finder(el, {
+                    seedMinLength: 5,
+                    optimizedMinLength: optimizedMinLength,
+                    className(className) {
+                        return className !== 'selected';
+                    },
+                }),
+            );
+        }
+        return selectors.join(', ');
+    }
+
+    _tagVariableForSelection(varName) {
+        const selector = this._getMultiSelector(this._selectedElements);
+        const msg = {
+            selector: selector,
+            value: null,
+            tagName: null,
+            inputType: null,
+            selection: null,
+            action: 'THIS_IS_A',
+            varName: varName,
+            keyCode: null,
+            href: null,
+        };
+        console.log('Selection message', msg);
+
+        this._sendMessage(msg);
+    }
+
+    _tagVariableForInput(varName) {
+        if (this._current_click.target.tagName === 'TEXTAREA') {
+            this._replaceSelectedTextArea(
+                this._current_click.target,
+                `[${varName}]`,
+            );
+        }
+
+        if (this._current_click.target.tagName === 'INPUT') {
+            this._replaceSelectedInput(
+                this._current_click.target,
+                `[${varName}]`,
+            );
+        }
+
+        const optimizedMinLength = this._current_click.target.id ? 2 : 10; // if the target has an id, use that instead of multiple other selectors
+        const selector = finder(this._current_click.target, {
+            seedMinLength: 5,
+            optimizedMinLength: optimizedMinLength,
+        });
+
+        this._sendMessage({
+            selector: selector,
+            value: this._current_click.target.value,
+            tagName: this._current_click.target.tagName,
+            inputType:
+                this._current_click.target.tagName === 'INPUT'
+                    ? this._current_click.target.type
+                    : null,
+            selection: null,
+            action: 'THIS_IS_A',
+            varName: varName,
+            keyCode: null,
+            href: this._current_click.target.href
+                ? this._current_click.target.href
+                : null,
+        });
+    }
+
+    _getInputSelection(el) {
+        var start = 0;
+        var end = 0;
+        var normalizedValue;
+        var range;
+
+        var textInputRange;
+        var len;
+        var endRange;
+
+        if (
+            typeof el.selectionStart === 'number' &&
+            typeof el.selectionEnd === 'number'
+        ) {
+            start = el.selectionStart;
+            end = el.selectionEnd;
+        } else {
+            range = document.selection.createRange();
+
+            if (range && range.parentElement() === el) {
+                len = el.value.length;
+                normalizedValue = el.value.replace(/\r\n/g, '\n');
+
+                // Create a working TextRange that lives only in the input
+                textInputRange = el.createTextRange();
+                textInputRange.moveToBookmark(range.getBookmark());
+
+                // Check if the start and end of the selection are at the very end
+                // of the input, since moveStart/moveEnd doesn't return what we want
+                // in those cases
+                endRange = el.createTextRange();
+                endRange.collapse(false);
+
+                if (
+                    textInputRange.compareEndPoints('StartToEnd', endRange) > -1
+                ) {
+                    start = end = len;
+                } else {
+                    start = -textInputRange.moveStart('character', -len);
+                    start +=
+                        normalizedValue.slice(0, start).split('\n').length - 1;
+
+                    if (
+                        textInputRange.compareEndPoints('EndToEnd', endRange) >
+                        -1
+                    ) {
+                        end = len;
+                    } else {
+                        end = -textInputRange.moveEnd('character', -len);
+                        end +=
+                            normalizedValue.slice(0, end).split('\n').length -
+                            1;
+                    }
+                }
+            }
+        }
+
+        return {
+            start: start,
+            end: end,
+        };
+    }
+
+    _replaceSelectedInput(el, text) {
+        el.value = text;
+    }
+
+    _replaceSelectedTextArea(el, text) {
+        var sel = this._getInputSelection(el);
+        var val = el.value;
+        el.value = val.slice(0, sel.start) + text + val.slice(sel.end);
+    }
 }
 
 // gestureStop (selector) {
