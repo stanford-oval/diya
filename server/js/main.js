@@ -1,11 +1,17 @@
 'use strict';
 
+const Cookies = require('js-cookie');
+const uuid = require('uuid');
+
 // Handle session token sent from extension
 let sessionToken;
 
 document.addEventListener('NewSessionToken', function(event) {
   sessionToken = event.token;
 });
+
+// Set cookie to attribute utterances to users
+if (!Cookies.get('userID')) Cookies.set('userID', uuid.v4());
 
 $(function() {
   $('.button_reserve').on('click', e => {

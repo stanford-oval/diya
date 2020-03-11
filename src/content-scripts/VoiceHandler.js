@@ -22,7 +22,9 @@
 
 import annyang from 'annyang';
 import axios from 'axios';
+import Cookies from 'js-cookie';
 import finder from '@medv/finder';
+import uuid from 'uuid';
 import actions from '../models/extension-ui-actions';
 import { Timer } from 'easytimer.js';
 
@@ -243,15 +245,19 @@ export default class VoiceHandler {
             console.log('annyang result', data);
             document.getElementById('transcript').textContent =
                 whatWasHeardArray[0];
+
+            if (!Cookies.get('userID')) Cookies.set('userID', uuid.v4());
+
             axios
                 .post(`${serverUrl}/record-utterance`, {
                     utterance: whatWasHeardArray[0],
+                    user: Cookies.get('userID'),
                 })
                 .then(_ => {
-                  console.log('Recorded utterance:', whatWasHeardArray[0]);
+                    console.log('Recorded utterance:', whatWasHeardArray[0]);
                 })
                 .catch(e => {
-                  console.log('Failed to record utterance.', e);
+                    console.log('Failed to record utterance.', e);
                 });
         });
         annyang.addCallback('resultNoMatch', function(

@@ -172,10 +172,15 @@ function initFrontend(db) {
     app.post('/record-utterance', (req, res) => {
         console.log('Recording!');
         const utterance = req.body.utterance;
+        const user = req.body.user;
         if (!utterance) res.status(400).json({ status: 'error' });
 
         db.get('utterances')
-            .push({ timestamp: new Date().toLocaleString(), text: utterance })
+            .push({
+                timestamp: new Date().toLocaleString(),
+                text: utterance,
+                user: user,
+            })
             .write();
 
         res.status(200).json({
@@ -293,7 +298,7 @@ async function main() {
     const adapter = new FileSync('db.json');
     const db = low(adapter);
 
-    const jsonFileIsEmpty = (filename) => {
+    const jsonFileIsEmpty = filename => {
         const json = JSON.parse(fs.readFileSync(filename));
         return !Object.keys(json).length;
     };
