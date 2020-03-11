@@ -21,6 +21,9 @@
 'use strict';
 
 const express = require('express');
+const low = require('lowdb');
+const FileSync = require('lowdb/adapters/FileSync');
+const fs = require('fs');
 const path = require('path');
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
@@ -71,7 +74,7 @@ async function runThingTalk(engine, code) {
     return { results, errors };
 }
 
-function initFrontend() {
+function initFrontend(db) {
     const app = express();
     const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
     app.set('port', port);
@@ -164,6 +167,19 @@ function initFrontend() {
 
     app.get('/survey', (req, res) => {
         res.render('survey');
+    });
+
+    app.post('/record-utterance', (req, res) => {
+        const utterance = req.body.utterance;
+        if (!utterance) res.status(400).json({ status: 'error' });
+
+        db.get('utterances')
+            .push({ timestamp: new Date().toLocaleString(), text: utterance })
+            .write();
+
+        res.status(200).json({
+            status: 'ok',
+        });
     });
 
     app.get('/', (req, res) => {
@@ -270,7 +286,22 @@ async function main() {
     process.on('SIGTERM', handleStop);
 
     engine = new Engine(platform, { thingpediaUrl: Config.THINGPEDIA_URL });
-    frontend = initFrontend();
+
+    // Local db
+    const dbFilename = 'db.json';
+    const adapter = new FileSync('db.json');
+    const db = low(adapter);
+
+    const jsonFileIsEmpty = (filename) => {
+        const json = JSON.parse(fs.readFileSync(filename));
+        return !Object.keys(json).length;
+    };
+
+    if (!fs.existsSync(dbFilename) || jsonFileIsEmpty(dbFilename)) {
+        db.defaults({ utterances: [] }).write();
+    }
+
+    frontend = initFrontend(db);
     frontend.engine = engine;
 
     ad = new AssistantDispatcher(engine);

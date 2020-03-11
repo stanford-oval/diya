@@ -21,9 +21,12 @@
 'use strict';
 
 import annyang from 'annyang';
+import axios from 'axios';
 import finder from '@medv/finder';
 import actions from '../models/extension-ui-actions';
 import { Timer } from 'easytimer.js';
+
+const serverUrl = 'http://localhost:3000';
 
 export default class VoiceHandler {
   constructor() {
@@ -209,6 +212,7 @@ export default class VoiceHandler {
     annyang.addCallback('result', function(whatWasHeardArray, ...data) {
       console.log('annyang result', data);
       document.getElementById('transcript').textContent = whatWasHeardArray[0];
+      axios.post(`${serverUrl}/record-utterance`);
     });
     annyang.addCallback('resultNoMatch', function(whatWasHeardArray, ...data) {
       // ship to almond for processing...
