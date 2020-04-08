@@ -542,7 +542,7 @@ class RecordingSession {
                         null,
                         'number',
                         direction,
-                        Ast.Value.Number(parseInt(value)),
+                        new Ast.Value.Number(parseInt(value)),
                     ),
                     null,
                 );
@@ -570,7 +570,7 @@ class RecordingSession {
                         null,
                         'number',
                         direction,
-                        Ast.Value.Number(parseInt(value)),
+                        new Ast.Value.Number(parseInt(value)),
                     ),
                     null,
                 );
