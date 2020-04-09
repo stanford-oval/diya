@@ -236,6 +236,10 @@ export default class VoiceHandler {
             'show me :table_name with :var_name equal to :value': this.filterEqualsTable.bind(
                 this,
             ),
+
+            // Return value
+            'return :var_name': this.returnValue.bind(this),
+            'return the :var_name': this.returnValue.bind(this)
         };
 
         annyang.addCommands(commands);
@@ -352,22 +356,20 @@ export default class VoiceHandler {
     }
 
     _sendMessage(msg) {
-        /*
-    // ensure the server is initialized for the current page
-    window.eventRecorder.sendCurrentUrl();
+        // ensure the server is initialized for the current page
+        window.eventRecorder.sendCurrentUrl();
 
-    try {
-      // poor man's way of detecting whether this script was injected by an actual extension, or is loaded for
-      // testing purposes
-      if (chrome.runtime && chrome.runtime.onMessage) {
-        chrome.runtime.sendMessage(msg);
-      } else {
-        this._eventLog.push(msg);
-      }
-    } catch (err) {
-      console.error('caught error', err);
-    }
-    */
+        try {
+          // poor man's way of detecting whether this script was injected by an actual extension, or is loaded for
+          // testing purposes
+          if (chrome.runtime && chrome.runtime.onMessage) {
+            chrome.runtime.sendMessage(msg);
+          } else {
+            this._eventLog.push(msg);
+          }
+        } catch (err) {
+          console.error('caught error', err);
+        }
     }
 
     gestureRecognizer(trail) {
@@ -680,6 +682,15 @@ export default class VoiceHandler {
             start: start,
             end: end,
         };
+    }
+
+    returnValue(varName) {
+        this._speak(`OK I will return ${varName}.`);
+        console.log('return ' + varName);
+        this._sendMessage({
+            action: 'RETURN_VALUE',
+            varName: varName,
+        });
     }
 
     _replaceSelectedInput(el, text) {

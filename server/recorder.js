@@ -189,6 +189,7 @@ class RecordingSession {
                 ),
             );
         }
+        console.log(params);
 
         this._builder.addNamedQuery(
             saveAs,
@@ -329,7 +330,6 @@ class RecordingSession {
 
         for (;;) {
             let { item: next, resolve, reject } = await app.mainOutput.next();
-            console.log(String(next));
 
             if (next.isDone) {
                 resolve();
@@ -583,6 +583,12 @@ class RecordingSession {
         return undefined;
     }
 
+    _doReturnValue(varName) {
+        const table = new Ast.Table.VarRef(null, wordsToVariable(varName, 't_'), [], null);
+        const action = new Ast.Action.Notify(null, 'notify', null);
+        this._builder.addQueryAction(table, action);
+    }
+
     _handleThisIsA(event) {
         this._maybeFlushCurrentInput(event);
         if (event.tagName) {
@@ -609,9 +615,10 @@ class RecordingSession {
     }
 
     async addRecordingEvent(event) {
+        console.log(event);
         switch (event.action) {
             case 'START_RECORDING':
-                this._accRecArgs = [];
+                this._accRecArgs = new Set;
                 // reset the selection state when the user clicks start
                 this._currentInput = null;
                 this._currentSelection = null;
@@ -621,7 +628,7 @@ class RecordingSession {
 
             case 'STOP_RECORDING':
                 this._recordingMode = false;
-                this._accRecArgs = [];
+                this._accRecArgs = new Set;
                 return { code: this._builder.finish() };
 
             case 'GOTO':
@@ -662,6 +669,11 @@ class RecordingSession {
             case 'NAME_PROGRAM':
                 this._maybeFlushCurrentInput(event);
                 this._doNameProgram(event.varName);
+                break;
+
+            case 'RETURN_VALUE':
+                this._maybeFlushCurrentInput(event);
+                this._doReturnValue(event.varName);
                 break;
 
             case 'RUN_PROGRAM':
