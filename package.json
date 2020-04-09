@@ -55,7 +55,7 @@
     "stemmer": "^1.0.5",
     "thingengine-core": "~1.8.0",
     "thingpedia": "^2.7.0",
-    "thingtalk": "github:stanford-oval/thingtalk#master",
+    "thingtalk": "github:stanford-oval/thingtalk#wip/procedure-return-value",
     "utf-8-validate": "^5.0.2",
     "vue": "^2.6.11",
     "vue-clipboard2": "^0.2.1",
