@@ -50,9 +50,15 @@ export default class VoiceHandler {
     }
 
     start() {
+        if (!document.getElementById('transcript')) {
+            const transcriptDiv = document.createElement('div');
+            transcriptDiv.id = 'transcript';
+            document.body.prepend(transcriptDiv);
+        }
+
         var port = chrome.runtime.connect();
         port.postMessage({ joke: 'Knock knock' });
-        port.onMessage.addListener(msg => {
+        port.onMessage.addListener((msg) => {
             if (msg.action == 'STOP_RECORDING') {
                 this._speak('what would you like to name this program?');
             }
@@ -95,7 +101,7 @@ export default class VoiceHandler {
                     inst.clearSelection();
                 }
             })
-            .on('move', event => {
+            .on('move', (event) => {
                 // {changed: {removed, added}}
 
                 let removed = event.changed.removed;
@@ -123,7 +129,7 @@ export default class VoiceHandler {
             });
         this._selection.disable();
 
-        document.addEventListener('keyup', event => {
+        document.addEventListener('keyup', (event) => {
             if (event.key === 'Escape') {
                 // escape key maps to keycode `27`
                 this.selectClear();
@@ -131,11 +137,11 @@ export default class VoiceHandler {
         });
 
         // always track mouse position
-        document.addEventListener('mousemove', event => {
+        document.addEventListener('mousemove', (event) => {
             this._mouse_x = event.pageX;
             this._mouse_y = event.pageY;
         });
-        document.body.addEventListener('click', event => {
+        document.body.addEventListener('click', (event) => {
             this._current_click = event;
         });
 
@@ -239,13 +245,13 @@ export default class VoiceHandler {
 
             // Return value
             'return :var_name': this.returnValue.bind(this),
-            'return the :var_name': this.returnValue.bind(this)
+            'return the :var_name': this.returnValue.bind(this),
         };
 
         annyang.addCommands(commands);
         annyang.start();
 
-        annyang.addCallback('result', function(whatWasHeardArray, ...data) {
+        annyang.addCallback('result', function (whatWasHeardArray, ...data) {
             console.log('annyang result', data);
             document.getElementById('transcript').textContent =
                 whatWasHeardArray[0];
@@ -257,14 +263,14 @@ export default class VoiceHandler {
                     utterance: whatWasHeardArray[0],
                     user: Cookies.get('userID'),
                 })
-                .then(_ => {
+                .then((_) => {
                     console.log('Recorded utterance:', whatWasHeardArray[0]);
                 })
-                .catch(e => {
+                .catch((e) => {
                     console.log('Failed to record utterance.', e);
                 });
         });
-        annyang.addCallback('resultNoMatch', function(
+        annyang.addCallback('resultNoMatch', function (
             whatWasHeardArray,
             ...data
         ) {
@@ -272,31 +278,31 @@ export default class VoiceHandler {
             console.log('no match', whatWasHeardArray, data);
         });
 
-        annyang.addCallback('start', function(whatWasHeardArray) {
+        annyang.addCallback('start', function (whatWasHeardArray) {
             document.getElementById('transcript').textContent = '[start]';
         });
 
-        annyang.addCallback('soundstart', function() {
+        annyang.addCallback('soundstart', function () {
             document.getElementById('transcript').textContent = '[soundstart]';
         });
 
-        annyang.addCallback('error', function(str) {
+        annyang.addCallback('error', function (str) {
             document.getElementById('transcript').textContent =
                 '[error] ' + str;
             console.log(str);
         });
 
-        annyang.addCallback('errorNetwork', function() {
+        annyang.addCallback('errorNetwork', function () {
             document.getElementById('transcript').textContent =
                 '[errorNetwork]';
         });
 
-        annyang.addCallback('errorPermissionBlocked', function() {
+        annyang.addCallback('errorPermissionBlocked', function () {
             document.getElementById('transcript').textContent =
                 '[errorPermissionBlocked]';
         });
 
-        annyang.addCallback('errorPermissionDenied', function() {
+        annyang.addCallback('errorPermissionDenied', function () {
             document.getElementById('transcript').textContent =
                 '[errorPermissionDenied]';
         });
@@ -318,7 +324,7 @@ export default class VoiceHandler {
         /* Digital Timer */
         this.timer = new Timer();
         this.timer.start();
-        this.timer.addEventListener('secondsUpdated', _ => {
+        this.timer.addEventListener('secondsUpdated', (_) => {
             document.getElementById(
                 'timer',
             ).innerHTML = this.timer.getTimeValues().toString();
@@ -360,15 +366,15 @@ export default class VoiceHandler {
         window.eventRecorder.sendCurrentUrl();
 
         try {
-          // poor man's way of detecting whether this script was injected by an actual extension, or is loaded for
-          // testing purposes
-          if (chrome.runtime && chrome.runtime.onMessage) {
-            chrome.runtime.sendMessage(msg);
-          } else {
-            this._eventLog.push(msg);
-          }
+            // poor man's way of detecting whether this script was injected by an actual extension, or is loaded for
+            // testing purposes
+            if (chrome.runtime && chrome.runtime.onMessage) {
+                chrome.runtime.sendMessage(msg);
+            } else {
+                this._eventLog.push(msg);
+            }
         } catch (err) {
-          console.error('caught error', err);
+            console.error('caught error', err);
         }
     }
 

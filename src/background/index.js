@@ -62,7 +62,7 @@ class RecordingController {
     // this._boundedSelectStoptHandler = this.handleSelectStop.bind(this)
 
     chrome.runtime.onMessage.addListener(this._boundedMessageHandler)
-    // chrome.webNavigation.onCompleted.addListener(this._boundedNavigationHandler)
+    chrome.webNavigation.onCompleted.addListener(this._boundedNavigationHandler)
     // chrome.webNavigation.onBeforeNavigate.addListener(this._boundedWaitHandler)
 
     axios.post(SERVER_URL + '/recorder/start').then(({ data }) => {
@@ -142,8 +142,8 @@ class RecordingController {
 
   destroy () {
     chrome.runtime.onMessage.removeListener(this._boundedMessageHandler)
-    // chrome.webNavigation.onCompleted.removeListener(this._boundedNavigationHandler)
-    // chrome.webNavigation.onBeforeNavigate.removeListener(this._boundedWaitHandler)
+    chrome.webNavigation.onCompleted.removeListener(this._boundedNavigationHandler)
+    chrome.webNavigation.onBeforeNavigate.removeListener(this._boundedWaitHandler)
     chrome.contextMenus.onClicked.removeListener(this._boundedMenuHandler)
   }
 
