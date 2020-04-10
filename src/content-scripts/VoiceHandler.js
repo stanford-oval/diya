@@ -55,6 +55,11 @@ export default class VoiceHandler {
             transcriptDiv.id = 'transcript';
             document.body.prepend(transcriptDiv);
         }
+        if (!document.getElementById('timer')) {
+            const timerDiv = document.createElement('div');
+            timerDiv.id = 'timer';
+            document.body.prepend(timerDiv);
+        }
 
         var port = chrome.runtime.connect();
         port.postMessage({ joke: 'Knock knock' });

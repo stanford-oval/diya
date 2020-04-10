@@ -170,7 +170,7 @@ function initFrontend(db) {
     });
 
     app.post('/record-utterance', (req, res) => {
-        console.log('Recording!');
+        console.log('Recording Utterance!');
         const utterance = req.body.utterance;
         const user = req.body.user;
         if (!utterance) res.status(400).json({ status: 'error' });

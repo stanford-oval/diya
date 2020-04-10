@@ -615,7 +615,7 @@ class RecordingSession {
     }
 
     async addRecordingEvent(event) {
-        console.log(event);
+        console.log('addRecordingEvent', event);
         switch (event.action) {
             case 'START_RECORDING':
                 this._accRecArgs = new Set;
@@ -677,6 +677,7 @@ class RecordingSession {
                 break;
 
             case 'RUN_PROGRAM':
+                console.log('RUN_PROGRAM');
                 this._maybeFlushCurrentInput(event);
 
                 return {
