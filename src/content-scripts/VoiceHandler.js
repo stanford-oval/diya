@@ -261,6 +261,7 @@ export default class VoiceHandler {
             document.getElementById('transcript').textContent =
                 whatWasHeardArray[0];
 
+            /*
             if (!Cookies.get('userID')) Cookies.set('userID', uuid.v4());
 
             axios
@@ -274,6 +275,7 @@ export default class VoiceHandler {
                 .catch((e) => {
                     console.log('Failed to record utterance.', e);
                 });
+            */
         });
         annyang.addCallback('resultNoMatch', function (
             whatWasHeardArray,
@@ -375,8 +377,10 @@ export default class VoiceHandler {
             // testing purposes
             if (chrome.runtime && chrome.runtime.onMessage) {
                 chrome.runtime.sendMessage(msg);
+                console.log('Send runtime message.');
             } else {
                 this._eventLog.push(msg);
+                console.log('Push to event log.');
             }
         } catch (err) {
             console.error('caught error', err);

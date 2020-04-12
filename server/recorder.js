@@ -819,6 +819,7 @@ router.post('/start', (req, res) => {
 });
 
 router.post('/add-event', (req, res, next) => {
+    console.log('router /add-event');
     const session = _sessions.get(req.body.token);
     if (!session) {
         res.status(404).json({ error: 'invalid token', code: 'ENOENT' });
