@@ -75,6 +75,14 @@ export default class VoiceHandler {
                 this._speak('Please select the ' + result);
                 this.selectStart();
             }
+            if (msg.action == 'executionResult') {
+                for (let msg of msg.results)
+                    this._speak(msg.message);
+            }
+            if (msg.action == 'executionError') {
+                for (let msg of msg.errors)
+                    this._speak('Sorry, that did not work: ' + (msg.message || msg));
+            }
         });
 
         // var port2 = chrome.extension.connect({ name: 'recordControls' })

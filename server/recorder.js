@@ -157,6 +157,7 @@ class RecordingSession {
             this._platform.locale,
             this._platform.getSharedPreferences(),
         );
+        this._formatter = new ThingTalk.Formatter(engine.platform.locale, engine.platform.timezone, engine.schemas, this._platform.getCapability('gettext'));
 
         this._currentFocus = null;
         this._currentInput = null;
@@ -338,7 +339,10 @@ class RecordingSession {
 
             if (next.isNotification) {
                 try {
+                    console.log(next);
+                    const message = await this._formatter.formatForType(next.outputType, next.outputValue, 'string');
                     results.push({
+                        message: message,
                         value: next.outputValue,
                         type: next.outputType,
                     });
@@ -365,48 +369,26 @@ class RecordingSession {
         return { results, errors };
     }
 
-    async _runProgram(progName, args) {
-        console.log('_runProgram', progName, args);
-        const missingArgs = this._recordProgramCall(progName, args);
-
-        if (missingArgs && missingArgs.length > 0) return missingArgs;
-        console.log('missingArgs', missingArgs);
-
-        if (!this._recordingMode) {
-            await this._doRunProgram();
-            this._builder = new ProgramBuilder(); // To close window
+    async _runProgram(progName, options) {
+        console.log('_runProgram', progName, options.args);
+        let time = null;
+        if (options.time) {
+            console.log('_scheduleProgram', progName, options.time, options.args);
+            time = await parseTime(options.time);
+            console.log(time);
         }
+        const params_missing = this._recordProgramCall(progName, options.args, time, options.condition);
 
-        return [];
-    }
-
-    async _runProgramIf(progName, condVar, value, direction) {
-        // const args = this._recordingMode ? this._accRecArgs : this._accArgs;
-        const args = [];
-        const missingArgs = this._recordProgramCall(progName, args, null, {
-            condVar,
-            value,
-            direction,
-        });
+        if (params_missing && params_missing.length > 0)
+            return { params_missing, results: [], errors: [] };
 
         if (!this._recordingMode) {
-            await this._doRunProgram();
+            const { results, errors } = await this._doRunProgram();
             this._builder = new ProgramBuilder();
+            return { params_missing: [], results, errors };
         }
 
-        return missingArgs ? missingArgs : [];
-    }
-
-    async _scheduleProgram(progName, time, args) {
-        this._builder = new ProgramBuilder();
-        console.log('_scheduleProgram', progName, time, args);
-        const parsedTime = await parseTime(time);
-        console.log(parsedTime);
-        this._recordProgramCall(progName, args, parsedTime);
-
-        if (!this._recordingMode) {
-            await this._doRunProgram();
-        }
+        return { params_missing: [], results: [], errors: [] };
     }
 
     _getRelevantStoredArgs(neededArgs) {
@@ -680,28 +662,27 @@ class RecordingSession {
                 console.log('RUN_PROGRAM');
                 this._maybeFlushCurrentInput(event);
 
-                return {
-                    params_missing: await this._runProgram(
-                        event.varName,
-                        event.args,
-                    ),
-                };
+                return this._runProgram(event.varName, {
+                    args: event.args
+                });
 
             case 'RUN_PROGRAM_IF':
                 this._maybeFlushCurrentInput(event);
-                return {
-                    params_missing: await this._runProgramIf(
-                        event.varName,
-                        event.condVar,
-                        event.value,
-                        event.direction,
-                    ),
-                };
+                return this._runProgram(event.varName, {
+                    args: [],
+                    condition: {
+                        condVar: event.condVar,
+                        value: event.value,
+                        direction: event.direction,
+                    }
+                });
 
             case 'SCHEDULE_PROGRAM':
                 this._maybeFlushCurrentInput(event);
-                this._scheduleProgram(event.varName, event.time, event.args);
-                break;
+                return this._runProgram(event.varName, {
+                    args: event.args,
+                    time: event.time
+                });
 
             case 'keydown':
                 // ignore (we handle change/select events instead)

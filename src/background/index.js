@@ -222,6 +222,18 @@ class RecordingController {
           })
         })
       }
+      if (response.data.results && response.data.results.length > 0) {
+        this._broadcastMessage({
+          action: 'executionResult',
+          results: response.data.results,
+        })
+      }
+      if (response.data.errors && response.data.errors.length > 0) {
+        this._broadcastMessage({
+          action: 'executionError',
+          errors: response.data.errors,
+        })
+      }
 
       if (response.data.code) {
         chrome.storage.local.set({ thingtalk: response.data.code }, () => {
