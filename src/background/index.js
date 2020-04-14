@@ -206,7 +206,6 @@ class RecordingController {
   _sendEvent (event) {
     if (this._isPaused || !this._sessionToken) return
 
-
     this._broadcastMessage( event )
 
 
@@ -214,14 +213,25 @@ class RecordingController {
       token: this._sessionToken,
       event: event
     }).then((response) => {
-
-      if (response.data.params_missing.length > 0) {
+      if (response.data.params_missing && response.data.params_missing.length > 0) {
         chrome.storage.local.set({ params_missing: response.data.params_missing }, () => {
           console.debug('response.data.params_missing', response.data.params_missing)
           this._broadcastMessage({ 
             action: 'paramsMissing',
             paramsMissing: response.data.params_missing,
           })
+        })
+      }
+      if (response.data.results && response.data.results.length > 0) {
+        this._broadcastMessage({
+          action: 'executionResult',
+          results: response.data.results,
+        })
+      }
+      if (response.data.errors && response.data.errors.length > 0) {
+        this._broadcastMessage({
+          action: 'executionError',
+          errors: response.data.errors,
         })
       }
 

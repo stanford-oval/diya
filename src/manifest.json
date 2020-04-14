@@ -12,9 +12,10 @@
     "https://voiceassistantturk.herokuapp.com/*/*",
     "storage",
     "activeTab",
-    "contextMenus"
+    "contextMenus",
+    "tts"
   ],
-  "icons" : {
+  "icons": {
     "16": "images/app_icon_16.png",
     "128": "images/app_icon_128.png"
   },
@@ -40,16 +41,10 @@
       "description": "Take screenshot clipped"
     }
   },
-  "content_scripts": [
-    {
-      "matches": [
-        "http://localhost:5000/*",
-        "http://localhost:3000/*",
-        "http://127.0.0.1:3000/*",
-        "https://voiceassistantturk.herokuapp.com/*"],
-      "js": ["content-script.js"]
-    }
-  ],
+  "content_scripts": [{
+    "matches": ["http://*/*", "https://*/*"],
+    "js": ["content-script.js"]
+  }],
   "background": {
     "scripts": [
       "background.js"

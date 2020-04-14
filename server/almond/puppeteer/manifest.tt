@@ -17,6 +17,7 @@ class @com.google.puppeteer
                                 out number : Number #_[canonical="number"])
   #_[canonical="element on screen"]
   #_[confirmation="the elements matched by ${selector}"]
+  #_[formatted=["${text}"]]
   #[poll_interval=10min];
 
   action load(in req url : Entity(tt:url) #_[canonical="url"])

@@ -50,9 +50,20 @@ export default class VoiceHandler {
     }
 
     start() {
+        if (!document.getElementById('transcript')) {
+            const transcriptDiv = document.createElement('div');
+            transcriptDiv.id = 'transcript';
+            document.body.prepend(transcriptDiv);
+        }
+        if (!document.getElementById('timer')) {
+            const timerDiv = document.createElement('div');
+            timerDiv.id = 'timer';
+            document.body.prepend(timerDiv);
+        }
+
         var port = chrome.runtime.connect();
         port.postMessage({ joke: 'Knock knock' });
-        port.onMessage.addListener(msg => {
+        port.onMessage.addListener((msg) => {
             if (msg.action == 'STOP_RECORDING') {
                 this._speak('what would you like to name this program?');
             }
@@ -63,6 +74,14 @@ export default class VoiceHandler {
 
                 this._speak('Please select the ' + result);
                 this.selectStart();
+            }
+            if (msg.action == 'executionResult') {
+                for (let msg of msg.results)
+                    this._speak(msg.message);
+            }
+            if (msg.action == 'executionError') {
+                for (let msg of msg.errors)
+                    this._speak('Sorry, that did not work: ' + (msg.message || msg));
             }
         });
 
@@ -95,7 +114,7 @@ export default class VoiceHandler {
                     inst.clearSelection();
                 }
             })
-            .on('move', event => {
+            .on('move', (event) => {
                 // {changed: {removed, added}}
 
                 let removed = event.changed.removed;
@@ -123,7 +142,7 @@ export default class VoiceHandler {
             });
         this._selection.disable();
 
-        document.addEventListener('keyup', event => {
+        document.addEventListener('keyup', (event) => {
             if (event.key === 'Escape') {
                 // escape key maps to keycode `27`
                 this.selectClear();
@@ -131,11 +150,11 @@ export default class VoiceHandler {
         });
 
         // always track mouse position
-        document.addEventListener('mousemove', event => {
+        document.addEventListener('mousemove', (event) => {
             this._mouse_x = event.pageX;
             this._mouse_y = event.pageY;
         });
-        document.body.addEventListener('click', event => {
+        document.body.addEventListener('click', (event) => {
             this._current_click = event;
         });
 
@@ -236,16 +255,21 @@ export default class VoiceHandler {
             'show me :table_name with :var_name equal to :value': this.filterEqualsTable.bind(
                 this,
             ),
+
+            // Return value
+            'return :var_name': this.returnValue.bind(this),
+            'return the :var_name': this.returnValue.bind(this),
         };
 
         annyang.addCommands(commands);
         annyang.start();
 
-        annyang.addCallback('result', function(whatWasHeardArray, ...data) {
+        annyang.addCallback('result', function (whatWasHeardArray, ...data) {
             console.log('annyang result', data);
             document.getElementById('transcript').textContent =
                 whatWasHeardArray[0];
 
+            /*
             if (!Cookies.get('userID')) Cookies.set('userID', uuid.v4());
 
             axios
@@ -253,14 +277,15 @@ export default class VoiceHandler {
                     utterance: whatWasHeardArray[0],
                     user: Cookies.get('userID'),
                 })
-                .then(_ => {
+                .then((_) => {
                     console.log('Recorded utterance:', whatWasHeardArray[0]);
                 })
-                .catch(e => {
+                .catch((e) => {
                     console.log('Failed to record utterance.', e);
                 });
+            */
         });
-        annyang.addCallback('resultNoMatch', function(
+        annyang.addCallback('resultNoMatch', function (
             whatWasHeardArray,
             ...data
         ) {
@@ -268,31 +293,31 @@ export default class VoiceHandler {
             console.log('no match', whatWasHeardArray, data);
         });
 
-        annyang.addCallback('start', function(whatWasHeardArray) {
+        annyang.addCallback('start', function (whatWasHeardArray) {
             document.getElementById('transcript').textContent = '[start]';
         });
 
-        annyang.addCallback('soundstart', function() {
+        annyang.addCallback('soundstart', function () {
             document.getElementById('transcript').textContent = '[soundstart]';
         });
 
-        annyang.addCallback('error', function(str) {
+        annyang.addCallback('error', function (str) {
             document.getElementById('transcript').textContent =
                 '[error] ' + str;
             console.log(str);
         });
 
-        annyang.addCallback('errorNetwork', function() {
+        annyang.addCallback('errorNetwork', function () {
             document.getElementById('transcript').textContent =
                 '[errorNetwork]';
         });
 
-        annyang.addCallback('errorPermissionBlocked', function() {
+        annyang.addCallback('errorPermissionBlocked', function () {
             document.getElementById('transcript').textContent =
                 '[errorPermissionBlocked]';
         });
 
-        annyang.addCallback('errorPermissionDenied', function() {
+        annyang.addCallback('errorPermissionDenied', function () {
             document.getElementById('transcript').textContent =
                 '[errorPermissionDenied]';
         });
@@ -314,7 +339,7 @@ export default class VoiceHandler {
         /* Digital Timer */
         this.timer = new Timer();
         this.timer.start();
-        this.timer.addEventListener('secondsUpdated', _ => {
+        this.timer.addEventListener('secondsUpdated', (_) => {
             document.getElementById(
                 'timer',
             ).innerHTML = this.timer.getTimeValues().toString();
@@ -352,22 +377,22 @@ export default class VoiceHandler {
     }
 
     _sendMessage(msg) {
-        /*
-    // ensure the server is initialized for the current page
-    window.eventRecorder.sendCurrentUrl();
+        // ensure the server is initialized for the current page
+        window.eventRecorder.sendCurrentUrl();
 
-    try {
-      // poor man's way of detecting whether this script was injected by an actual extension, or is loaded for
-      // testing purposes
-      if (chrome.runtime && chrome.runtime.onMessage) {
-        chrome.runtime.sendMessage(msg);
-      } else {
-        this._eventLog.push(msg);
-      }
-    } catch (err) {
-      console.error('caught error', err);
-    }
-    */
+        try {
+            // poor man's way of detecting whether this script was injected by an actual extension, or is loaded for
+            // testing purposes
+            if (chrome.runtime && chrome.runtime.onMessage) {
+                chrome.runtime.sendMessage(msg);
+                console.log('Send runtime message.');
+            } else {
+                this._eventLog.push(msg);
+                console.log('Push to event log.');
+            }
+        } catch (err) {
+            console.error('caught error', err);
+        }
     }
 
     gestureRecognizer(trail) {
@@ -680,6 +705,15 @@ export default class VoiceHandler {
             start: start,
             end: end,
         };
+    }
+
+    returnValue(varName) {
+        this._speak(`OK I will return ${varName}.`);
+        console.log('return ' + varName);
+        this._sendMessage({
+            action: 'RETURN_VALUE',
+            varName: varName,
+        });
     }
 
     _replaceSelectedInput(el, text) {
