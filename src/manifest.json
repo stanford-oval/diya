@@ -43,7 +43,8 @@
   },
   "content_scripts": [{
     "matches": ["http://*/*", "https://*/*"],
-    "js": ["content-script.js"]
+    "js": ["content-script.js"],
+    "css" : ["main.css"]
   }],
   "background": {
     "scripts": [

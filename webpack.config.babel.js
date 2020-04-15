@@ -65,6 +65,7 @@ const base = {
     new ChromeExtensionReloader(),
     new CopyPlugin([
       { from: './src/manifest.json', to: './manifest.json' },
+      { from: './src/main.css', to: './main.css' },
       { from: './src/images', to: 'images' },
     ]),
     new HtmlWebpackPlugin({

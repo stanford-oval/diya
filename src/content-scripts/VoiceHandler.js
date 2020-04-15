@@ -98,7 +98,7 @@ export default class VoiceHandler {
 
             // All elements in this container can be selected
             // selectables: ['div'],
-            selectables: ['.box-wrap > div', 'li', 'td', 'a'],
+            selectables: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'td', 'caption'],
 
             // The container is also the boundary in this case
             // boundaries: ['.box-wrap']
@@ -136,6 +136,7 @@ export default class VoiceHandler {
             .on('stop', ({ inst }) => {
                 // Remember selection in case the user wants to add smth in the next one
                 inst.keepSelection();
+                console.log(inst);
 
                 // console.log(this._selection.option('class'))
                 // console.log(this._selection.option('class', 'selection_2'))
