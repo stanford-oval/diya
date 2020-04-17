@@ -63,7 +63,7 @@ export default class VoiceHandler {
 
         var port = chrome.runtime.connect();
         port.postMessage({ joke: 'Knock knock' });
-        port.onMessage.addListener((msg) => {
+        port.onMessage.addListener(msg => {
             if (msg.action == 'STOP_RECORDING') {
                 this._speak('what would you like to name this program?');
             }
@@ -76,12 +76,13 @@ export default class VoiceHandler {
                 this.selectStart();
             }
             if (msg.action == 'executionResult') {
-                for (let msg of msg.results)
-                    this._speak(msg.message);
+                for (let msg of msg.results) this._speak(msg.message);
             }
             if (msg.action == 'executionError') {
                 for (let msg of msg.errors)
-                    this._speak('Sorry, that did not work: ' + (msg.message || msg));
+                    this._speak(
+                        'Sorry, that did not work: ' + (msg.message || msg),
+                    );
             }
         });
 
@@ -114,7 +115,7 @@ export default class VoiceHandler {
                     inst.clearSelection();
                 }
             })
-            .on('move', (event) => {
+            .on('move', event => {
                 // {changed: {removed, added}}
 
                 let removed = event.changed.removed;
@@ -143,7 +144,7 @@ export default class VoiceHandler {
             });
         this._selection.disable();
 
-        document.addEventListener('keyup', (event) => {
+        document.addEventListener('keyup', event => {
             if (event.key === 'Escape') {
                 // escape key maps to keycode `27`
                 this.selectClear();
@@ -151,11 +152,11 @@ export default class VoiceHandler {
         });
 
         // always track mouse position
-        document.addEventListener('mousemove', (event) => {
+        document.addEventListener('mousemove', event => {
             this._mouse_x = event.pageX;
             this._mouse_y = event.pageY;
         });
-        document.body.addEventListener('click', (event) => {
+        document.body.addEventListener('click', event => {
             this._current_click = event;
         });
 
@@ -184,6 +185,11 @@ export default class VoiceHandler {
             'run :prog_name using :v1 and :v2': this.runProgram.bind(this),
             'call :prog_name': this.runProgram.bind(this),
             'run :prog_name': this.runProgram.bind(this),
+
+            // Copy & Paste
+            'run :prog_name copying clipboard as :var_name': this.runProgramWithClipboard.bind(
+                this,
+            ),
 
             // Conditionals
             'call :prog_name if :var_name is at least :value': this.runProgramIfAtLeast.bind(
@@ -265,12 +271,11 @@ export default class VoiceHandler {
         annyang.addCommands(commands);
         annyang.start();
 
-        annyang.addCallback('result', function (whatWasHeardArray, ...data) {
+        annyang.addCallback('result', function(whatWasHeardArray, ...data) {
             console.log('annyang result', data);
             document.getElementById('transcript').textContent =
                 whatWasHeardArray[0];
 
-            /*
             if (!Cookies.get('userID')) Cookies.set('userID', uuid.v4());
 
             axios
@@ -278,15 +283,14 @@ export default class VoiceHandler {
                     utterance: whatWasHeardArray[0],
                     user: Cookies.get('userID'),
                 })
-                .then((_) => {
+                .then(_ => {
                     console.log('Recorded utterance:', whatWasHeardArray[0]);
                 })
-                .catch((e) => {
+                .catch(e => {
                     console.log('Failed to record utterance.', e);
                 });
-            */
         });
-        annyang.addCallback('resultNoMatch', function (
+        annyang.addCallback('resultNoMatch', function(
             whatWasHeardArray,
             ...data
         ) {
@@ -294,31 +298,31 @@ export default class VoiceHandler {
             console.log('no match', whatWasHeardArray, data);
         });
 
-        annyang.addCallback('start', function (whatWasHeardArray) {
+        annyang.addCallback('start', function(whatWasHeardArray) {
             document.getElementById('transcript').textContent = '[start]';
         });
 
-        annyang.addCallback('soundstart', function () {
+        annyang.addCallback('soundstart', function() {
             document.getElementById('transcript').textContent = '[soundstart]';
         });
 
-        annyang.addCallback('error', function (str) {
+        annyang.addCallback('error', function(str) {
             document.getElementById('transcript').textContent =
                 '[error] ' + str;
             console.log(str);
         });
 
-        annyang.addCallback('errorNetwork', function () {
+        annyang.addCallback('errorNetwork', function() {
             document.getElementById('transcript').textContent =
                 '[errorNetwork]';
         });
 
-        annyang.addCallback('errorPermissionBlocked', function () {
+        annyang.addCallback('errorPermissionBlocked', function() {
             document.getElementById('transcript').textContent =
                 '[errorPermissionBlocked]';
         });
 
-        annyang.addCallback('errorPermissionDenied', function () {
+        annyang.addCallback('errorPermissionDenied', function() {
             document.getElementById('transcript').textContent =
                 '[errorPermissionDenied]';
         });
@@ -340,7 +344,7 @@ export default class VoiceHandler {
         /* Digital Timer */
         this.timer = new Timer();
         this.timer.start();
-        this.timer.addEventListener('secondsUpdated', (_) => {
+        this.timer.addEventListener('secondsUpdated', _ => {
             document.getElementById(
                 'timer',
             ).innerHTML = this.timer.getTimeValues().toString();
@@ -440,6 +444,25 @@ export default class VoiceHandler {
             action: 'RUN_PROGRAM',
             varName: progName,
             args: args,
+        });
+    }
+
+    async runProgramWithClipboard(progName, ...args) {
+        this._speak(`Running ${progName} with clipboard content.`);
+        console.log('run with clipboard');
+
+        // Get data from clipboard
+        const clipboardText = (await navigator.clipboard.readText()).trim();
+        const clipboardVarName = args.pop();
+
+        this._sendMessage({
+            action: 'RUN_PROGRAM_WITH_CLIPBOARD',
+            varName: progName,
+            args: [clipboardVarName],
+            clipboard: {
+                argName: clipboardVarName,
+                argValue: clipboardText,
+            },
         });
     }
 

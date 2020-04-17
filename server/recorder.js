@@ -157,7 +157,12 @@ class RecordingSession {
             this._platform.locale,
             this._platform.getSharedPreferences(),
         );
-        this._formatter = new ThingTalk.Formatter(engine.platform.locale, engine.platform.timezone, engine.schemas, this._platform.getCapability('gettext'));
+        this._formatter = new ThingTalk.Formatter(
+            engine.platform.locale,
+            engine.platform.timezone,
+            engine.schemas,
+            this._platform.getCapability('gettext'),
+        );
 
         this._currentFocus = null;
         this._currentInput = null;
@@ -182,6 +187,7 @@ class RecordingSession {
             );
         }
         if (event.selector) {
+            console.log('event.selector', event.selector);
             params.push(
                 new Ast.InputParam(
                     null,
@@ -340,7 +346,11 @@ class RecordingSession {
             if (next.isNotification) {
                 try {
                     console.log(next);
-                    const message = await this._formatter.formatForType(next.outputType, next.outputValue, 'string');
+                    const message = await this._formatter.formatForType(
+                        next.outputType,
+                        next.outputValue,
+                        'string',
+                    );
                     results.push({
                         message: message,
                         value: next.outputValue,
@@ -373,11 +383,23 @@ class RecordingSession {
         console.log('_runProgram', progName, options.args);
         let time = null;
         if (options.time) {
-            console.log('_scheduleProgram', progName, options.time, options.args);
+            console.log(
+                '_scheduleProgram',
+                progName,
+                options.time,
+                options.args,
+                options.clipboard,
+            );
             time = await parseTime(options.time);
             console.log(time);
         }
-        const params_missing = this._recordProgramCall(progName, options.args, time, options.condition);
+        const params_missing = this._recordProgramCall(
+            progName,
+            options.args,
+            time,
+            options.condition,
+            options.clipboard,
+        );
 
         if (params_missing && params_missing.length > 0)
             return { params_missing, results: [], errors: [] };
@@ -413,7 +435,7 @@ class RecordingSession {
         return missingArgs;
     }
 
-    _recordProgramCall(progName, givenArgs, time, condition) {
+    _recordProgramCall(progName, givenArgs, time, condition, clipboard) {
         console.log(`RECORD PROGRAM CALL!!!`);
         progName = wordsToVariable(progName, 'p_');
         const prog = namedPrograms.get(progName);
@@ -449,18 +471,34 @@ class RecordingSession {
         // FIXME we should use an alias here but aliases do not work
         //let in_params = args.map((arg) =>
         //    new Ast.InputParam(null, wordsToVariable(arg, 'v_'), new Ast.Value.VarRef(wordsToVariable(arg, '__t_') + '.text')));
-        let in_params = args.map(
-            arg =>
+        let in_params;
+        if (!clipboard) {
+            in_params = args.map(
+                arg =>
+                    new Ast.InputParam(
+                        null,
+                        wordsToVariable(arg, 'v_'),
+                        new Ast.Value.VarRef('text'),
+                    ),
+            );
+        } else {
+            in_params = [
                 new Ast.InputParam(
                     null,
-                    wordsToVariable(arg, 'v_'),
-                    new Ast.Value.VarRef('text'),
-                ),
-        );
+                    wordsToVariable(clipboard.argName, 'v_'),
+                    new Ast.Value.String(clipboard.argValue),
+                )
+            ];
+        }
         console.log(`In Params: ${in_params}`);
 
         this._builder.addProcedure(decl);
         const action = new Ast.Action.VarRef(null, progName, in_params, null);
+
+        if (clipboard) {
+            this._builder.addAction(action);
+            return undefined;
+        }
 
         if (time) {
             const ttTime = Ast.Value.fromJS(
@@ -566,7 +604,12 @@ class RecordingSession {
     }
 
     _doReturnValue(varName) {
-        const table = new Ast.Table.VarRef(null, wordsToVariable(varName, 't_'), [], null);
+        const table = new Ast.Table.VarRef(
+            null,
+            wordsToVariable(varName, 't_'),
+            [],
+            null,
+        );
         const action = new Ast.Action.Notify(null, 'notify', null);
         this._builder.addQueryAction(table, action);
     }
@@ -600,7 +643,7 @@ class RecordingSession {
         console.log('addRecordingEvent', event);
         switch (event.action) {
             case 'START_RECORDING':
-                this._accRecArgs = new Set;
+                this._accRecArgs = new Set();
                 // reset the selection state when the user clicks start
                 this._currentInput = null;
                 this._currentSelection = null;
@@ -610,7 +653,7 @@ class RecordingSession {
 
             case 'STOP_RECORDING':
                 this._recordingMode = false;
-                this._accRecArgs = new Set;
+                this._accRecArgs = new Set();
                 return { code: this._builder.finish() };
 
             case 'GOTO':
@@ -663,7 +706,16 @@ class RecordingSession {
                 this._maybeFlushCurrentInput(event);
 
                 return this._runProgram(event.varName, {
-                    args: event.args
+                    args: event.args,
+                });
+
+            case 'RUN_PROGRAM_WITH_CLIPBOARD':
+                console.log('RUN_PROGRAM_WITH_CLIPBOARD');
+                this._maybeFlushCurrentInput(event);
+
+                return this._runProgram(event.varName, {
+                    args: event.args,
+                    clipboard: event.clipboard,
                 });
 
             case 'RUN_PROGRAM_IF':
@@ -674,14 +726,14 @@ class RecordingSession {
                         condVar: event.condVar,
                         value: event.value,
                         direction: event.direction,
-                    }
+                    },
                 });
 
             case 'SCHEDULE_PROGRAM':
                 this._maybeFlushCurrentInput(event);
                 return this._runProgram(event.varName, {
                     args: event.args,
-                    time: event.time
+                    time: event.time,
                 });
 
             case 'keydown':
