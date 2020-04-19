@@ -99,7 +99,7 @@ export default class VoiceHandler {
 
             // All elements in this container can be selected
             // selectables: ['div'],
-            selectables: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'td', 'caption'],
+            selectables: ['.box-wrap > div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'td', 'caption'],
 
             // The container is also the boundary in this case
             // boundaries: ['.box-wrap']
