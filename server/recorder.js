@@ -158,8 +158,6 @@ function wordsToVariable(words, prefix = '') {
 
 class RecordingSession {
     constructor(engine) {
-        this._builder = new ProgramBuilder();
-
         this._engine = engine;
         this._platform = engine.platform;
         this._parser = new ParserClient(
@@ -177,7 +175,21 @@ class RecordingSession {
         this._currentFocus = null;
         this._currentInput = null;
 
-        this._recordingMode = false;
+        this._builderStack = [new ProgramBuilder()];
+    }
+
+    _pushProgramBuilder() {
+        this._builderStack.push(new ProgramBuilder());
+    }
+    _popProgramBuilder() {
+        assert(this._recordingMode);
+        this._builderStack.pop();
+    }
+    get _builder() {
+        return this._builderStack[this._builderStack.length-1];
+    }
+    get _recordingMode() {
+        return this._builderStack.length >= 2;
     }
 
     _addPuppeteerQuery(event, name, params, saveAs) {
@@ -324,8 +336,7 @@ class RecordingSession {
         this._builder.name = wordsToVariable(name, 'p_');
         const code = this._builder.finish();
         namedPrograms.set(this._builder.name, code);
-
-        this._builder = new ProgramBuilder();
+        this._popProgramBuilder();
     }
 
     async _doRunProgram() {
@@ -411,7 +422,6 @@ class RecordingSession {
 
         if (!this._recordingMode) {
             const { results, errors } = await this._doRunProgram();
-            this._builder = new ProgramBuilder();
             return { params_missing: [], results, errors };
         }
 
@@ -648,12 +658,10 @@ class RecordingSession {
                 // reset the selection state when the user clicks start
                 this._currentInput = null;
                 this._currentSelection = null;
-                this._builder = new ProgramBuilder();
-                this._recordingMode = true;
+                this._pushProgramBuilder();
                 break;
 
             case 'STOP_RECORDING':
-                this._recordingMode = false;
                 return { code: this._builder.finish() };
 
             case 'GOTO':
