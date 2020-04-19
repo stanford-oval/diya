@@ -122,26 +122,14 @@ export default class EventRecorder {
       let selection
       let selector
       var selector_group = []
-      var selected = $('.selected')
       const optimizedMinLength = (e.target.id) ? 2 : 10 // if the target has an id, use that instead of multiple other selectors
 
-      if(selected.length){
-        $.each( selected, function( index, value ){
-          let selector_item = finder(value, {seedMinLength: 5, optimizedMinLength: optimizedMinLength})
-          selector_group.push(selector_item)
-        })
-        .promise().done( function(){ 
-          selector = selector_group.join(", ")
-        })
-
-      } else {
-        selector = this._dataAttribute
+      selector = this._dataAttribute
           ? finder(e.target, {seedMinLength: 5, optimizedMinLength: optimizedMinLength, attr: (name, _value) => name === this._dataAttribute})
           : finder(e.target, {seedMinLength: 5, optimizedMinLength: optimizedMinLength})
 
-        if (e.type === 'select') {
+      if (e.type === 'select') {
           selection = event.target.value.substring(event.target.selectionStart, event.target.selectionEnd)
-        }
       }
 
       const msg = {

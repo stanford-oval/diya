@@ -161,7 +161,7 @@ class ProgramBuilder {
 
 function wordsToVariable(words, prefix = '') {
     // stem all words
-    if (!Array.isArray(words)) words = words.split(/\s+/g);
+    if (!Array.isArray(words)) words = words.split(/[\s-]+/g);
 
     words = words.map(word => stemmer(word));
 
@@ -317,7 +317,7 @@ class RecordingSession {
             this._builder.declareVariable(
                 wordsToVariable(this._currentInput.varName, 'v_'),
                 Type.String,
-                new Ast.Value.String(this._currentInput.oldvalue)
+                new Ast.Value.String(this._currentInput.oldvalue || '')
             );
             const chunks = this._currentInput.value.split(
                 '[' + this._currentInput.varName + ']',
