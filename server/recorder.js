@@ -112,6 +112,8 @@ class ProgramBuilder {
 
         // replace parameters with real values
         for (let slot of prog.iterateSlots2()) {
+            if (slot instanceof Ast.Selector)
+                continue;
             const value = slot.get();
             if (value.isVarRef && this._declaredVariables.has(value.name))
                 slot.set(this._declaredVariables.get(value.name)[1]);
