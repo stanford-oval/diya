@@ -630,15 +630,16 @@ export default class VoiceHandler {
     }
 
     _tagVariableForInput(varName) {
+        let replaced = '';
         if (this._current_click.target.tagName === 'TEXTAREA') {
-            this._replaceSelectedTextArea(
+            replaced = this._replaceSelectedTextArea(
                 this._current_click.target,
                 `[${varName}]`,
             );
         }
 
         if (this._current_click.target.tagName === 'INPUT') {
-            this._replaceSelectedInput(
+            replaced = this._replaceSelectedInput(
                 this._current_click.target,
                 `[${varName}]`,
             );
@@ -653,6 +654,7 @@ export default class VoiceHandler {
         this._sendMessage({
             selector: selector,
             value: this._current_click.target.value,
+            oldvalue: replaced,
             tagName: this._current_click.target.tagName,
             inputType:
                 this._current_click.target.tagName === 'INPUT'
@@ -741,13 +743,17 @@ export default class VoiceHandler {
     }
 
     _replaceSelectedInput(el, text) {
+        const oldvalue = el.value;
         el.value = text;
+        return oldvalue;
     }
 
     _replaceSelectedTextArea(el, text) {
         var sel = this._getInputSelection(el);
         var val = el.value;
+        const oldvalue = val.slice(sel.start, sel.end);
         el.value = val.slice(0, sel.start) + text + val.slice(sel.end);
+        return oldvalue;
     }
 }
 

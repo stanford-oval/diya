@@ -90,30 +90,40 @@ class ProgramBuilder {
         );
     }
 
-    finish() {
-        let prog;
-        if (this.name !== null) {
-            const procedure = this._makeProgram();
-            const args = {};
-            for (let [name, type] of this._declaredVariables) args[name] = type;
-            const decl = new Ast.Statement.Declaration(
-                null,
-                this.name,
-                'procedure',
-                args,
-                procedure,
-            );
-            prog = new Ast.Program(null, [], [decl], []);
-        } else {
-            prog = this._makeProgram();
-        }
+    finishForDeclaration() {
+        const procedure = this._makeProgram();
+        const args = {};
+        for (let [name, [type,]] of this._declaredVariables) args[name] = type;
+        const decl = new Ast.Statement.Declaration(
+            null,
+            this.name,
+            'procedure',
+            args,
+            procedure,
+        );
+        const prog = new Ast.Program(null, [], [decl], []);
         const code = prog.prettyprint();
         console.log('Generated', code);
         return code;
     }
 
-    declareVariable(varName, type) {
-        this._declaredVariables.set(varName, type);
+    finishForExecution() {
+        const prog = this._makeProgram().clone();
+
+        // replace parameters with real values
+        for (let slot of prog.iterateSlots2()) {
+            const value = slot.get();
+            if (value.isVarRef && this._declaredVariables.has(value.name))
+                slot.set(this._declaredVariables.get(value.name)[1]);
+        }
+
+        const code = prog.prettyprint();
+        console.log('Generated', code);
+        return code;
+    }
+
+    declareVariable(varName, type, value) {
+        this._declaredVariables.set(varName, [type, value]);
     }
 
     addStatement(stmt) {
@@ -305,6 +315,7 @@ class RecordingSession {
             this._builder.declareVariable(
                 wordsToVariable(this._currentInput.varName, 'v_'),
                 Type.String,
+                new Ast.Value.String(this._currentInput.oldvalue)
             );
             const chunks = this._currentInput.value.split(
                 '[' + this._currentInput.varName + ']',
@@ -334,14 +345,14 @@ class RecordingSession {
 
     _doNameProgram(name) {
         this._builder.name = wordsToVariable(name, 'p_');
-        const code = this._builder.finish();
+        const code = this._builder.finishForDeclaration();
         namedPrograms.set(this._builder.name, code);
         this._popProgramBuilder();
     }
 
     async _doRunProgram() {
         console.log('RUNNING PROGRAM!!!');
-        const code = this._builder.finish();
+        const code = this._builder.finishForExecution();
         console.log('CODE (_doRunProgram)', code);
         const app = await this._engine.createApp(code, {
             description: 'this is a thingtalk program', // there is a bug in thingtalk where we fail to describe certain programs...
@@ -420,12 +431,8 @@ class RecordingSession {
         if (params_missing && params_missing.length > 0)
             return { params_missing, results: [], errors: [] };
 
-        if (!this._recordingMode) {
-            const { results, errors } = await this._doRunProgram();
-            return { params_missing: [], results, errors };
-        }
-
-        return { params_missing: [], results: [], errors: [] };
+        const { results, errors } = await this._doRunProgram();
+        return { params_missing: [], results, errors };
     }
 
     _getRelevantStoredArgs(neededArgs) {
@@ -662,7 +669,7 @@ class RecordingSession {
                 break;
 
             case 'STOP_RECORDING':
-                return { code: this._builder.finish() };
+                return { code: this._builder.finishForExecution() };
 
             case 'GOTO':
                 console.log('GOTO', event);
