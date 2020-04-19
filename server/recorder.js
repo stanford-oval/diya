@@ -67,6 +67,17 @@ class ProgramBuilder {
         this._statements = [];
         this._declaredProcedures = new Map();
         this._declaredVariables = new Map();
+
+        // accumulated arguments (meant for auto argument passing)
+        this._accArgs = new Set();
+    }
+
+    trackVariable(varName) {
+        this._accArgs.add(varName);
+    }
+
+    getTrackedVariables() {
+        return this._accArgs;
     }
 
     _makeProgram() {
@@ -148,7 +159,6 @@ function wordsToVariable(words, prefix = '') {
 class RecordingSession {
     constructor(engine) {
         this._builder = new ProgramBuilder();
-        console.log('BUILDER!!!', this._builder);
 
         this._engine = engine;
         this._platform = engine.platform;
@@ -168,11 +178,6 @@ class RecordingSession {
         this._currentInput = null;
 
         this._recordingMode = false;
-
-        // accumulated arguments in session (meant for auto argument passing)
-        this._accArgs = new Set();
-        // accumulated arguments while recording (meant for auto argument passing)
-        this._accRecArgs = new Set();
     }
 
     _addPuppeteerQuery(event, name, params, saveAs) {
@@ -414,7 +419,7 @@ class RecordingSession {
     }
 
     _getRelevantStoredArgs(neededArgs) {
-        const argSet = this._recordingMode ? this._accRecArgs : this._accArgs; // accumulated args
+        const argSet = this._builder.getTrackedVariables(); // accumulated args
         const result = [];
         // Get args in argSet that are also needed
         for (let item of argSet) {
@@ -632,11 +637,7 @@ class RecordingSession {
         }
 
         // Keep track of args for auto argument passing
-        if (this._recordingMode) {
-            this._accRecArgs.add(event.varName);
-        } else {
-            this._accArgs.add(event.varName);
-        }
+        this._builder.trackVariable(event.varName);
     }
 
     async addRecordingEvent(event) {
@@ -653,7 +654,6 @@ class RecordingSession {
 
             case 'STOP_RECORDING':
                 this._recordingMode = false;
-                this._accRecArgs = new Set();
                 return { code: this._builder.finish() };
 
             case 'GOTO':
