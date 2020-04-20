@@ -27,6 +27,7 @@ import finder from '@medv/finder';
 import uuid from 'uuid';
 import actions from '../models/extension-ui-actions';
 import { Timer } from 'easytimer.js';
+import MicroModal from 'micromodal';
 
 const serverUrl = 'http://localhost:3000';
 
@@ -76,13 +77,20 @@ export default class VoiceHandler {
                 this.selectStart();
             }
             if (msg.action == 'executionResult') {
-                for (let msg of msg.results) this._speak(msg.message);
+                console.log('executionResult', msg);
+                const messages = msg.results.map(m => {
+                    return `<p>${m.message}</p>`;
+                });
+                document.getElementById('result-modal-content').innerHTML = messages.join(' ');
+                MicroModal.show('result-modal');
             }
             if (msg.action == 'executionError') {
-                for (let msg of msg.errors)
-                    this._speak(
-                        'Sorry, that did not work: ' + (msg.message || msg),
-                    );
+                console.log('executionError', msg);
+                const mErrors = msg.errors.map(e => {
+                    return `${msg.message || msg}`;
+                });
+                document.getElementById('result-modal-content').innerHTML = `Sorry that did not work: ${mErrors.join(' ')}`;
+                MicroModal.show('result-modal');
             }
         });
 
@@ -161,10 +169,10 @@ export default class VoiceHandler {
         });
 
         const commands = {
-            'this is a *var_name': this.tagVariable.bind(this),
-            'this is an *var_name': this.tagVariable.bind(this),
-            'these are *var_name': this.tagVariable.bind(this),
-            'this variable is a *var_name': this.tagVariable.bind(this),
+            'this is a *var_name': this.tagThis.bind(this),
+            'this is an *var_name': this.tagThis.bind(this),
+            'these are *var_name': this.tagThis.bind(this),
+            'this variable is a *var_name': this.tagThis.bind(this),
 
             'call this program :var_name': this.nameProgram.bind(this),
             'call this command :var_name': this.nameProgram.bind(this),
@@ -176,56 +184,47 @@ export default class VoiceHandler {
                 this,
             ),
 
-            'call :prog_name with :var_name': this.runProgram.bind(this),
-            'run :prog_name with :var_name': this.runProgram.bind(this),
-            'call :prog_name using :var_name': this.runProgram.bind(this),
-            'run :prog_name using :var_name': this.runProgram.bind(this),
-            'call :prog_name using :v1 and :v2': this.runProgram.bind(this),
-            'call :prog_name with :v1 and :v2': this.runProgram.bind(this),
-            'run :prog_name using :v1 and :v2': this.runProgram.bind(this),
+            'call :prog_name with this': this.runProgramWithThis.bind(this),
+            'run :prog_name with this': this.runProgramWithThis.bind(this),
+            'call :prog_name using this': this.runProgramWithThis.bind(this),
+            'run :prog_name using this': this.runProgramWithThis.bind(this),
             'call :prog_name': this.runProgram.bind(this),
             'run :prog_name': this.runProgram.bind(this),
 
-            // Copy & Paste
+            // Clipboard
             'run :prog_name copying clipboard as :var_name': this.runProgramWithClipboard.bind(
                 this,
             ),
 
             // Conditionals
-            'call :prog_name if :var_name is at least :value': this.runProgramIfAtLeast.bind(
+            'call :prog_name if this is at least :value': this.runProgramIfAtLeast.bind(
                 this,
             ),
-            'run :prog_name if :var_name is at least :value': this.runProgramIfAtLeast.bind(
+            'run :prog_name if this is at least :value': this.runProgramIfAtLeast.bind(
                 this,
             ),
-            'call :prog_name if :var_name more than :value': this.runProgramIfAtLeast.bind(
+            'call :prog_name if this is greater than :value': this.runProgramIfAtLeast.bind(
                 this,
             ),
-            'run :prog_name if :var_name more than :value': this.runProgramIfAtLeast.bind(
+            'run :prog_name if this is greater than :value': this.runProgramIfAtLeast.bind(
                 this,
             ),
-            'call :prog_name if :var_name is greater than :value': this.runProgramIfAtLeast.bind(
+            'call :prog_name if this equals :value': this.runProgramIfEqual.bind(
                 this,
             ),
-            'run :prog_name if :var_name is greater than :value': this.runProgramIfAtLeast.bind(
+            'run :prog_name if this equals :value': this.runProgramIfEqual.bind(
                 this,
             ),
-            'call :prog_name if :var_name equals :value': this.runProgramIfEqual.bind(
+            'call :prog_name if this is at most :value': this.runProgramIfAtMost.bind(
                 this,
             ),
-            'run :prog_name if :var_name equals :value': this.runProgramIfEqual.bind(
+            'run :prog_name if this is at most :value': this.runProgramIfAtMost.bind(
                 this,
             ),
-            'call :prog_name if :var_name is at most :value': this.runProgramIfAtMost.bind(
+            'call :prog_name if this is less than :value': this.runProgramIfAtMost.bind(
                 this,
             ),
-            'run :prog_name if :var_name is at most :value': this.runProgramIfAtMost.bind(
-                this,
-            ),
-            'call :prog_name if :var_name is less than :value': this.runProgramIfAtMost.bind(
-                this,
-            ),
-            'run :prog_name if :var_name is less than :value': this.runProgramIfAtMost.bind(
+            'run :prog_name if this is less than :value': this.runProgramIfAtMost.bind(
                 this,
             ),
 
@@ -236,7 +235,7 @@ export default class VoiceHandler {
 
             // Run program with scheduling
             'run :prog_name at *time': this.scheduleProgram.bind(this),
-            'run :prog_name with :var_name at *time': this.scheduleProgram.bind(
+            'run :prog_name with this at *time': this.scheduleProgram.bind(
                 this,
             ),
 
@@ -266,6 +265,7 @@ export default class VoiceHandler {
             // Return value
             'return :var_name': this.returnValue.bind(this),
             'return the :var_name': this.returnValue.bind(this),
+            'return this': this.returnThis.bind(this),
         };
 
         annyang.addCommands(commands);
@@ -447,6 +447,17 @@ export default class VoiceHandler {
         });
     }
 
+    runProgramWithThis(progName, ...args) {
+        this._speak(`Running ${progName}.`);
+        console.log('run');
+        this.tagVariable('var');
+        this._sendMessage({
+            action: 'RUN_PROGRAM',
+            varName: progName,
+            args: ['var'],
+        });
+    }
+
     async runProgramWithClipboard(progName, ...args) {
         this._speak(`Running ${progName} with clipboard content.`);
         console.log('run with clipboard');
@@ -484,10 +495,11 @@ export default class VoiceHandler {
         }
 
         const value = args.pop();
-        const condVar = args.pop(); // variable being conditioned on
+        const condVar = 'condvar'; // variable being conditioned on
+        this.tagVariable('condvar');
 
         this._speak(
-            `Running ${progName} if ${condVar} ${direction[0]} ${value}`,
+            `Running ${progName} if this ${direction[0]} ${value}`,
         );
 
         console.log('DETECTING CONDITIONAL RUN!!!');
@@ -514,7 +526,7 @@ export default class VoiceHandler {
         this._sendMessage({
             action: 'SCHEDULE_PROGRAM',
             varName: progName,
-            args: args,
+            args: args.length === 1 ? ['var'] : args,
             time: time,
         });
     }
@@ -583,7 +595,7 @@ export default class VoiceHandler {
     }
 
     tagVariable(varName) {
-        this._speak('I have stored that variable.');
+        // this._speak('I have stored that variable.');
         if (
             this._current_click &&
             ['TEXTAREA', 'INPUT'].includes(this._current_click.target.tagName)
@@ -591,6 +603,18 @@ export default class VoiceHandler {
             this._tagVariableForInput(varName);
         } else {
             this._tagVariableForSelection(varName);
+        }
+    }
+    
+    tagThis() {
+        // this._speak('I have stored that variable.');
+        if (
+            this._current_click &&
+            ['TEXTAREA', 'INPUT'].includes(this._current_click.target.tagName)
+        ) {
+            this._tagVariableForInput('var');
+        } else {
+            this._tagVariableForSelection('var');
         }
     }
 
@@ -634,14 +658,14 @@ export default class VoiceHandler {
         if (this._current_click.target.tagName === 'TEXTAREA') {
             replaced = this._replaceSelectedTextArea(
                 this._current_click.target,
-                `[${varName}]`,
+                `[var]`,
             );
         }
 
         if (this._current_click.target.tagName === 'INPUT') {
             replaced = this._replaceSelectedInput(
                 this._current_click.target,
-                `[${varName}]`,
+                `[var]`,
             );
         }
 
@@ -662,7 +686,8 @@ export default class VoiceHandler {
                     : null,
             selection: null,
             action: 'THIS_IS_A',
-            varName: varName,
+            varName: varName, // for implicit variables
+            // varName: varName,
             keyCode: null,
             href: this._current_click.target.href
                 ? this._current_click.target.href
@@ -739,6 +764,14 @@ export default class VoiceHandler {
         this._sendMessage({
             action: 'RETURN_VALUE',
             varName: varName,
+        });
+    }
+
+    returnThis() {
+        this._speak(`OK I will return this.`);
+        this._sendMessage({
+            action: 'RETURN_VALUE',
+            varName: 'var',
         });
     }
 

@@ -44,6 +44,7 @@
     "js-cookie": "^2.2.1",
     "lowdb": "^1.0.0",
     "markdown": "^0.5.0",
+    "micromodal": "^0.4.6",
     "morgan": "^1.10.0",
     "node-gettext": "^2.1.0",
     "optimal-select": "^4.0.1",

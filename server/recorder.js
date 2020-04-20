@@ -484,6 +484,7 @@ class RecordingSession {
             args = this._getRelevantStoredArgs(requiredArgs);
             console.log(`RETRIEVED ARGS: ${args}`);
         }
+        // if using implicit this argument (i.e. wildcard), handled on frontend
         const missingArgs = this._missingArgs(args, requiredArgs);
         if (missingArgs.length !== 0) {
             // send missing args
@@ -491,6 +492,7 @@ class RecordingSession {
         }
 
         console.log('I"M HERE', decl);
+        console.log('args', args);
 
         // FIXME we should use an alias here but aliases do not work
         //let in_params = args.map((arg) =>
