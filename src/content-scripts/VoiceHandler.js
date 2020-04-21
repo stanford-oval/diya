@@ -169,10 +169,10 @@ export default class VoiceHandler {
         });
 
         const commands = {
-            'this is a *var_name': this.tagThis.bind(this),
-            'this is an *var_name': this.tagThis.bind(this),
-            'these are *var_name': this.tagThis.bind(this),
-            'this variable is a *var_name': this.tagThis.bind(this),
+            'this is a *var_name': this.tagVariable.bind(this),
+            'this is an *var_name': this.tagVariable.bind(this),
+            'these are *var_name': this.tagVariable.bind(this),
+            'this variable is a *var_name': this.tagVariable.bind(this),
 
             'call this program :var_name': this.nameProgram.bind(this),
             'call this command :var_name': this.nameProgram.bind(this),
@@ -262,10 +262,18 @@ export default class VoiceHandler {
                 this,
             ),
 
+            // Aggregation
+            'calculate the sum of this': this.calculateAggregation.bind(this, 'sum', 'var'),
+            'calculate the sum of :var_name': this.calculateAggregation.bind(this, 'sum'),
+            'calculate the average of this': this.calculateAggregation.bind(this, 'average', 'var'),
+            'calculate the average of :var_name': this.calculateAggregation.bind(this, 'average'),
+            'calculate the count of this': this.calculateAggregation.bind(this, 'count', 'var'),
+            'calculate the count of :var_name': this.calculateAggregation.bind(this, 'count'),
+
             // Return value
+            'return this': this.returnThis.bind(this),
             'return :var_name': this.returnValue.bind(this),
             'return the :var_name': this.returnValue.bind(this),
-            'return this': this.returnThis.bind(this),
         };
 
         annyang.addCommands(commands);
@@ -592,6 +600,24 @@ export default class VoiceHandler {
 
     filterEqualsTable(tableName, varName, value) {
         this.filterTable(tableName, varName, value, (a, b) => a === b);
+    }
+
+    calculateAggregation(aggOp, varName) {
+        this._speak(`OK I will calculate the ${aggOp} of ${varName}.`);
+        const msg = {
+            value: null,
+            tagName: null,
+            inputType: null,
+            selection: null,
+            action: 'AGGREGATION',
+            operator: aggOp === 'average' ? 'avg' : aggOp,
+            varName: varName,
+            keyCode: null,
+            href: null,
+        };
+        console.log('Aggregation message', msg);
+
+        this._sendMessage(msg);
     }
 
     tagVariable(varName) {
