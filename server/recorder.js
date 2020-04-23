@@ -461,6 +461,7 @@ class RecordingSession {
 
     _recordProgramCall(progName, givenArgs, time, condition, clipboard) {
         console.log(`RECORD PROGRAM CALL!!!`);
+        console.log('Given Args', givenArgs);
         progName = wordsToVariable(progName, 'p_');
         const prog = namedPrograms.get(progName);
         console.log(`PROG: ${prog}`);
@@ -476,19 +477,26 @@ class RecordingSession {
 
         const decl = parsed.declarations[0];
 
-        // check if enough args provided
         const requiredArgs = Object.keys(decl.args).map(x => x.split('_')[1]);
         let args = givenArgs;
-        if (condition && condition.value && requiredArgs.length > 0) {
-            // Handling implicit arguments for conditional
-            args = this._getRelevantStoredArgs(requiredArgs);
-            console.log(`RETRIEVED ARGS: ${args}`);
-        }
-        // if using implicit this argument (i.e. wildcard), handled on frontend
-        const missingArgs = this._missingArgs(args, requiredArgs);
-        if (missingArgs.length !== 0) {
-            // send missing args
-            return missingArgs;
+        let queryArgs = givenArgs;
+        if (args.includes('var')) { // if implicit this, default to first required arg
+            args = [requiredArgs[0]];
+            queryArgs = ['var']; // these args are the variables under which data is actually stored.
+            console.log('This args', givenArgs);
+        } else {
+            // check if enough args provided
+            if (condition && condition.value && requiredArgs.length > 0) {
+                // Handling implicit arguments for conditional
+                args = this._getRelevantStoredArgs(requiredArgs);
+                console.log(`RETRIEVED ARGS: ${args}`);
+            }
+            // if using implicit this argument (i.e. wildcard), handled on frontend
+            const missingArgs = this._missingArgs(args, requiredArgs);
+            if (missingArgs.length !== 0) {
+                // send missing args
+                return missingArgs;
+            }
         }
 
         console.log('I"M HERE', decl);
@@ -508,6 +516,7 @@ class RecordingSession {
                     ),
             );
         } else {
+            console.log('Ast.Value.String clipboard');
             in_params = [
                 new Ast.InputParam(
                     null,
@@ -539,7 +548,7 @@ class RecordingSession {
 
             if (args.length > 0) {
                 console.log('QUERY TIME!!!');
-                const tables = args.map(
+                const tables = queryArgs.map(
                     arg =>
                         new Ast.Table.VarRef(
                             null,
@@ -564,7 +573,7 @@ class RecordingSession {
         if (args.length > 0) {
             console.log('query without time args', args);
             console.log('QUERY WITHOUT TIME!!!');
-            let tables = args.map(
+            let tables = queryArgs.map(
                 arg =>
                     new Ast.Table.VarRef(
                         null,

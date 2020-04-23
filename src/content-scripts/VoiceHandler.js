@@ -184,10 +184,19 @@ export default class VoiceHandler {
                 this,
             ),
 
+            // Run with this
             'call :prog_name with this': this.runProgramWithThis.bind(this),
             'run :prog_name with this': this.runProgramWithThis.bind(this),
             'call :prog_name using this': this.runProgramWithThis.bind(this),
             'run :prog_name using this': this.runProgramWithThis.bind(this),
+            
+            'call :prog_name with :var_name': this.runProgram.bind(this),
+            'run :prog_name with :var_name': this.runProgram.bind(this),
+            'call :prog_name using :var_name': this.runProgram.bind(this),
+            'run :prog_name using :var_name': this.runProgram.bind(this),
+            'call :prog_name using :v1 and :v2': this.runProgram.bind(this),
+            'call :prog_name with :v1 and :v2': this.runProgram.bind(this),
+            'run :prog_name using :v1 and :v2': this.runProgram.bind(this),
             'call :prog_name': this.runProgram.bind(this),
             'run :prog_name': this.runProgram.bind(this),
 
@@ -197,35 +206,81 @@ export default class VoiceHandler {
             ),
 
             // Conditionals
+             'call :prog_name if :var_name is at least :value': this.runProgramIfAtLeast.bind(
+                this,
+            ),
+            'run :prog_name if :var_name is at least :value': this.runProgramIfAtLeast.bind(
+                this,
+            ),
+            'call :prog_name if :var_name more than :value': this.runProgramIfAtLeast.bind(
+                this,
+            ),
+            'run :prog_name if :var_name more than :value': this.runProgramIfAtLeast.bind(
+                this,
+            ),
+            'call :prog_name if :var_name is greater than :value': this.runProgramIfAtLeast.bind(
+                this,
+            ),
+            'run :prog_name if :var_name is greater than :value': this.runProgramIfAtLeast.bind(
+                this,
+            ),
+            'call :prog_name if :var_name equals :value': this.runProgramIfEqual.bind(
+                this,
+            ),
+            'run :prog_name if :var_name equals :value': this.runProgramIfEqual.bind(
+                this,
+            ),
+            'call :prog_name if :var_name is at most :value': this.runProgramIfAtMost.bind(
+                this,
+            ),
+            'run :prog_name if :var_name is at most :value': this.runProgramIfAtMost.bind(
+                this,
+            ),
+            'call :prog_name if :var_name is less than :value': this.runProgramIfAtMost.bind(
+                this,
+            ),
+            'run :prog_name if :var_name is less than :value': this.runProgramIfAtMost.bind(
+                this,
+            ),
             'call :prog_name if this is at least :value': this.runProgramIfAtLeast.bind(
                 this,
+                'condvar'
             ),
             'run :prog_name if this is at least :value': this.runProgramIfAtLeast.bind(
                 this,
+                'condvar'
             ),
             'call :prog_name if this is greater than :value': this.runProgramIfAtLeast.bind(
                 this,
+                'condvar'
             ),
             'run :prog_name if this is greater than :value': this.runProgramIfAtLeast.bind(
                 this,
+                'condvar'
             ),
             'call :prog_name if this equals :value': this.runProgramIfEqual.bind(
                 this,
+                'condvar'
             ),
             'run :prog_name if this equals :value': this.runProgramIfEqual.bind(
                 this,
+                'condvar'
             ),
             'call :prog_name if this is at most :value': this.runProgramIfAtMost.bind(
                 this,
+                'condvar'
             ),
             'run :prog_name if this is at most :value': this.runProgramIfAtMost.bind(
                 this,
+                'condvar'
             ),
             'call :prog_name if this is less than :value': this.runProgramIfAtMost.bind(
                 this,
+                'condvar'
             ),
             'run :prog_name if this is less than :value': this.runProgramIfAtMost.bind(
                 this,
+                'condvar'
             ),
 
             'watch this': this.recordingStart.bind(this),
@@ -503,8 +558,8 @@ export default class VoiceHandler {
         }
 
         const value = args.pop();
-        const condVar = 'condvar'; // variable being conditioned on
-        this.tagVariable('condvar');
+        const condVar = args.pop(); // variable being conditioned on
+        if (condVar === 'condvar') this.tagVariable('condvar');
 
         this._speak(
             `Running ${progName} if this ${direction[0]} ${value}`,
@@ -684,14 +739,14 @@ export default class VoiceHandler {
         if (this._current_click.target.tagName === 'TEXTAREA') {
             replaced = this._replaceSelectedTextArea(
                 this._current_click.target,
-                `[var]`,
+                `[${varName}]`,
             );
         }
 
         if (this._current_click.target.tagName === 'INPUT') {
             replaced = this._replaceSelectedInput(
                 this._current_click.target,
-                `[var]`,
+                `[${varName}]`,
             );
         }
 
