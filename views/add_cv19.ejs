@@ -1,0 +1,37 @@
+<%- include('header'); -%>
+
+  <h3>Restaurants</h3>
+  <table id='cv19' style="width:50%">
+    <tr>
+      <th>Name</th>
+      <th>Cases</th>
+    </tr>
+    <tr>
+      <td>Santa Clara</td>
+      <td>301</td>
+    </tr>
+    <tr>
+      <td>San Fransisco</td>
+      <td>391</td>
+    </tr>
+    <tr>
+      <td>San Jose</td>
+      <td>120</td>
+    </tr>
+  </table>
+
+  <hr>
+
+  <div class="row">
+      <div class="col-sm">
+          <h3>Script:</h3>
+          <%- include('script', {scriptName: 'filter_restaurants'}) %>
+      </div>
+
+      <div class="col-sm">
+          <h3>Video:</h3>
+      </div>
+  </div>
+
+  
+<%- include('footer'); -%>

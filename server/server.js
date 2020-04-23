@@ -117,6 +117,10 @@ function initFrontend(db) {
         res.render('if_stocks');
     });
 
+    app.get('/add_cv19', (req, res) => {
+        res.render('add_cv19');
+    });
+
     app.get('/if_restaurants', (req, res) => {
         res.render('if_restaurants');
     });

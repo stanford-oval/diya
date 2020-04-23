@@ -629,6 +629,19 @@ class RecordingSession {
         return undefined;
     }
 
+    _doAggregation(operator, varName) {
+        const table = new Ast.Table.VarRef(
+            null,
+            wordsToVariable(varName, 't_'),
+            [],
+            null,
+        );
+        const aggregation = new Ast.Table.Aggregation(null, table, 'number', operator, null, null);
+
+        let saveAs = operator === 'avg' ? 'average' : operator;
+        this._builder.addNamedQuery(wordsToVariable(saveAs, 't_'), aggregation);
+    }
+
     _doReturnValue(varName) {
         const table = new Ast.Table.VarRef(
             null,
@@ -718,6 +731,11 @@ class RecordingSession {
             case 'RETURN_VALUE':
                 this._maybeFlushCurrentInput(event);
                 this._doReturnValue(event.varName);
+                break;
+
+            case 'AGGREGATION':
+                this._maybeFlushCurrentInput(event);
+                this._doAggregation(event.operator, event.varName);
                 break;
 
             case 'RUN_PROGRAM':

@@ -97,6 +97,13 @@
             **Say:** “name this program food”\t
             **Say:** “run food and then tweet the result”\t
         `.trim(),
+        'add_cv19': `\t
+            **Say:** “start cv19\t
+            **Action:** [Select cases listed in table.]\t
+            **Say:** Stop selection \t
+            **Say:** “this table contains cases”\t
+            **Say:** “Add cases”\t
+        `.trim(),
     };
 
     console.log(encodeURI(scripts['for_each_stocks']));
