@@ -283,9 +283,11 @@ export default class VoiceHandler {
                 'condvar'
             ),
 
-            'watch this': this.recordingStart.bind(this),
-            'start recording': this.recordingStart.bind(this),
-            'stop recording': this.recordingStop.bind(this),
+            // 'watch this': this.recordingStart.bind(this),
+            'start function :func_name': this.recordingStart.bind(this),
+            'stop function :func_name': this.recordingStop.bind(this),
+            // 'start recording': this.recordingStart.bind(this),
+            // 'stop recording': this.recordingStop.bind(this),
             'ok done': this.recordingStop.bind(this),
 
             // Run program with scheduling
@@ -397,12 +399,13 @@ export default class VoiceHandler {
         window.speechSynthesis.speak(msg);
     }
 
-    recordingStart() {
+    recordingStart(func_name) {
         this._speak(
             'Recording started.  Do the actions you would like me to record.',
         );
         this._sendMessage({
             action: actions.START,
+            varName: progName
         });
         /* Digital Timer */
         this.timer = new Timer();
@@ -414,9 +417,10 @@ export default class VoiceHandler {
         });
     }
 
-    recordingStop() {
+    recordingStop(func_name) {
         this._sendMessage({
             action: actions.STOP,
+            varName: progName
         });
         this.timer.stop();
     }
