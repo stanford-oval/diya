@@ -76,7 +76,7 @@ class RecordingController {
     }
   }
 
-  start () {
+  start (funcName) {
     console.log('-------start recording-------------')
     this.cleanUp()
 
@@ -132,7 +132,7 @@ class RecordingController {
     this._boundedKeyCommandHandler = this.handleKeyCommands.bind(this)
     chrome.commands.onCommand.addListener(this._boundedKeyCommandHandler)
 
-    this._sendEvent({ action: 'START_RECORDING' })
+    this._sendEvent({ action: 'START_RECORDING', funcName })
     chrome.tabs.query({ active: true }, (tabs) => {
       for (let tab of tabs) {
         chrome.tabs.sendMessage(tab.id, { action: actions.START })
@@ -154,8 +154,6 @@ class RecordingController {
     chrome.browserAction.setIcon({ path: './images/icon-black.png' })
     chrome.browserAction.setBadgeText({ text: this._badgeState })
     chrome.browserAction.setBadgeBackgroundColor({color: '#45C8F1'})
-
-
 
     this._sendEvent({ action: 'STOP_RECORDING' })
   }
@@ -248,8 +246,8 @@ class RecordingController {
     // console.log("handleMessage:", msg)
     // console.log(sender)
 
-    if (msg.action && msg.action === actions.START) this.start()
-    if (msg.action && msg.action === actions.STOP) this.stop()
+    if (msg.action && msg.action === actions.START) this.start(msg.funcName)
+    if (msg.action && msg.action === actions.STOP) this.stop(msg.funcName)
 
     if (msg.action && msg.action === actions.SELECT_START) this.selectStart()
     if (msg.action && msg.action === actions.SELECT_STOP) this.selectStop()

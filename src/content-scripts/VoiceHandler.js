@@ -44,7 +44,6 @@ export default class VoiceHandler {
         this._current_click = null;
         this._selection = null;
         this._selectedElements = new Set();
-        this._programNameCurrent = '';
         this._namedTables = {};
         this.timer = '';
         this._eventLog = [];
@@ -65,9 +64,6 @@ export default class VoiceHandler {
         var port = chrome.runtime.connect();
         port.postMessage({ joke: 'Knock knock' });
         port.onMessage.addListener(msg => {
-            if (msg.action == 'STOP_RECORDING') {
-                this._speak('what would you like to name this program?');
-            }
             if (msg.action == 'paramsMissing') {
                 const input = msg.paramsMissing;
                 const last = input.pop();
@@ -178,16 +174,6 @@ export default class VoiceHandler {
             'these are *var_name': this.tagVariable.bind(this),
             'this variable is a *var_name': this.tagVariable.bind(this),
 
-            'call this program :var_name': this.nameProgram.bind(this),
-            'call this command :var_name': this.nameProgram.bind(this),
-            'name this command :var_name': this.nameProgram.bind(this),
-            'name this program :var_name': this.nameProgram.bind(this),
-            'this program is :var_name': this.nameProgram.bind(this),
-            'this program is called :var_name': this.nameProgram.bind(this),
-            'this program should be called :var_name': this.nameProgram.bind(
-                this,
-            ),
-
             // Run with this
             'call :prog_name with this': this.runProgramWithThis.bind(this),
             'run :prog_name with this': this.runProgramWithThis.bind(this),
@@ -287,9 +273,11 @@ export default class VoiceHandler {
                 'condvar'
             ),
 
-            'watch this': this.recordingStart.bind(this),
-            'start recording': this.recordingStart.bind(this),
-            'stop recording': this.recordingStop.bind(this),
+            // 'watch this': this.recordingStart.bind(this),
+            'start function :func_name': this.recordingStart.bind(this),
+            'stop function :func_name': this.recordingStop.bind(this),
+            'start recording :func_name': this.recordingStart.bind(this),
+            'stop recording :func_name': this.recordingStop.bind(this),
             'ok done': this.recordingStop.bind(this),
 
             // Run program with scheduling
@@ -401,12 +389,13 @@ export default class VoiceHandler {
         window.speechSynthesis.speak(msg);
     }
 
-    recordingStart() {
+    recordingStart(funcName) {
         this._speak(
             'Recording started.  Do the actions you would like me to record.',
         );
         this._sendMessage({
             action: actions.START,
+            funcName: funcName
         });
         /* Digital Timer */
         this.timer = new Timer();
@@ -418,9 +407,11 @@ export default class VoiceHandler {
         });
     }
 
-    recordingStop() {
+    recordingStop(funcName) {
+        this._speak(`I stopped recording ${funcName}. Would you like to run ${funcName}?`);
         this._sendMessage({
             action: actions.STOP,
+            funcName: funcName
         });
         this.timer.stop();
     }
@@ -490,18 +481,6 @@ export default class VoiceHandler {
 
         this._mouse_x_start = this._mouse_x;
         this._mouse_y_start = this._mouse_y;
-    }
-
-    nameProgram(progName) {
-        this._speak(
-            `I have named this program ${progName}. Would you like to run ${progName}?`,
-        );
-        this._programNameCurrent = progName;
-
-        this._sendMessage({
-            action: 'NAME_PROGRAM',
-            varName: progName,
-        });
     }
 
     runProgram(progName, ...args) {

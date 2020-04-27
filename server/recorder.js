@@ -345,8 +345,7 @@ class RecordingSession {
         this._currentInput = null;
     }
 
-    _doNameProgram(name) {
-        this._builder.name = wordsToVariable(name, 'p_');
+    _doStopRecording(name) {
         const code = this._builder.finishForDeclaration();
         namedPrograms.set(this._builder.name, code);
         this._popProgramBuilder();
@@ -692,10 +691,13 @@ class RecordingSession {
                 this._currentInput = null;
                 this._currentSelection = null;
                 this._pushProgramBuilder();
+                this._builder.name = wordsToVariable(event.funcName, 'p_');
                 break;
 
             case 'STOP_RECORDING':
-                return { code: this._builder.finishForExecution() };
+                this._maybeFlushCurrentInput(event);
+                this._doStopRecording(event.varName);
+                break;
 
             case 'GOTO':
                 console.log('GOTO', event);
@@ -730,11 +732,6 @@ class RecordingSession {
             case 'select':
                 this._maybeFlushCurrentInput(event);
                 this._currentInput = event;
-                break;
-
-            case 'NAME_PROGRAM':
-                this._maybeFlushCurrentInput(event);
-                this._doNameProgram(event.varName);
                 break;
 
             case 'RETURN_VALUE':
