@@ -339,6 +339,7 @@ class RecordingSession {
             else value = operands[0];
         }
 
+        console.log('Ast value', value);
         this._addPuppeteerAction(this._currentInput, 'set_input', [
             new Ast.InputParam(null, 'text', value),
         ]);
@@ -730,6 +731,7 @@ class RecordingSession {
 
             case 'change':
             case 'select':
+                console.log('select/change event', event);
                 this._maybeFlushCurrentInput(event);
                 this._currentInput = event;
                 break;
@@ -784,9 +786,9 @@ class RecordingSession {
                 break;
 
             default:
-                this._maybeFlushCurrentInput(event);
                 // log
                 console.log('unknown recording event', event);
+                this._maybeFlushCurrentInput(event);
         }
 
         return undefined;

@@ -168,23 +168,32 @@ export default class VoiceHandler {
             this._current_click = event;
         });
 
-        // Track pastes
-        const inputEls = document.body.querySelectorAll('input');
-        for (let i=0; i < inputEls.length; i++) {
-            inputEls[i].onkeydown = (evt) => {
-                evt = evt||window.event; // IE support
-                const c = evt.keyCode;
-                const ctrlDown = evt.ctrlKey||evt.metaKey; // Mac support
+        // Track ctrl-v
+        document.body.addEventListener('keydown', async (evt) => {
+            console.log('Keydown on input element!')
+            evt = evt||window.event; // IE support
+            const c = evt.keyCode;
+            const ctrlDown = evt.ctrlKey||evt.metaKey; // Mac support
 
-                // Check for ctrl+v
-                if (ctrlDown && c==86) {
-                    this.tagThisCopy();
-                }
+            console.log('c', c);
+            console.log('ctrlDown', ctrlDown);
 
-                return true;
+            // Check for ctrl+v
+            if (ctrlDown && (c === 86)) {
+                console.log('Paste handled');
+                // Prevent pasting using ctrl-v to avoid recording text into webtalk
+                evt.preventDefault();
+                // Tag as variable
+                this.tagThisCopy();
+                // Paste selected text
+                const clipboardText = await navigator.clipboard.readText();
+                const srcElement = evt.target || evt.srcElement;
+                this._replaceSelectedInput(srcElement, clipboardText);
+                return false;
             }
-        }
-        
+
+            return true;
+        });
 
         const commands = {
             'this is a *var_name': this.tagVariable.bind(this),
@@ -741,18 +750,20 @@ export default class VoiceHandler {
 
     _tagVariableForInput(varName, implicit) {
         let replaced = '';
-        if (this._current_click.target.tagName === 'TEXTAREA') {
-            replaced = this._replaceSelectedTextArea(
-                this._current_click.target,
-                `[${varName}]`,
-            );
-        }
-
-        if (this._current_click.target.tagName === 'INPUT') {
-            replaced = this._replaceSelectedInput(
-                this._current_click.target,
-                `[${varName}]`,
-            );
+        // Replace text of input only when not implicit
+        if (!implicit) {
+            if (this._current_click.target.tagName === 'TEXTAREA') {
+                replaced = this._replaceSelectedTextArea(
+                    this._current_click.target,
+                    `[${varName}]`,
+                );
+            }
+            if (this._current_click.target.tagName === 'INPUT') {
+                replaced = this._replaceSelectedInput(
+                    this._current_click.target,
+                    `[${varName}]`,
+                );
+            }
         }
 
         const optimizedMinLength = this._current_click.target.id ? 2 : 10; // if the target has an id, use that instead of multiple other selectors

@@ -112,6 +112,9 @@ export default class EventRecorder {
   }
 
   _recordEvent (e) {
+    // Don't record ctrl + v
+    if (this._previousEvent && (this._previousEvent.keyCode === 17) && e.keyCode === 86) return;
+
     if (this._previousEvent && this._previousEvent.timeStamp === e.timeStamp) return
     this._previousEvent = e
 
