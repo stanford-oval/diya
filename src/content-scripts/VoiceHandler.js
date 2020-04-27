@@ -138,13 +138,14 @@ export default class VoiceHandler {
                     el.classList.remove('selected');
                 }
             })
-            .on('stop', ({ inst }) => {
+            .on('stop', async ({ inst }) => {
                 // Remember selection in case the user wants to add smth in the next one
                 inst.keepSelection();
-                console.log(inst);
+                console.log('inst', inst);
+                console.log('inst', inst.v[0].innerText);
 
                 // Copy to clipboard
-                await navigator.clipboard.writeText();
+                await navigator.clipboard.writeText(inst.v[0].innerText);
 
                 // console.log(this._selection.option('class'))
                 // console.log(this._selection.option('class', 'selection_2'))
