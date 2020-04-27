@@ -166,6 +166,23 @@ export default class VoiceHandler {
         document.body.addEventListener('click', event => {
             this._current_click = event;
         });
+
+        // Track pastes
+        const inputEls = document.body.querySelectorAll('input');
+        for (let i=0; i < inputEls.length; i++) {
+            inputEls[i].onkeydown = (evt) => {
+                evt = evt||window.event; // IE support
+                const c = evt.keyCode;
+                const ctrlDown = evt.ctrlKey||evt.metaKey; // Mac support
+
+                // Check for ctrl+v
+                if (ctrlDown && c==86) {
+                    this.tagThisCopy();
+                }
+
+                return true;
+            }
+        }
         
 
         const commands = {
@@ -683,15 +700,7 @@ export default class VoiceHandler {
     }
 
     tagThisCopy() {
-        // this._speak('I have stored that variable.');
-        if (
-            this._current_click &&
-            ['TEXTAREA', 'INPUT'].includes(this._current_click.target.tagName)
-        ) {
-            this._tagVariableForInput('var');
-        } else {
-            this._tagVariableForSelection('var');
-        }
+        this._tagVariableForInput('var', true);
     }
 
     _getMultiSelector(elements) {
@@ -729,7 +738,7 @@ export default class VoiceHandler {
         this._sendMessage(msg);
     }
 
-    _tagVariableForInput(varName) {
+    _tagVariableForInput(varName, implicit) {
         let replaced = '';
         if (this._current_click.target.tagName === 'TEXTAREA') {
             replaced = this._replaceSelectedTextArea(
@@ -762,7 +771,7 @@ export default class VoiceHandler {
                     : null,
             selection: null,
             action: 'THIS_IS_A',
-            varName: varName, // for implicit variables
+            varName: implicit ? 'var' : varName, // for implicit variables
             // varName: varName,
             keyCode: null,
             href: this._current_click.target.href
