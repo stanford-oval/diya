@@ -147,6 +147,9 @@ export default class VoiceHandler {
                 inst.keepSelection();
                 console.log(inst);
 
+                // Copy to clipboard
+                await navigator.clipboard.writeText();
+
                 // console.log(this._selection.option('class'))
                 // console.log(this._selection.option('class', 'selection_2'))
             });
@@ -167,6 +170,7 @@ export default class VoiceHandler {
         document.body.addEventListener('click', event => {
             this._current_click = event;
         });
+        
 
         const commands = {
             'this is a *var_name': this.tagVariable.bind(this),
@@ -688,6 +692,18 @@ export default class VoiceHandler {
     }
     
     tagThis() {
+        // this._speak('I have stored that variable.');
+        if (
+            this._current_click &&
+            ['TEXTAREA', 'INPUT'].includes(this._current_click.target.tagName)
+        ) {
+            this._tagVariableForInput('var');
+        } else {
+            this._tagVariableForSelection('var');
+        }
+    }
+
+    tagThisCopy() {
         // this._speak('I have stored that variable.');
         if (
             this._current_click &&
