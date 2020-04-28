@@ -296,7 +296,9 @@ class RecordingSession {
 
         if (this._currentInput === null) return;
 
+        console.log('_currentInput before event.', this._currentInput);
         if (event) {
+            // TODO: why does this exist
             if (this._currentInput.varName && !event.varName)
                 event.varName = this._currentInput.varName;
 
@@ -311,7 +313,7 @@ class RecordingSession {
                 return;
         }
 
-        console.log(this._currentInput);
+        console.log('_currentInput', this._currentInput);
         let value = new Ast.Value.String(this._currentInput.value);
         if (this._currentInput.varName) {
             this._builder.declareVariable(

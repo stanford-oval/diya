@@ -183,13 +183,16 @@ export default class VoiceHandler {
                 console.log('Paste handled');
                 // Prevent pasting using ctrl-v to avoid recording text into webtalk
                 evt.preventDefault();
-                // Tag as variable
-                this.tagThisCopy();
+
                 // Paste selected text
                 const clipboardText = await navigator.clipboard.readText();
-                const srcElement = evt.target || evt.srcElement;
-                this._replaceSelectedInput(srcElement, clipboardText);
-                return false;
+                this._current_click.target.value = clipboardText;
+                // const srcElement = evt.target || evt.srcElement;
+                // this._replaceSelectedInput(srcElement, clipboardText);
+
+                // Tag as variable
+                this.tagThisCopy();
+                // return false;
             }
 
             return true;
