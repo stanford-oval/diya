@@ -24,7 +24,7 @@ import annyang from 'annyang';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import finder from '@medv/finder';
-import uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import actions from '../models/extension-ui-actions';
 import { Timer } from 'easytimer.js';
 import MicroModal from 'micromodal';
@@ -358,10 +358,9 @@ export default class VoiceHandler {
 
         annyang.addCallback('result', function(whatWasHeardArray, ...data) {
             console.log('annyang result', data);
-            document.getElementById('transcript').textContent =
-                whatWasHeardArray[0];
+            document.getElementById('transcript').textContent = whatWasHeardArray[0]
 
-            if (!Cookies.get('userID')) Cookies.set('userID', uuid.v4());
+            if (!Cookies.get('userID')) Cookies.set('userID', uuidv4());
 
             axios
                 .post(`${serverUrl}/record-utterance`, {
@@ -415,7 +414,7 @@ export default class VoiceHandler {
 
     _speak(message) {
         var msg = new SpeechSynthesisUtterance(message);
-        msg.rate = 1.2;
+        msg.rate = 1.4;
         window.speechSynthesis.speak(msg);
     }
 
