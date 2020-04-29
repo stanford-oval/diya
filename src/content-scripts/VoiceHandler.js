@@ -439,7 +439,7 @@ export default class VoiceHandler {
     }
 
     recordingStop(funcName) {
-        this._speak(`I stopped recording ${funcName}. Would you like to run ${funcName}?`);
+        this._speak(`I stopped recording.`);
         this._sendMessage({
             action: actions.STOP,
             funcName: funcName
