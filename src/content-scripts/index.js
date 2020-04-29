@@ -24,7 +24,7 @@ document.body.innerHTML =
       <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="result-modal-title">
         <header class="modal__header">
           <h2 class="modal__title" id="result-modal-title">
-            Nightmare Result
+            Result
           </h2>
           <button class="modal__close" aria-label="Close modal" data-micromodal-close></button>
         </header>

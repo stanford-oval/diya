@@ -191,7 +191,14 @@ export default class VoiceHandler {
             if (msg.action == 'executionResult') {
                 console.log('executionResult', msg);
                 const messages = msg.results.map(m => {
-                    return `<p>${m.message}</p>`;
+                    var str = m.message
+                    try {
+                        str = str.split('$')[1]
+                    } catch(error) {
+                        
+                    }
+                    return `<p>${str}</p>`;
+                    // return `<p>${m.message}</p>`;
                 });
                 document.getElementById('result-modal-content').innerHTML = messages.join(' ');
                 MicroModal.show('result-modal');
@@ -466,6 +473,7 @@ export default class VoiceHandler {
 
             // Return selected value
             'return this text': this.returnSelected.bind(this),
+            'return this value': this.returnSelected.bind(this),
 
             // Return value
             'return this': this.returnThis.bind(this),
