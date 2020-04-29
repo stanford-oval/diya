@@ -105,6 +105,10 @@ function initFrontend(db) {
         res.render('simple_text');
     });
 
+    app.get('/user_input', (req, res) => {
+        res.render('user_input');
+    });
+
     app.get('/for_each_emails', (req, res) => {
         res.render('for_each_emails');
     });
