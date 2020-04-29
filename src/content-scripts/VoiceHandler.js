@@ -354,11 +354,12 @@ export default class VoiceHandler {
         };
 
         annyang.addCommands(commands);
-        annyang.start();
+        annyang.start({continuous: true});
 
         annyang.addCallback('result', function(whatWasHeardArray, ...data) {
             console.log('annyang result', data);
-            document.getElementById('transcript').textContent = whatWasHeardArray[0]
+
+            document.getElementById('transcript').textContent =  whatWasHeardArray[0];
 
             if (!Cookies.get('userID')) Cookies.set('userID', uuidv4());
 
