@@ -39,8 +39,8 @@ const getCommonAncestor = (nodes) => {
         throw new Error("getCommonAncestor: not enough parameters");
 
     let i;
-    const method = "contains" in node[0] ? "contains" : "compareDocumentPosition",
-    const test   = method === "contains" ? 1 : 0x0010;
+    const method = "contains" in nodes[0] ? "contains" : "compareDocumentPosition";
+    const test = method === "contains" ? 1 : 0x0010;
 
     rocking:
     while (nodes[0] = nodes[0].parentNode) {
@@ -49,7 +49,7 @@ const getCommonAncestor = (nodes) => {
             if ((nodes[0][method](nodes[i]) & test) !== test)
                 continue rocking;
         }
-        return node1;
+        return nodes[0];
     }
 
     return null;
@@ -88,8 +88,10 @@ const getSelectedElementTags = (win) => {
         range = sel.getRangeAt(0);
     }
 
+    console.log('range', range);
     if (range) {
         containerElement = range.commonAncestorContainer;
+        console.log('containerElement', containerElement)
         if (containerElement.nodeType != 1) {
             containerElement = containerElement.parentNode;
         }
@@ -106,8 +108,10 @@ const getSelectedElementTags = (win) => {
             elmlist.push(treeWalker.currentNode);
         }
 
-        console.log(elmlist);
+        console.log('elmlist', elmlist);
     }
+
+    return elmlist;
 }
 
 /*
@@ -457,13 +461,13 @@ export default class VoiceHandler {
             'calculate the count of this': this.calculateAggregation.bind(this, 'count', 'var'),
             'calculate the count of :var_name': this.calculateAggregation.bind(this, 'count'),
 
+            // Return selected value
+            'return this text': this.returnSelected.bind(this),
+
             // Return value
             'return this': this.returnThis.bind(this),
             'return :var_name': this.returnValue.bind(this),
             'return the :var_name': this.returnValue.bind(this),
-
-            // Return selected value
-            'return this text': this.returnSelected.bind(this),
         };
 
         annyang.addCommands(commands);
@@ -989,12 +993,16 @@ export default class VoiceHandler {
     }
 
     returnSelected() {
+        console.log('Running returnSelected');
+        this._speak(`OK I will return this.`);
         // Get what the user is selecting
         const tags = getSelectedElementTags(window);
-        if (!tags) return;
+        console.log('tags', tags);
+        if (!tags) throw Error('Can\'t identify selected tags.');
 
         // Get nearest common ancestor of selected tags
         const selector = getCommonAncestorSelector(tags);
+        console.log('selector', selector);
         if (!selector) throw Error('Cannot find selector of selected elements.');
 
         this._tagVariableForSelection('selectedVar', selector);
