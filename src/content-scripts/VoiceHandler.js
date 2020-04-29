@@ -471,6 +471,11 @@ export default class VoiceHandler {
             'calculate the count of this': this.calculateAggregation.bind(this, 'count', 'var'),
             'calculate the count of :var_name': this.calculateAggregation.bind(this, 'count'),
 
+            'calculate the max of this': this.calculateAggregation.bind(this, 'max', 'var'),
+            'calculate the max of :var_name': this.calculateAggregation.bind(this, 'max'),
+            'calculate the min of this': this.calculateAggregation.bind(this, 'min', 'var'),
+            'calculate the min of :var_name': this.calculateAggregation.bind(this, 'min'),
+
             // Return selected value
             'return this text': this.returnSelected.bind(this),
             'return this value': this.returnSelected.bind(this),
@@ -507,6 +512,8 @@ export default class VoiceHandler {
             whatWasHeardArray,
             ...data
         ) {
+            this._speak(`I didn't understand you.`);
+            document.getElementById('transcript').textContent = `I didn't understand you.`;
             // ship to almond for processing...
             console.log('no match', whatWasHeardArray, data);
         });
@@ -543,7 +550,7 @@ export default class VoiceHandler {
 
     _speak(message) {
         var msg = new SpeechSynthesisUtterance(message);
-        msg.rate = 1.4;
+        msg.rate = 1.7;
         window.speechSynthesis.speak(msg);
     }
 
