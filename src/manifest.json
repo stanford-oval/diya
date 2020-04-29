@@ -20,7 +20,8 @@
     "activeTab",
     "contextMenus",
     "tts",
-    "clipboardRead"
+    "clipboardRead",
+    "webNavigation"
   ],
   "icons": {
     "16": "images/app_icon_16.png",
