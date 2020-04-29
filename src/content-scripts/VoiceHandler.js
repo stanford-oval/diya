@@ -516,6 +516,8 @@ export default class VoiceHandler {
             'return :v1 if :v2 is at most :value': this.returnIf.bind(this, '<='),
             'return :v1 if :v2 is less than :value': this.returnIf.bind(this, '<='),
             'return :v1 if :v2 is less than :value': this.returnIf.bind(this, '<='),
+
+            'enter data': this.enterData.bind(this)
         };
 
         annyang.addCommands(commands);
@@ -575,6 +577,11 @@ export default class VoiceHandler {
             document.getElementById('transcript').textContent =
                 '[errorPermissionDenied]';
         });
+    }
+
+    enterData() {
+      var newURL = "http://localhost:3000/user_input";
+      window.location = newURL;
     }
 
     _speak(message) {
