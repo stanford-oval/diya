@@ -61,6 +61,21 @@ function elementIsActionable(event) {
 // HACK this should be somewhere else
 const namedPrograms = new Tp.Helpers.FilePreferences('./named-programs.json');
 
+class MemoryStore {
+    constructor() {
+        this._store = {};
+    }
+
+    get(key) {
+        return this._store[key];
+    }
+
+    set(key, value) {
+        this._store[key] = value;
+    }
+}
+const PERSISTENT_NAMED_PROGRAMS = false;
+
 class ProgramBuilder {
     constructor() {
         this.name = null;
@@ -188,6 +203,7 @@ class RecordingSession {
         this._currentInput = null;
 
         this._builderStack = [new ProgramBuilder()];
+        this._namedPrograms = PERSISTENT_NAMED_PROGRAMS ? namedPrograms : new MemoryStore;
     }
 
     _pushProgramBuilder() {
@@ -350,7 +366,7 @@ class RecordingSession {
 
     _doStopRecording(name) {
         const code = this._builder.finishForDeclaration();
-        namedPrograms.set(this._builder.name, code);
+        this._namedPrograms.set(this._builder.name, code);
         this._popProgramBuilder();
     }
 
@@ -465,7 +481,7 @@ class RecordingSession {
         console.log(`RECORD PROGRAM CALL!!!`);
         console.log('Given Args', givenArgs);
         progName = wordsToVariable(progName, 'p_');
-        const prog = namedPrograms.get(progName);
+        const prog = this._namedPrograms.get(progName);
         console.log(`PROG: ${prog}`);
         if (!prog) throw new Error(`No such program ${progName}`);
 
