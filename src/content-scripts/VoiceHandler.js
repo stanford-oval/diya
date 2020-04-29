@@ -163,6 +163,9 @@ export default class VoiceHandler {
     }
 
     start() {
+        // document.documentElement.getElementsByClassName('body')[0].click();
+        // this._speak(`Ready.`);
+
         if (!document.getElementById('transcript')) {
             const transcriptDiv = document.createElement('div');
             transcriptDiv.id = 'transcript';
@@ -538,7 +541,7 @@ export default class VoiceHandler {
 
     recordingStart(funcName) {
         this._speak(
-            'Recording started.  Do the actions you would like me to record.',
+            'Recording started.',
         );
         this._sendMessage({
             action: actions.START,
@@ -555,7 +558,7 @@ export default class VoiceHandler {
     }
 
     recordingStop(funcName) {
-        this._speak(`I stopped recording.`);
+        this._speak(`Recordingstopped.`);
         this._sendMessage({
             action: actions.STOP,
             funcName: funcName
