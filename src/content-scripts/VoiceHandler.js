@@ -305,9 +305,10 @@ export default class VoiceHandler {
 
             // 'watch this': this.recordingStart.bind(this),
             'start function :func_name': this.recordingStart.bind(this),
-            'stop function :func_name': this.recordingStop.bind(this),
+            'stop function': this.recordingStop.bind(this),
             'start recording :func_name': this.recordingStart.bind(this),
-            'stop recording :func_name': this.recordingStop.bind(this),
+            'stop recording': this.recordingStop.bind(this),
+            'end recording': this.recordingStop.bind(this),
             'ok done': this.recordingStop.bind(this),
 
             // Run program with scheduling
