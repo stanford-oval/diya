@@ -297,6 +297,7 @@ class RecordingSession {
         if (this._currentInput === null) return;
 
         console.log('_currentInput before event.', this._currentInput);
+        console.log('event before maybeFlushCurrentInput condition', event);
         if (event) {
             // TODO: why does this exist
             if (this._currentInput.varName && !event.varName)
@@ -314,6 +315,7 @@ class RecordingSession {
         }
 
         console.log('_currentInput', this._currentInput);
+        console.log('event maybeFlushCurrentInput', event);
         let value = new Ast.Value.String(this._currentInput.value);
         if (this._currentInput.varName) {
             this._builder.declareVariable(
