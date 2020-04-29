@@ -312,12 +312,7 @@ class RecordingSession {
 
         if (this._currentInput === null) return;
 
-        console.log('_currentInput before event.', this._currentInput);
         if (event) {
-            // TODO: why does this exist
-            if (this._currentInput.varName && !event.varName)
-                event.varName = this._currentInput.varName;
-
             if (
                 (event.action === 'change' ||
                     event.action === 'select' ||
@@ -751,6 +746,15 @@ class RecordingSession {
             case 'select':
                 console.log('select/change event', event);
                 this._maybeFlushCurrentInput(event);
+
+                // after tagging a variable we'll get a change event for the same input
+                // but we don't want to add a set_input with a constant
+                if (this._currentInput && this._currentInput.varName &&
+                    event.selector === this._currentInput.selector &&
+                    event.frameId === this._currentInput.frameId &&
+                    event.frameUrl === this._currentInput.frameUrl)
+                    break;
+
                 this._currentInput = event;
                 break;
 
