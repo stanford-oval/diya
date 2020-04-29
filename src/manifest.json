@@ -4,18 +4,6 @@
   "manifest_version": 2,
   "description": "A Chrome extension for automating tasks in the browser.",
   "permissions": [
-    "http://localhost:3000/*",
-    "http://localhost:5000/*",
-    "http://127.0.0.1:3000/*",
-    "http://127.0.0.1:3000/*/*",
-    "https://voiceassistantturk.herokuapp.com/*",
-    "https://voiceassistantturk.herokuapp.com/*/*",
-    "https://walmart.com/*/*",
-    "https://walmart.com/*/*",
-    "https://www.soundboard.com/",
-    "https://www.weather.gov/",
-    "https://www.wikipedia.org/",
-    "https://www.arxiv.org/",
     "storage",
     "activeTab",
     "contextMenus",
@@ -50,7 +38,19 @@
     }
   },
   "content_scripts": [{
-    "matches": ["http://*/*", "https://*/*"],
+    "matches": [
+      "http://localhost:3000/*",
+      "http://localhost:5000/*",
+      "http://127.0.0.1:3000/*",
+      "http://127.0.0.1:3000/*/*",
+      "https://voiceassistantturk.herokuapp.com/*",
+      "https://voiceassistantturk.herokuapp.com/*/*",
+      "https://walmart.com/*/*",
+      "https://www.soundboard.com/*",
+      "https://www.weather.gov/*",
+      "https://www.wikipedia.org/*",
+      "https://www.arxiv.org/*"
+    ],
     "js": ["content-script.js"],
     "css": ["main.css"]
   }],
