@@ -14,6 +14,17 @@ document.addEventListener('NewSessionToken', function(event) {
 if (!Cookies.get('userID')) Cookies.set('userID', uuid.v4());
 
 $(function() {
+  $("#user_input").on('change keyup paste', ()=>{
+    var lines = $("#user_input").val().split(/\n/)
+    console.log('-----------------------------')
+    var trs = ""
+    $.each(lines, function( index, value ) {
+      trs += '<tr><td>' + value + '</td></tr>'
+    });
+    $("#user_output").html(trs)
+  })
+
+
   $('.button_reserve').on('click', e => {
     let restaurant_name = $(e.target).attr('name');
     $('#reservation_result').text('Reserved "' + restaurant_name + '"');
