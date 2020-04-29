@@ -1009,6 +1009,10 @@ export default class VoiceHandler {
         if (!selector) throw Error('Cannot find selector of selected elements.');
 
         this._tagVariableForSelection('selectedVar', selector);
+        this._sendMessage({
+            action: 'RETURN_VALUE',
+            varName: 'selectedVar',
+        });
     }
 
     _replaceSelectedInput(el, text) {
