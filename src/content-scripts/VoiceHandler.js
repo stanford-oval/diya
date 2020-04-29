@@ -35,6 +35,9 @@ const serverUrl = 'http://localhost:3000';
 // For extracting selector from native text highlight
 // Adapted from: https://stackoverflow.com/questions/3960843/how-to-find-the-nearest-common-ancestors-of-two-or-more-nodes
 const getCommonAncestor = (nodes) => {
+    if (nodes.length == 1)
+        return nodes[0];
+
     if (nodes.length < 2)
         throw new Error("getCommonAncestor: not enough parameters");
 
@@ -169,6 +172,11 @@ export default class VoiceHandler {
         if (!document.getElementById('transcript')) {
             const transcriptDiv = document.createElement('div');
             transcriptDiv.id = 'transcript';
+            transcriptDiv.style.zIndex = 1000000;
+            transcriptDiv.style.position = 'fixed';
+            transcriptDiv.style.width = '100%';
+            transcriptDiv.style.background = '#C4FFF7';
+
             document.body.prepend(transcriptDiv);
         }
         if (!document.getElementById('timer')) {
@@ -532,11 +540,8 @@ export default class VoiceHandler {
                     console.log('Failed to record utterance.', e);
                 });
         });
-        annyang.addCallback('resultNoMatch', function(
-            whatWasHeardArray,
-            ...data
-        ) {
-            this._speak(`I didn't understand you.`);
+        annyang.addCallback('resultNoMatch', (whatWasHeardArray,...data) => {
+            // this._speak(`I didn't understand you.`);
             document.getElementById('transcript').textContent = `I didn't understand you.`;
             // ship to almond for processing...
             console.log('no match', whatWasHeardArray, data);
@@ -1056,7 +1061,7 @@ export default class VoiceHandler {
             if (!tags) throw Error('Can\'t identify selected tags.');
 
             // Get nearest common ancestor of selected tags
-            const selector = getCommonAncestorSelector(tags);
+            selector = getCommonAncestorSelector(tags);
             console.log('selector', selector);
             if (!selector) throw Error('Cannot find selector of selected elements.');
         }

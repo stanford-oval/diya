@@ -21,7 +21,7 @@ class PuppeteerSession {
         this._browser = await puppeteer.launch({
             // debugging:
             headless: false,
-            slowMo: 100
+            // slowMo: 100
         });
         this._page = await this._browser.newPage();
 

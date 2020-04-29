@@ -53,7 +53,11 @@
       "https://marketwatch.com/*",
       "http://marketwatch.com/*",
       "https://www.marketwatch.com/*",
-      "http://www.marketwatch.com/*"
+      "http://www.marketwatch.com/*",
+      "https://www.investopedia.com/*",
+      "https://www.barchart.com/*",
+      "https://old.nasdaq.com/*",
+      "https://finance.yahoo.com/*"
     ],
     "js": ["content-script.js"],
     "css": ["main.css"]
