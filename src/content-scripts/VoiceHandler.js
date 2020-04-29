@@ -752,17 +752,17 @@ export default class VoiceHandler {
     }
 
     _tagVariableForInput(varName, implicit) {
-        let replaced = '';
+        let replaced = '', oldvalue = '';
         // Replace text of input only when not implicit
         if (!implicit) {
             if (this._current_click.target.tagName === 'TEXTAREA') {
-                replaced = this._replaceSelectedTextArea(
+                [replaced, oldvalue] = this._replaceSelectedTextArea(
                     this._current_click.target,
                     `[${varName}]`,
                 );
             }
             if (this._current_click.target.tagName === 'INPUT') {
-                replaced = this._replaceSelectedInput(
+                [replaced, oldvalue] = this._replaceSelectedInput(
                     this._current_click.target,
                     `[${varName}]`,
                 );
@@ -777,8 +777,8 @@ export default class VoiceHandler {
 
         this._sendMessage({
             selector: selector,
-            value: this._current_click.target.value,
-            oldvalue: replaced,
+            value: replaced,
+            oldvalue: oldvalue,
             tagName: this._current_click.target.tagName,
             inputType:
                 this._current_click.target.tagName === 'INPUT'
@@ -877,16 +877,15 @@ export default class VoiceHandler {
 
     _replaceSelectedInput(el, text) {
         const oldvalue = el.value;
-        el.value = text;
-        return oldvalue;
+        return [text, oldvalue];
     }
 
     _replaceSelectedTextArea(el, text) {
         var sel = this._getInputSelection(el);
         var val = el.value;
         const oldvalue = val.slice(sel.start, sel.end);
-        el.value = val.slice(0, sel.start) + text + val.slice(sel.end);
-        return oldvalue;
+        const replaced = val.slice(0, sel.start) + text + val.slice(sel.end);
+        return [replaced, oldvalue];
     }
 }
 
