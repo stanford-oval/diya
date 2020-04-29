@@ -479,9 +479,9 @@ export default class VoiceHandler {
             // Return selected value
             'return this text': this.returnSelected.bind(this),
             'return this value': this.returnSelected.bind(this),
+            'return this': this.returnSelected.bind(this),
 
             // Return value
-            'return this': this.returnThis.bind(this),
             'return :var_name': this.returnValue.bind(this),
             'return the :var_name': this.returnValue.bind(this),
         };
@@ -806,7 +806,9 @@ export default class VoiceHandler {
     }
 
     calculateAggregation(aggOp, varName) {
-        this._speak(`OK I will calculate the ${aggOp} of ${varName}.`);
+        this._speak(`OK I will calculate the ${aggOp} of ${varName === 'var' ? 'this' : varName}.`);
+        if (varName === 'var')
+            this._tagImplicitSelection();
         const msg = {
             value: null,
             tagName: null,
@@ -1002,31 +1004,33 @@ export default class VoiceHandler {
         });
     }
 
-    returnThis() {
-        this._speak(`OK I will return this.`);
-        this._sendMessage({
-            action: 'RETURN_VALUE',
-            varName: 'var',
-        });
+    _tagImplicitSelection() {
+        let selector;
+        if (this._selectedElements.size > 0) {
+            // something was selected using selection mode
+            selector = this._getMultiSelector(this._selectedElements);
+        } else {
+            // something was selected using native selection
+            const tags = getSelectedElementTags(window);
+            console.log('tags', tags);
+            if (!tags) throw Error('Can\'t identify selected tags.');
+
+            // Get nearest common ancestor of selected tags
+            const selector = getCommonAncestorSelector(tags);
+            console.log('selector', selector);
+            if (!selector) throw Error('Cannot find selector of selected elements.');
+        }
+        this._tagVariableForSelection('var', selector);
     }
 
     returnSelected() {
         console.log('Running returnSelected');
         this._speak(`OK I will return this.`);
-        // Get what the user is selecting
-        const tags = getSelectedElementTags(window);
-        console.log('tags', tags);
-        if (!tags) throw Error('Can\'t identify selected tags.');
 
-        // Get nearest common ancestor of selected tags
-        const selector = getCommonAncestorSelector(tags);
-        console.log('selector', selector);
-        if (!selector) throw Error('Cannot find selector of selected elements.');
-
-        this._tagVariableForSelection('selectedVar', selector);
+        this._tagImplicitSelection();
         this._sendMessage({
             action: 'RETURN_VALUE',
-            varName: 'selectedVar',
+            varName: 'var',
         });
     }
 
