@@ -62,7 +62,7 @@ class RecordingController {
     // this._boundedSelectStoptHandler = this.handleSelectStop.bind(this)
 
     chrome.runtime.onMessage.addListener(this._boundedMessageHandler)
-    // chrome.webNavigation.onCompleted.addListener(this._boundedNavigationHandler)
+    chrome.webNavigation.onCompleted.addListener(this._boundedNavigationHandler)
     // chrome.webNavigation.onBeforeNavigate.addListener(this._boundedWaitHandler)
 
     axios.post(SERVER_URL + '/recorder/start').then(({ data }) => {
@@ -268,9 +268,10 @@ class RecordingController {
     if (msg.control === ctrl.GET_SCREENSHOT) this.recordScreenshot(msg.value)
   }
 
-  handleNavigation ({ frameId }) {
+  handleNavigation ({ frameId, url }) {
     // console.debug('frameId is:', frameId)
     if (frameId === 0) {
+      this.recordCurrentUrl(url)
       this.recordNavigation()
     }
   }

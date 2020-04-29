@@ -54,12 +54,29 @@ function elementIsActionable(event) {
         (tagName === 'input' &&
             ['submit', 'reset', 'button'].includes(event.inputType)) ||
         tagName === 'button' ||
-        tagName === 'a'
+        tagName === 'a' ||
+        tagName === 'img' ||
+        tagName === 'span'
     );
 }
 
 // HACK this should be somewhere else
 const namedPrograms = new Tp.Helpers.FilePreferences('./named-programs.json');
+
+class MemoryStore {
+    constructor() {
+        this._store = {};
+    }
+
+    get(key) {
+        return this._store[key];
+    }
+
+    set(key, value) {
+        this._store[key] = value;
+    }
+}
+const PERSISTENT_NAMED_PROGRAMS = false;
 
 class ProgramBuilder {
     constructor() {
@@ -70,6 +87,11 @@ class ProgramBuilder {
 
         // accumulated arguments (meant for auto argument passing)
         this._accArgs = new Set();
+
+        // HACKS to avoid spurious/broken events
+        this.isToplevel = false;
+        this.hasGoto = false;
+        this.taggedInputs = new Set;
     }
 
     trackVariable(varName) {
@@ -188,6 +210,8 @@ class RecordingSession {
         this._currentInput = null;
 
         this._builderStack = [new ProgramBuilder()];
+        this._builderStack[0].isToplevel = true;
+        this._namedPrograms = PERSISTENT_NAMED_PROGRAMS ? namedPrograms : new MemoryStore;
     }
 
     _pushProgramBuilder() {
@@ -299,10 +323,6 @@ class RecordingSession {
         console.log('_currentInput before event.', this._currentInput);
         console.log('event before maybeFlushCurrentInput condition', event);
         if (event) {
-            // TODO: why does this exist
-            if (this._currentInput.varName && !event.varName)
-                event.varName = this._currentInput.varName;
-
             if (
                 (event.action === 'change' ||
                     event.action === 'select' ||
@@ -347,12 +367,13 @@ class RecordingSession {
         this._addPuppeteerAction(this._currentInput, 'set_input', [
             new Ast.InputParam(null, 'text', value),
         ]);
+        this._builder.taggedInputs.add(event.frameUrl + '//' + event.frameId + '//' + event.selector);
         this._currentInput = null;
     }
 
     _doStopRecording(name) {
         const code = this._builder.finishForDeclaration();
-        namedPrograms.set(this._builder.name, code);
+        this._namedPrograms.set(this._builder.name, code);
         this._popProgramBuilder();
     }
 
@@ -467,7 +488,7 @@ class RecordingSession {
         console.log(`RECORD PROGRAM CALL!!!`);
         console.log('Given Args', givenArgs);
         progName = wordsToVariable(progName, 'p_');
-        const prog = namedPrograms.get(progName);
+        const prog = this._namedPrograms.get(progName);
         console.log(`PROG: ${prog}`);
         if (!prog) throw new Error(`No such program ${progName}`);
 
@@ -707,6 +728,16 @@ class RecordingSession {
             case 'GOTO':
                 console.log('GOTO', event);
                 this._maybeFlushCurrentInput(event);
+
+                if (this._builder.isToplevel) {
+                    // at the top level, discard everything recorded so far
+                    this._builderStack = [new ProgramBuilder()];
+                    this._builderStack[0].isToplevel = true;
+                }
+
+                if (this._builder.hasGoto)
+                    break;
+                this._builder.hasGoto = true;
                 this._addPuppeteerAction(event, 'load', [
                     new Ast.InputParam(
                         null,
@@ -734,9 +765,19 @@ class RecordingSession {
                 break;
 
             case 'change':
-            case 'select':
-                console.log('select/change event', event);
+                console.log('change event', event);
                 this._maybeFlushCurrentInput(event);
+
+                // after tagging a variable we'll get a change event for the same input
+                // but we don't want to add a set_input with a constant
+                if (this._currentInput && this._currentInput.varName &&
+                    event.selector === this._currentInput.selector &&
+                    event.frameId === this._currentInput.frameId &&
+                    event.frameUrl === this._currentInput.frameUrl)
+                    break;
+                if (this._builder.taggedInputs.has(event.frameUrl + '//' + event.frameId + '//' + event.selector))
+                    break;
+
                 this._currentInput = event;
                 break;
 
@@ -786,13 +827,14 @@ class RecordingSession {
                 });
 
             case 'keydown':
-                // ignore (we handle change/select events instead)
+            case 'select':
+                // ignore (we handle change events instead)
                 break;
 
             default:
                 // log
                 console.log('unknown recording event', event);
-                this._maybeFlushCurrentInput(event);
+                //this._maybeFlushCurrentInput(event);
         }
 
         return undefined;

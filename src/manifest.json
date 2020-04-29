@@ -10,11 +10,18 @@
     "http://127.0.0.1:3000/*/*",
     "https://voiceassistantturk.herokuapp.com/*",
     "https://voiceassistantturk.herokuapp.com/*/*",
+    "https://walmart.com/*/*",
+    "https://walmart.com/*/*",
+    "https://www.soundboard.com/",
+    "https://www.weather.gov/",
+    "https://www.wikipedia.org/",
+    "https://www.arxiv.org/",
     "storage",
     "activeTab",
     "contextMenus",
     "tts",
-    "clipboardRead"
+    "clipboardRead",
+    "webNavigation"
   ],
   "icons": {
     "16": "images/app_icon_16.png",
