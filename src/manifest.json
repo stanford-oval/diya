@@ -48,7 +48,7 @@
       "https://www.walmart.com/*",
       "https://www.soundboard.com/*",
       "https://www.weather.gov/*",
-      "https://www.wikipedia.org/*",
+      "https://en.wikipedia.org/*",
       "https://www.arxiv.org/*"
     ],
     "js": ["content-script.js"],

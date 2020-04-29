@@ -70,7 +70,7 @@ class PuppeteerSession {
         await frame.waitForSelector(selector, { timeout: 10000 });
 
         const values = await frame.$$eval(selector, (elements) => elements.map((el) => el.textContent));
-        return values.map((v) => ({ text: v, number: parseInt(v) }));
+        return values.map((v) => ({ text: v, number: Math.floor(parseFloat(v.replace(/[^0-9.]/g, ''))) }));
     }
 }
 
