@@ -690,7 +690,7 @@ export default class VoiceHandler {
     }
 
     tagVariable(varName) {
-        // this._speak('I have stored that variable.');
+        this._speak('Variable named ' + varName);
         if (
             this._current_click &&
             ['TEXTAREA', 'INPUT'].includes(this._current_click.target.tagName)
