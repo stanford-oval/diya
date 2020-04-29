@@ -48,13 +48,13 @@ class PuppeteerSession {
 
     async click(frameUrl, selector) {
         const frame = await this._getFrame(frameUrl);
-        await frame.waitForSelector(selector);
+        await frame.waitForSelector(selector, { timeout: 10000 });
         await frame.click(selector);
     }
 
     async setInput(frameUrl, selector, text) {
         const frame = await this._getFrame(frameUrl);
-        await frame.waitForSelector(selector);
+        await frame.waitForSelector(selector, { timeout: 10000 });
 
         const element = await frame.$(selector);
         // select everything
@@ -67,7 +67,7 @@ class PuppeteerSession {
 
     async select(frameUrl, selector) {
         const frame = await this._getFrame(frameUrl);
-        await frame.waitForSelector(selector);
+        await frame.waitForSelector(selector, { timeout: 10000 });
 
         const values = await frame.$$eval(selector, (elements) => elements.map((el) => el.textContent));
         return values.map((v) => ({ text: v, number: parseInt(v) }));
