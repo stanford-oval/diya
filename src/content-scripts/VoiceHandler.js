@@ -558,7 +558,7 @@ export default class VoiceHandler {
     }
 
     recordingStop(funcName) {
-        this._speak(`Recoding stopped.`);
+        this._speak(`Recordingstopped.`);
         this._sendMessage({
             action: actions.STOP,
             funcName: funcName
