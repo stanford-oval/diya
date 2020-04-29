@@ -687,6 +687,7 @@ class RecordingSession {
         );
         let tables = [table];
         if (condition && condition.value) {
+            console.log('return value condition', condition);
             const { condvar, value, direction } = condition;
             if (condvar !== varName) {
                 const condTable = new Ast.Table.Filter(

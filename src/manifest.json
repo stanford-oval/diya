@@ -49,7 +49,11 @@
       "https://www.soundboard.com/*",
       "https://www.weather.gov/*",
       "https://en.wikipedia.org/*",
-      "https://www.arxiv.org/*"
+      "https://www.arxiv.org/*",
+      "https://marketwatch.com/*",
+      "http://marketwatch.com/*",
+      "https://www.marketwatch.com/*",
+      "http://www.marketwatch.com/*"
     ],
     "js": ["content-script.js"],
     "css": ["main.css"]

@@ -459,15 +459,35 @@ export default class VoiceHandler {
             'return :var_name': this.returnValue.bind(this),
             'return the :var_name': this.returnValue.bind(this),
 
-            'return :v1 if :v2 is at least :value': this.returnIf.bind(this, '>='),
-            'return :v1 if :v2 more than :value': this.returnIf.bind(this, '>='),
-            'return :v1 if :v2 is greater than :value': this.returnIf.bind(this, '>='),
-            'return :v1 if :v2 equals :value': this.returnIf.bind(this, '=='),
-            'return :v1 if :v2 equals :value': this.returnIf.bind(this, '=='),
-            'return :v1 if :v2 is at most :value': this.returnIf.bind(this, '<='),
-            'return :v1 if :v2 is at most :value': this.returnIf.bind(this, '<='),
-            'return :v1 if :v2 is less than :value': this.returnIf.bind(this, '<='),
-            'return :v1 if :v2 is less than :value': this.returnIf.bind(this, '<='),
+            'return this if this is at least :value': this.returnIf.bind(this, '>=', 'var', 'var'),
+            'return this if this more than :value': this.returnIf.bind(this, '>=', 'var', 'var'),
+            'return this if this is greater than :value': this.returnIf.bind(this, '>=', 'var', 'var'),
+            'return this if this equals :value': this.returnIf.bind(this, '==', 'var', 'var'),
+            'return this if this equals :value': this.returnIf.bind(this, '==', 'var', 'var'),
+            'return this if this is at most :value': this.returnIf.bind(this, '<=', 'var', 'var'),
+            'return this if this is at most :value': this.returnIf.bind(this, '<=', 'var', 'var'),
+            'return this if this is less than :value': this.returnIf.bind(this, '<=', 'var', 'var'),
+            'return this if this is less than :value': this.returnIf.bind(this, '<=', 'var', 'var'),
+
+            'return this value if this is at least :value': this.returnIf.bind(this, '>=', 'var', 'var'),
+            'return this value if this more than :value': this.returnIf.bind(this, '>=', 'var', 'var'),
+            'return this value if this is greater than :value': this.returnIf.bind(this, '>=', 'var', 'var'),
+            'return this value if this equals :value': this.returnIf.bind(this, '==', 'var', 'var'),
+            'return this value if this equals :value': this.returnIf.bind(this, '==', 'var', 'var'),
+            'return this value if this is at most :value': this.returnIf.bind(this, '<=', 'var', 'var'),
+            'return this value if this is at most :value': this.returnIf.bind(this, '<=', 'var', 'var'),
+            'return this value if this is less than :value': this.returnIf.bind(this, '<=', 'var', 'var'),
+            'return this value if this is less than :value': this.returnIf.bind(this, '<=', 'var', 'var'),
+
+            'return this value if it is at least :value': this.returnIf.bind(this, '>=', 'var', 'var'),
+            'return this value if it more than :value': this.returnIf.bind(this, '>=', 'var', 'var'),
+            'return this value if it is greater than :value': this.returnIf.bind(this, '>=', 'var', 'var'),
+            'return this value if it equals :value': this.returnIf.bind(this, '==', 'var', 'var'),
+            'return this value if it equals :value': this.returnIf.bind(this, '==', 'var', 'var'),
+            'return this value if it is at most :value': this.returnIf.bind(this, '<=', 'var', 'var'),
+            'return this value if it is at most :value': this.returnIf.bind(this, '<=', 'var', 'var'),
+            'return this value if it is less than :value': this.returnIf.bind(this, '<=', 'var', 'var'),
+            'return this value if it is less than :value': this.returnIf.bind(this, '<=', 'var', 'var'),
 
             'return this if :var_name is at least :value': this.returnIf.bind(this, '>=', 'var'),
             'return this if :var_name more than :value': this.returnIf.bind(this, '>=', 'var'),
@@ -479,15 +499,15 @@ export default class VoiceHandler {
             'return this if :var_name is less than :value': this.returnIf.bind(this, '<=', 'var'),
             'return this if :var_name is less than :value': this.returnIf.bind(this, '<=', 'var'),
 
-            'return this if this is at least :value': this.returnIf.bind(this, '>=', 'var', 'var'),
-            'return this if this more than :value': this.returnIf.bind(this, '>=', 'var', 'var'),
-            'return this if this is greater than :value': this.returnIf.bind(this, '>=', 'var', 'var'),
-            'return this if this equals :value': this.returnIf.bind(this, '==', 'var', 'var'),
-            'return this if this equals :value': this.returnIf.bind(this, '==', 'var', 'var'),
-            'return this if this is at most :value': this.returnIf.bind(this, '<=', 'var', 'var'),
-            'return this if this is at most :value': this.returnIf.bind(this, '<=', 'var', 'var'),
-            'return this if this is less than :value': this.returnIf.bind(this, '<=', 'var', 'var'),
-            'return this if this is less than :value': this.returnIf.bind(this, '<=', 'var', 'var'),
+            'return :v1 if :v2 is at least :value': this.returnIf.bind(this, '>='),
+            'return :v1 if :v2 more than :value': this.returnIf.bind(this, '>='),
+            'return :v1 if :v2 is greater than :value': this.returnIf.bind(this, '>='),
+            'return :v1 if :v2 equals :value': this.returnIf.bind(this, '=='),
+            'return :v1 if :v2 equals :value': this.returnIf.bind(this, '=='),
+            'return :v1 if :v2 is at most :value': this.returnIf.bind(this, '<='),
+            'return :v1 if :v2 is at most :value': this.returnIf.bind(this, '<='),
+            'return :v1 if :v2 is less than :value': this.returnIf.bind(this, '<='),
+            'return :v1 if :v2 is less than :value': this.returnIf.bind(this, '<='),
         };
 
         annyang.addCommands(commands);
@@ -1008,11 +1028,11 @@ export default class VoiceHandler {
         });
     }
 
-    returnIf(operator, returnValue, condvar, value) {
+    returnIf(direction, returnValue, condvar, value) {
         this._speak(`OK I will return ${returnValue === 'var' ? 'this' : returnValue}.`);
         if (returnValue === 'var' || condvar === 'var')
             this._tagImplicitSelection();
-        console.log('return ' + returnValue);
+        console.log('return ' + returnValue + ' if ' + condvar + ' ' + direction + ' ' + value);
         this._sendMessage({
             action: 'RETURN_VALUE',
             varName: returnValue,
