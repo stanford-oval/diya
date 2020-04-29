@@ -474,9 +474,11 @@ class RecordingSession {
     }
 
     _missingArgs(providedArgs, requiredArgs) {
+        providedArgs = providedArgs.map((arg) => wordsToVariable(arg, ''));
         const missingArgs = [];
         for (let i = 0; i < requiredArgs.length; i++) {
-            if (!providedArgs.includes(requiredArgs[i])) {
+            const required = wordsToVariable(requiredArgs[i], '');
+            if (!providedArgs.includes(required)) {
                 missingArgs.push(requiredArgs[i]);
             }
         }
