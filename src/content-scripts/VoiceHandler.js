@@ -344,47 +344,21 @@ export default class VoiceHandler {
             'run :prog_name': this.runProgram.bind(this),
 
             // Clipboard
-            'run :prog_name copying clipboard as :var_name': this.runProgramWithClipboard.bind(
-                this,
-            ),
+            'run :prog_name copying clipboard as :var_name': this.runProgramWithClipboard.bind(this),
 
             // Conditionals
-             'call :prog_name if :var_name is at least :value': this.runProgramIfAtLeast.bind(
-                this,
-            ),
-            'run :prog_name if :var_name is at least :value': this.runProgramIfAtLeast.bind(
-                this,
-            ),
-            'call :prog_name if :var_name more than :value': this.runProgramIfAtLeast.bind(
-                this,
-            ),
-            'run :prog_name if :var_name more than :value': this.runProgramIfAtLeast.bind(
-                this,
-            ),
-            'call :prog_name if :var_name is greater than :value': this.runProgramIfAtLeast.bind(
-                this,
-            ),
-            'run :prog_name if :var_name is greater than :value': this.runProgramIfAtLeast.bind(
-                this,
-            ),
-            'call :prog_name if :var_name equals :value': this.runProgramIfEqual.bind(
-                this,
-            ),
-            'run :prog_name if :var_name equals :value': this.runProgramIfEqual.bind(
-                this,
-            ),
-            'call :prog_name if :var_name is at most :value': this.runProgramIfAtMost.bind(
-                this,
-            ),
-            'run :prog_name if :var_name is at most :value': this.runProgramIfAtMost.bind(
-                this,
-            ),
-            'call :prog_name if :var_name is less than :value': this.runProgramIfAtMost.bind(
-                this,
-            ),
-            'run :prog_name if :var_name is less than :value': this.runProgramIfAtMost.bind(
-                this,
-            ),
+            'call :prog_name if :var_name is at least :value': this.runProgramIfAtLeast.bind(this),
+            'run :prog_name if :var_name is at least :value': this.runProgramIfAtLeast.bind(this),
+            'call :prog_name if :var_name more than :value': this.runProgramIfAtLeast.bind(this),
+            'run :prog_name if :var_name more than :value': this.runProgramIfAtLeast.bind(this),
+            'call :prog_name if :var_name is greater than :value': this.runProgramIfAtLeast.bind(this),
+            'run :prog_name if :var_name is greater than :value': this.runProgramIfAtLeast.bind(this),
+            'call :prog_name if :var_name equals :value': this.runProgramIfEqual.bind(this),
+            'run :prog_name if :var_name equals :value': this.runProgramIfEqual.bind(this),
+            'call :prog_name if :var_name is at most :value': this.runProgramIfAtMost.bind(this),
+            'run :prog_name if :var_name is at most :value': this.runProgramIfAtMost.bind(this),
+            'call :prog_name if :var_name is less than :value': this.runProgramIfAtMost.bind(this),
+            'run :prog_name if :var_name is less than :value': this.runProgramIfAtMost.bind(this),
             'call :prog_name if this is at least :value': this.runProgramIfAtLeast.bind(
                 this,
                 'condvar'
@@ -484,6 +458,36 @@ export default class VoiceHandler {
             // Return value
             'return :var_name': this.returnValue.bind(this),
             'return the :var_name': this.returnValue.bind(this),
+
+            'return :v1 if :v2 is at least :value': this.returnIf.bind(this, '>='),
+            'return :v1 if :v2 more than :value': this.returnIf.bind(this, '>='),
+            'return :v1 if :v2 is greater than :value': this.returnIf.bind(this, '>='),
+            'return :v1 if :v2 equals :value': this.returnIf.bind(this, '=='),
+            'return :v1 if :v2 equals :value': this.returnIf.bind(this, '=='),
+            'return :v1 if :v2 is at most :value': this.returnIf.bind(this, '<='),
+            'return :v1 if :v2 is at most :value': this.returnIf.bind(this, '<='),
+            'return :v1 if :v2 is less than :value': this.returnIf.bind(this, '<='),
+            'return :v1 if :v2 is less than :value': this.returnIf.bind(this, '<='),
+
+            'return this if :var_name is at least :value': this.returnIf.bind(this, '>=', 'var'),
+            'return this if :var_name more than :value': this.returnIf.bind(this, '>=', 'var'),
+            'return this if :var_name is greater than :value': this.returnIf.bind(this, '>=', 'var'),
+            'return this if :var_name equals :value': this.returnIf.bind(this, '==', 'var'),
+            'return this if :var_name equals :value': this.returnIf.bind(this, '==', 'var'),
+            'return this if :var_name is at most :value': this.returnIf.bind(this, '<=', 'var'),
+            'return this if :var_name is at most :value': this.returnIf.bind(this, '<=', 'var'),
+            'return this if :var_name is less than :value': this.returnIf.bind(this, '<=', 'var'),
+            'return this if :var_name is less than :value': this.returnIf.bind(this, '<=', 'var'),
+
+            'return this if this is at least :value': this.returnIf.bind(this, '>=', 'var', 'var'),
+            'return this if this more than :value': this.returnIf.bind(this, '>=', 'var', 'var'),
+            'return this if this is greater than :value': this.returnIf.bind(this, '>=', 'var', 'var'),
+            'return this if this equals :value': this.returnIf.bind(this, '==', 'var', 'var'),
+            'return this if this equals :value': this.returnIf.bind(this, '==', 'var', 'var'),
+            'return this if this is at most :value': this.returnIf.bind(this, '<=', 'var', 'var'),
+            'return this if this is at most :value': this.returnIf.bind(this, '<=', 'var', 'var'),
+            'return this if this is less than :value': this.returnIf.bind(this, '<=', 'var', 'var'),
+            'return this if this is less than :value': this.returnIf.bind(this, '<=', 'var', 'var'),
         };
 
         annyang.addCommands(commands);
@@ -1001,6 +1005,22 @@ export default class VoiceHandler {
         this._sendMessage({
             action: 'RETURN_VALUE',
             varName: varName,
+        });
+    }
+
+    returnIf(operator, returnValue, condvar, value) {
+        this._speak(`OK I will return ${returnValue === 'var' ? 'this' : returnValue}.`);
+        if (returnValue === 'var' || condvar === 'var')
+            this._tagImplicitSelection();
+        console.log('return ' + returnValue);
+        this._sendMessage({
+            action: 'RETURN_VALUE',
+            varName: returnValue,
+            condition: {
+                direction,
+                condvar,
+                value
+            }
         });
     }
 

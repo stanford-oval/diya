@@ -678,15 +678,50 @@ class RecordingSession {
         this._builder.addNamedQuery(wordsToVariable(saveAs, 't_'), aggregation);
     }
 
-    _doReturnValue(varName) {
+    _doReturnValue(varName, condition) {
         const table = new Ast.Table.VarRef(
             null,
             wordsToVariable(varName, 't_'),
             [],
             null,
         );
+        let tables = [table];
+        if (condition && condition.value) {
+            const { condvar, value, direction } = condition;
+            if (condvar !== varName) {
+                const condTable = new Ast.Table.Filter(
+                    null,
+                    new Ast.Table.VarRef(
+                        null,
+                        wordsToVariable(condvar, 't_'),
+                        [],
+                        null,
+                    ),
+                    new Ast.BooleanExpression.Atom(
+                        null,
+                        'number',
+                        direction,
+                        new Ast.Value.Number(parseInt(value)),
+                    ),
+                    null,
+                );
+                tables = [condTable].concat(tables);
+            } else {
+                tables[0] = new Ast.Table.Filter(null, table,
+                    new Ast.BooleanExpression.Atom(
+                        null,
+                        'number',
+                        direction,
+                        new Ast.Value.Number(parseInt(value)),
+                    ),
+                    null,
+                );
+            }
+        }
+
+        const query = tables.reduce((t1, t2) => new Ast.Table.Join(null, t1, t2, [], null));
         const action = new Ast.Action.Notify(null, 'notify', null);
-        this._builder.addQueryAction(table, action);
+        this._builder.addQueryAction(query, action);
     }
 
     _handleThisIsA(event) {
@@ -785,7 +820,7 @@ class RecordingSession {
 
             case 'RETURN_VALUE':
                 this._maybeFlushCurrentInput(event);
-                this._doReturnValue(event.varName);
+                this._doReturnValue(event.varName, event.condition);
                 break;
 
             case 'AGGREGATION':
