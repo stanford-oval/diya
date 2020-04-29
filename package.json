@@ -36,6 +36,7 @@
     "browserify": "^16.5.1",
     "bufferutil": "^4.0.1",
     "crx-hotreload": "^1.0.4",
+    "css-selector-generator": "^2.0.1",
     "date-fns": "^2.11.1",
     "easytimer.js": "^4.1.1",
     "ejs": "^3.0.2",

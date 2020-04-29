@@ -45,7 +45,7 @@
       "http://127.0.0.1:3000/*/*",
       "https://voiceassistantturk.herokuapp.com/*",
       "https://voiceassistantturk.herokuapp.com/*/*",
-      "https://walmart.com/*/*",
+      "https://www.walmart.com/*",
       "https://www.soundboard.com/*",
       "https://www.weather.gov/*",
       "https://www.wikipedia.org/*",

@@ -28,8 +28,121 @@ import { v4 as uuidv4 } from 'uuid';
 import actions from '../models/extension-ui-actions';
 import { Timer } from 'easytimer.js';
 import MicroModal from 'micromodal';
+import getCssSelector from 'css-selector-generator';
 
 const serverUrl = 'http://localhost:3000';
+
+// For extracting selector from native text highlight
+// Adapted from: https://stackoverflow.com/questions/3960843/how-to-find-the-nearest-common-ancestors-of-two-or-more-nodes
+const getCommonAncestor = (nodes) => {
+    if (nodes.length < 2)
+        throw new Error("getCommonAncestor: not enough parameters");
+
+    let i;
+    const method = "contains" in nodes[0] ? "contains" : "compareDocumentPosition";
+    const test = method === "contains" ? 1 : 0x0010;
+
+    rocking:
+    while (nodes[0] = nodes[0].parentNode) {
+        i = nodes.length;    
+        while (i--) {
+            if ((nodes[0][method](nodes[i]) & test) !== test)
+                continue rocking;
+        }
+        return nodes[0];
+    }
+
+    return null;
+}
+
+const getCommonAncestorSelector = (nodes) => {
+    const ancestor = getCommonAncestor(nodes);
+
+    if (!ancestor) return null;
+
+    return getCssSelector(ancestor);
+};
+
+// Adapted from: https://stackoverflow.com/questions/1482832/how-to-get-all-elements-that-are-highlighted
+const rangeIntersectsNode = (range, node) => {
+    let nodeRange;
+    if (range.intersectsNode) {
+        return range.intersectsNode(node);
+    } else {
+        nodeRange = node.ownerDocument.createRange();
+        try {
+            nodeRange.selectNode(node);
+        } catch (e) {
+            nodeRange.selectNodeContents(node);
+        }
+
+        return range.compareBoundaryPoints(Range.END_TO_START, nodeRange) == -1 &&
+            range.compareBoundaryPoints(Range.START_TO_END, nodeRange) == 1;
+    }
+}
+
+const getSelectedElementTags = (win) => {
+    let range, sel, elmlist, treeWalker, containerElement;
+    sel = win.getSelection();
+    if (sel.rangeCount > 0) {
+        range = sel.getRangeAt(0);
+    }
+
+    console.log('range', range);
+    if (range) {
+        containerElement = range.commonAncestorContainer;
+        console.log('containerElement', containerElement)
+        if (containerElement.nodeType != 1) {
+            containerElement = containerElement.parentNode;
+        }
+
+        treeWalker = win.document.createTreeWalker(
+            containerElement,
+            NodeFilter.SHOW_ELEMENT,
+            (node) => { return rangeIntersectsNode(range, node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT; },
+            false
+        );
+
+        elmlist = [treeWalker.currentNode];
+        while (treeWalker.nextNode()) {
+            elmlist.push(treeWalker.currentNode);
+        }
+
+        console.log('elmlist', elmlist);
+    }
+
+    return elmlist;
+}
+
+/*
+const parents = (node) => {
+    const nodes = [node];
+    for (; node; node = node.parentNode) {
+        nodes.unshift(node);
+    }
+    return nodes;
+};
+
+const getCommonAncestor = (nodes) => {
+    const nodesParents = [];
+    for (let i = 0; i < nodes.length; i++) {
+        nodesParents.push(parents(nodes[i]));
+    }
+
+    const commonAncestorExists = nodesParents.reduce((acc, x) => {
+        return (acc[0] && (x[0] === acc[1][0]), x);
+    });
+    if (!commonAncestorExists) throw "No common ancestor!";
+
+    for (let i=0; i < nodes[0].length; i++) {
+        for (let j=0; j < nodes[0].length; j++) {
+
+        }
+        if (parents1[i] != parents2[i]) return parents1[i - 1]
+    }
+}
+*/
+
 
 export default class VoiceHandler {
     constructor() {
@@ -350,6 +463,9 @@ export default class VoiceHandler {
             'calculate the average of :var_name': this.calculateAggregation.bind(this, 'average'),
             'calculate the count of this': this.calculateAggregation.bind(this, 'count', 'var'),
             'calculate the count of :var_name': this.calculateAggregation.bind(this, 'count'),
+
+            // Return selected value
+            'return this text': this.returnSelected.bind(this),
 
             // Return value
             'return this': this.returnThis.bind(this),
@@ -692,8 +808,8 @@ export default class VoiceHandler {
         this._sendMessage(msg);
     }
 
-    tagVariable(varName) {
-        this._speak('Variable named ' + varName);
+    tagVariable(varName, noSpeech) {
+        if (!noSpeech) this._speak('Variable named ' + varName);
         if (
             this._current_click &&
             ['TEXTAREA', 'INPUT'].includes(this._current_click.target.tagName)
@@ -737,8 +853,8 @@ export default class VoiceHandler {
         return selectors.join(', ');
     }
 
-    _tagVariableForSelection(varName) {
-        const selector = this._getMultiSelector(this._selectedElements);
+    _tagVariableForSelection(varName, selector) {
+        if (!selector) selector = this._getMultiSelector(this._selectedElements);
         const msg = {
             selector: selector,
             value: null,
@@ -877,6 +993,22 @@ export default class VoiceHandler {
             action: 'RETURN_VALUE',
             varName: 'var',
         });
+    }
+
+    returnSelected() {
+        console.log('Running returnSelected');
+        this._speak(`OK I will return this.`);
+        // Get what the user is selecting
+        const tags = getSelectedElementTags(window);
+        console.log('tags', tags);
+        if (!tags) throw Error('Can\'t identify selected tags.');
+
+        // Get nearest common ancestor of selected tags
+        const selector = getCommonAncestorSelector(tags);
+        console.log('selector', selector);
+        if (!selector) throw Error('Cannot find selector of selected elements.');
+
+        this._tagVariableForSelection('selectedVar', selector);
     }
 
     _replaceSelectedInput(el, text) {
