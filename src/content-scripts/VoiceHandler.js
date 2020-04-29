@@ -117,35 +117,22 @@ const getSelectedElementTags = (win) => {
     return elmlist;
 }
 
-/*
-const parents = (node) => {
-    const nodes = [node];
-    for (; node; node = node.parentNode) {
-        nodes.unshift(node);
-    }
-    return nodes;
+const getSelectorForHighlighted = () => {
+    // something was selected using native selection
+    const tags = getSelectedElementTags(window);
+    console.log('tags', tags);
+    if (!tags) throw Error('Can\'t identify selected tags.');
+
+    // Get nearest common ancestor of selected tags
+    const selector = getCommonAncestorSelector(tags);
+    console.log('selector', selector);
+    if (!selector) {
+        console.log('Cannot find selector of selected elements. Defaulting to parent node.');
+        return getCssSelector(tags[0]);
+    };
+
+    return selector;
 };
-
-const getCommonAncestor = (nodes) => {
-    const nodesParents = [];
-    for (let i = 0; i < nodes.length; i++) {
-        nodesParents.push(parents(nodes[i]));
-    }
-
-    const commonAncestorExists = nodesParents.reduce((acc, x) => {
-        return (acc[0] && (x[0] === acc[1][0]), x);
-    });
-    if (!commonAncestorExists) throw "No common ancestor!";
-
-    for (let i=0; i < nodes[0].length; i++) {
-        for (let j=0; j < nodes[0].length; j++) {
-
-        }
-        if (parents1[i] != parents2[i]) return parents1[i - 1]
-    }
-}
-*/
-
 
 export default class VoiceHandler {
     constructor() {
@@ -234,7 +221,7 @@ export default class VoiceHandler {
 
             // All elements in this container can be selected
             // selectables: ['div'],
-            selectables: ['.box-wrap > div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'td', 'th', 'caption'],
+            selectables: ['.box-wrap > div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'td', 'th', 'caption', 'tr'],
 
             // The container is also the boundary in this case
             // boundaries: ['.box-wrap']
@@ -330,6 +317,8 @@ export default class VoiceHandler {
         });
 
         const commands = {
+            'copy this': this.copyHighlighted.bind(this),
+
             'this is a *var_name': this.tagVariable.bind(this),
             'this is an *var_name': this.tagVariable.bind(this),
             'these are *var_name': this.tagVariable.bind(this),
@@ -880,6 +869,20 @@ export default class VoiceHandler {
 
     tagThisCopy() {
         this._tagVariableForInput('var', true);
+    }
+
+    async copyHighlighted() {
+        const selector = getSelectorForHighlighted();
+        console.log('copyHighlighted', selector);
+        if (!selector) return;
+
+        // tag as variable
+        this._tagVariableForSelection('var', selector);
+
+        // store in clipboard
+        const selectedEl = document.querySelector(selector);
+        if (!selectedEl) throw 'Cannot find element in DOM with that selector.';
+        await navigator.clipboard.writeText(selectedEl.textContent);
     }
 
     _getMultiSelector(elements) {
