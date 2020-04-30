@@ -27,7 +27,6 @@ import finder from '@medv/finder';
 import { v4 as uuidv4 } from 'uuid';
 import actions from '../models/extension-ui-actions';
 import { Timer } from 'easytimer.js';
-import getCssSelector from 'css-selector-generator';
 // import MicroModal from 'micromodal';
 
 const serverUrl = 'http://localhost:3000';
@@ -57,14 +56,6 @@ const getCommonAncestor = (nodes) => {
 
     return null;
 }
-
-const getCommonAncestorSelector = (nodes) => {
-    const ancestor = getCommonAncestor(nodes);
-
-    if (!ancestor) return null;
-
-    return getCssSelector(ancestor);
-};
 
 // Adapted from: https://stackoverflow.com/questions/1482832/how-to-get-all-elements-that-are-highlighted
 const rangeIntersectsNode = (range, node) => {
@@ -116,23 +107,6 @@ const getSelectedElementTags = (win) => {
 
     return elmlist;
 }
-
-const getSelectorForHighlighted = () => {
-    // something was selected using native selection
-    const tags = getSelectedElementTags(window);
-    console.log('tags', tags);
-    if (!tags) throw Error('Can\'t identify selected tags.');
-
-    // Get nearest common ancestor of selected tags
-    const selector = getCommonAncestorSelector(tags);
-    console.log('selector', selector);
-    if (!selector) {
-        console.log('Cannot find selector of selected elements. Defaulting to parent node.');
-        return getCssSelector(tags[0]);
-    };
-
-    return selector;
-};
 
 export default class VoiceHandler {
     constructor() {
@@ -874,12 +848,7 @@ export default class VoiceHandler {
     }
 
     async copyHighlighted() {
-        const selector = getSelectorForHighlighted();
-        console.log('copyHighlighted', selector);
-        if (!selector) return;
-
-        // tag as variable
-        this._tagVariableForSelection('var', selector);
+        this._tagImplicitSelection();
 
         // store in clipboard
         const selectedEl = document.querySelector(selector);
@@ -1068,8 +1037,8 @@ export default class VoiceHandler {
             if (!tags) throw Error('Can\'t identify selected tags.');
 
             // Get nearest common ancestor of selected tags
-            selector = getCommonAncestorSelector(tags);
-            console.log('selector', selector);
+            const ancestor = getCommonAncestor(tags);
+            selector = this._getMultiSelector([ancestor]);
             if (!selector) throw Error('Cannot find selector of selected elements.');
         }
         this._tagVariableForSelection('var', selector);
