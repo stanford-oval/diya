@@ -195,7 +195,7 @@ export default class VoiceHandler {
                     // return `<p>${m.message}</p>`;
                 });
                 alert(messages.join(' '))
-                
+
                 // document.getElementById('result-modal-content').innerHTML = messages.join(' ');
                 // MicroModal.show('result-modal');
             }
@@ -890,10 +890,10 @@ export default class VoiceHandler {
     _getMultiSelector(elements) {
         const selectors = [];
         for (let el of elements) {
-            const optimizedMinLength = el.id ? 2 : 10; // if the target has an id, use that instead of multiple other selectors
+            const optimizedMinLength = el.id ? 2 : 5; // if the target has an id, use that instead of multiple other selectors
             selectors.push(
                 finder(el, {
-                    seedMinLength: 5,
+                    seedMinLength: 2,
                     optimizedMinLength: optimizedMinLength,
                     className(className) {
                         return className !== 'selected';
