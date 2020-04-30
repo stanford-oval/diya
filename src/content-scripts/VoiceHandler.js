@@ -208,20 +208,13 @@ export default class VoiceHandler {
             }
         });
 
-        // var port2 = chrome.extension.connect({ name: 'recordControls' })
-        // port2.onMessage.addListener((msg) => {
-        //   if (msg.action == "paramsUpdated"){
-        //     console.log("missing parsms")
-        //   }
-        // })
-
         this._selection = Selection.create({
             // Class for the selection-area
             class: 'selection',
 
             // All elements in this container can be selected
             // selectables: ['div'],
-            selectables: ['.box-wrap > div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'td', 'th', 'caption', 'tr'],
+            selectables: ['.box-wrap > div', 'td', 'th', 'strong'],
 
             // The container is also the boundary in this case
             // boundaries: ['.box-wrap']
@@ -252,7 +245,7 @@ export default class VoiceHandler {
                 // Remove the class from elements that where removed
                 // since the last selection
                 for (const el of removed) {
-                    this._selectedElements.remove(el);
+                    this._selectedElements.delete(el);
                     el.classList.remove('selected');
                 }
             })
@@ -943,6 +936,8 @@ export default class VoiceHandler {
                     `[${varName}]`,
                 );
             }
+        } else {
+            replaced = '[var]'
         }
 
         const optimizedMinLength = this._current_click.target.id ? 2 : 10; // if the target has an id, use that instead of multiple other selectors

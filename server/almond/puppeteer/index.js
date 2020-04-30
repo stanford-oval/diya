@@ -19,10 +19,12 @@ class PuppeteerSession {
     async init() {
         console.log('PUPPETEER LAUNCH!');
         this._browser = await puppeteer.launch({
-            // debugging:
+            slowMo: 250,
             headless: false,
-            // slowMo: 100
-        });
+            defaultViewport: null,
+            executablePath: 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
+        })
+
         this._page = await this._browser.newPage();
 
         this._frames = null;

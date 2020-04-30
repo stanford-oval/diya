@@ -19,7 +19,7 @@ $(function() {
     console.log('-----------------------------')
     var trs = ""
     $.each(lines, function( index, value ) {
-      trs += '<tr><td>' + value + '</td></tr>'
+      trs += `<div>` + value + `</div>`
     });
     $("#user_output").html(trs)
   })
