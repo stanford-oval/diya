@@ -153,7 +153,6 @@ export default class VoiceHandler {
     }
 
     start() {
-        document.documentElement.getElementsByClassName('body')[0].click();
         this._speak(`Ready.`);
 
         if (!document.getElementById('transcript')) {
@@ -195,16 +194,19 @@ export default class VoiceHandler {
                     return `<p>${str}</p>`;
                     // return `<p>${m.message}</p>`;
                 });
-                document.getElementById('result-modal-content').innerHTML = messages.join(' ');
-                MicroModal.show('result-modal');
+                alert(messages.join(' '))
+                
+                // document.getElementById('result-modal-content').innerHTML = messages.join(' ');
+                // MicroModal.show('result-modal');
             }
             if (msg.action == 'executionError') {
                 console.log('executionError', msg);
                 const mErrors = msg.errors.map(e => {
                     return `${msg.message || msg}`;
                 });
-                document.getElementById('result-modal-content').innerHTML = `Sorry that did not work: ${mErrors.join(' ')}`;
-                MicroModal.show('result-modal');
+                alert(`Sorry that did not work: ${mErrors.join(' ')}`)
+                // document.getElementById('result-modal-content').innerHTML = `Sorry that did not work: ${mErrors.join(' ')}`;
+                // MicroModal.show('result-modal');
             }
         });
 
