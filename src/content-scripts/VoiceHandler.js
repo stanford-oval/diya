@@ -27,8 +27,8 @@ import finder from '@medv/finder';
 import { v4 as uuidv4 } from 'uuid';
 import actions from '../models/extension-ui-actions';
 import { Timer } from 'easytimer.js';
-import MicroModal from 'micromodal';
 import getCssSelector from 'css-selector-generator';
+// import MicroModal from 'micromodal';
 
 const serverUrl = 'http://localhost:3000';
 
@@ -153,8 +153,8 @@ export default class VoiceHandler {
     }
 
     start() {
-        // document.documentElement.getElementsByClassName('body')[0].click();
-        // this._speak(`Ready.`);
+        document.documentElement.getElementsByClassName('body')[0].click();
+        this._speak(`Ready.`);
 
         if (!document.getElementById('transcript')) {
             const transcriptDiv = document.createElement('div');
@@ -1098,27 +1098,3 @@ export default class VoiceHandler {
     }
 }
 
-// gestureStop (selector) {
-//   this._mouse_x_stop = this._mouse_x
-//   this._mouse_y_stop = this._mouse_y
-
-//   this._delta_x = this._mouse_x_start - this._mouse_x_stop
-//   this._delta_y = this._mouse_y_start - this._mouse_y_stop
-
-//   console.log(this._delta_x, this._delta_x)
-// }
-
-// selectRandom (selector) {
-// }
-
-// selectClass (selector) {
-// }
-
-// selectList (selector) {
-// }
-
-// selectColumn () {
-// }
-
-// selectRow () {
-// }
