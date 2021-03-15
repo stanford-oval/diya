@@ -22,8 +22,8 @@ class PuppeteerSession {
             slowMo: 250,
             headless: false,
             defaultViewport: null,
-            executablePath: 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
-        })
+            //executablePath: 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
+        });
 
         this._page = await this._browser.newPage();
 
