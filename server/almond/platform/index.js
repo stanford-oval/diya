@@ -20,7 +20,7 @@ const child_process = require('child_process');
 const Gettext = require('node-gettext');
 
 const PuppeteerDevice = require('../puppeteer');
-const Builtins = require('thingengine-core/lib/devices/builtins');
+const Builtins = require('genie-toolkit/dist/lib/engine/devices/builtins');
 Builtins['com.google.puppeteer'] = {
     kind: 'com.google.puppeteer',
     class: (fs.readFileSync(path.resolve(path.dirname(module.filename), '../puppeteer/manifest.tt'), { encoding: 'utf8' })),

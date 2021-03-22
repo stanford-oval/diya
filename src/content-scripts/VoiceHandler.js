@@ -396,16 +396,28 @@ export default class VoiceHandler {
 
             // Aggregation
             'calculate the sum of this': this.calculateAggregation.bind(this, 'sum', 'this'),
-            'calculate the sum of :var_name': this.calculateAggregation.bind(this, 'sum'),
+            'calculate the sum of (the) :var_name': this.calculateAggregation.bind(this, 'sum'),
             'calculate the average of this': this.calculateAggregation.bind(this, 'average', 'this'),
-            'calculate the average of :var_name': this.calculateAggregation.bind(this, 'average'),
+            'calculate the average of (the) :var_name': this.calculateAggregation.bind(this, 'average'),
             'calculate the count of this': this.calculateAggregation.bind(this, 'count', 'this'),
-            'calculate the count of :var_name': this.calculateAggregation.bind(this, 'count'),
+            'calculate the count of (the) :var_name': this.calculateAggregation.bind(this, 'count'),
 
             'calculate the max of this': this.calculateAggregation.bind(this, 'max', 'this'),
-            'calculate the max of :var_name': this.calculateAggregation.bind(this, 'max'),
+            'calculate the max of (the) :var_name': this.calculateAggregation.bind(this, 'max'),
             'calculate the min of this': this.calculateAggregation.bind(this, 'min', 'this'),
-            'calculate the min of :var_name': this.calculateAggregation.bind(this, 'min'),
+            'calculate the min of (the) :var_name': this.calculateAggregation.bind(this, 'min'),
+
+            'compute the sum of this': this.calculateAggregation.bind(this, 'sum', 'this'),
+            'compute the sum of (the) :var_name': this.calculateAggregation.bind(this, 'sum'),
+            'compute the average of this': this.calculateAggregation.bind(this, 'average', 'this'),
+            'compute the average of (the) :var_name': this.calculateAggregation.bind(this, 'average'),
+            'compute the count of this': this.calculateAggregation.bind(this, 'count', 'this'),
+            'compute the count of (the) :var_name': this.calculateAggregation.bind(this, 'count'),
+
+            'compute the max of this': this.calculateAggregation.bind(this, 'max', 'this'),
+            'compute the max of (the) :var_name': this.calculateAggregation.bind(this, 'max'),
+            'compute the min of this': this.calculateAggregation.bind(this, 'min', 'this'),
+            'compute the min of (the) :var_name': this.calculateAggregation.bind(this, 'min'),
 
             // Return selected value
             'return this text': this.returnSelected.bind(this),

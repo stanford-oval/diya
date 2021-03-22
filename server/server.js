@@ -28,8 +28,7 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
 
-const Engine = require('thingengine-core');
-const AssistantDispatcher = require('./almond/assistant');
+const { AssistantEngine : Engine } = require('genie-toolkit');
 const platform = require('./almond/platform');
 const Config = require('./config');
 
@@ -289,7 +288,7 @@ function initFrontend(db) {
 async function main() {
     let stopped = false;
     let running = false;
-    let engine, frontend, ad;
+    let engine, frontend;
 
     function handleStop() {
         if (running) engine.stop();
@@ -318,8 +317,6 @@ async function main() {
     frontend = initFrontend(db);
     frontend.engine = engine;
 
-    ad = new AssistantDispatcher(engine);
-    platform.setAssistant(ad);
     await engine.open();
 
     frontend.listen(frontend.get('port'), () => {
@@ -333,7 +330,6 @@ async function main() {
             console.log('Ready');
             if (!stopped) {
                 running = true;
-                await ad.startConversation();
                 await engine.run();
             }
         } finally {

@@ -26,7 +26,7 @@ const ThingTalk = require('thingtalk');
 const Ast = ThingTalk.Ast;
 const Type = ThingTalk.Type;
 const Builtin = ThingTalk.Builtin;
-const { ParserClient } = require('almond-dialog-agent');
+const { ParserClient } = require('genie-toolkit');
 
 const crypto = require('crypto');
 const express = require('express');
@@ -84,7 +84,6 @@ class ProgramBuilder {
         this._statements = [];
         this._declaredProcedures = new Map();
         this._declaredVariables = new Map();
-        this._nextTempProcedure = 0;
 
         // accumulated arguments (meant for auto argument passing)
         this._accArgs = new Set();
@@ -117,15 +116,15 @@ class ProgramBuilder {
     }
 
     finishForDeclaration() {
-        const procedure = this._makeProgram();
         const args = {};
         for (let [name, [type,]] of this._declaredVariables) args[name] = type;
-        const decl = new Ast.Statement.Declaration(
+        const subdeclarations = Array.from(this._declaredProcedures.values());
+        const decl = new Ast.FunctionDeclaration(
             null,
             this.name,
-            'procedure',
             args,
-            procedure,
+            subdeclarations,
+            this._statements,
         );
         const prog = new Ast.Program(null, [], [decl], []);
         const code = prog.prettyprint();
@@ -138,7 +137,7 @@ class ProgramBuilder {
 
         // replace parameters with real values
         for (let slot of prog.iterateSlots2()) {
-            if (slot instanceof Ast.Selector)
+            if (slot instanceof Ast.DeviceSelector)
                 continue;
             const value = slot.get();
             if (value.isVarRef && this._declaredVariables.has(value.name))
@@ -159,43 +158,32 @@ class ProgramBuilder {
     }
 
     addAction(action) {
-        this.addStatement(new Ast.Statement.Command(null, null, [action]));
+        this.addStatement(new Ast.ExpressionStatement(null, action));
+    }
+
+    addReturnStatement(action) {
+        this.addStatement(new Ast.ReturnStatement(null, action));
     }
 
     addQueryAction(query, action) {
-        this.addStatement(new Ast.Statement.Command(null, query, [action]));
+        this.addStatement(new Ast.ExpressionStatement(null, new Ast.ChainExpression(null, [query, action], action.schema)));
     }
 
     addNamedQuery(name, query) {
-        console.log('ADDING NAMED QUERY!!!!!!');
         this.addStatement(
-            new Ast.Statement.Assignment(null, name, query, query.schema),
+            new Ast.Assignment(null, name, query, query.schema),
         );
     }
 
     addNamedAction(name, action) {
-        console.log('ADDING NAMED ACTION!!!!!!');
         this.addStatement(
-            new Ast.Statement.Assignment(null, name, action, action.schema),
+            new Ast.Assignment(null, name, action, action.schema),
         );
     }
 
     addNamedQueryAction(name, query, action) {
-        console.log('ADDING NAMED QUERY+ACTION!!!!!!');
-
-        // hack: we can't have both an action and a query in the same assignment in ThingTalk 1.*
-        // so we have to make a temporary procedure
-        const tmpProcedure = 'tmp_' + (this._nextTempProcedure++);
-        const decl = new Ast.Statement.Declaration(
-            null,
-            tmpProcedure,
-            'procedure',
-            {},
-            new Ast.Program(null, [], [], [new Ast.Statement.Command(null, query, [action])]),
-        );
-        this.addProcedure(decl);
         this.addStatement(
-            new Ast.Statement.Assignment(null, name, new Ast.Action.VarRef(null, tmpProcedure, [], action.schema), action.schema),
+            new Ast.Assignment(null, name, new Ast.ChainExpression(null, [query, action], action.schema), action.schema),
         );
     }
 
@@ -204,10 +192,7 @@ class ProgramBuilder {
     }
 
     addAtTimedAction(action, stream) {
-        console.log('TIMER_STREAM!!!!!!!!!!!!!!!');
-
-        this.addStatement(new Ast.Statement.Rule(null, stream, [action]));
-        console.log('FINISHED ADDING STATEMENT!!!');
+        this.addStatement(new Ast.ExpressionStatement(null, new Ast.ChainExpression(null, [stream, action], action.schema)));
     }
 }
 
@@ -227,16 +212,11 @@ class RecordingSession {
     constructor(engine) {
         this._engine = engine;
         this._platform = engine.platform;
-        this._parser = new ParserClient(
+        this._parser = ParserClient.get(
             Config.NL_SERVER_URL,
             this._platform.locale,
-            this._platform.getSharedPreferences(),
-        );
-        this._formatter = new ThingTalk.Formatter(
-            engine.platform.locale,
-            engine.platform.timezone,
-            engine.schemas,
-            this._platform.getCapability('gettext'),
+            this._platform,
+            this._engine.thingpedia,
         );
 
         this._currentFocus = null;
@@ -262,7 +242,6 @@ class RecordingSession {
     }
 
     _addPuppeteerQuery(event, name, params, saveAs) {
-        console.log('ADDING QUERY!!!');
         if (event.frameUrl) {
             params.push(
                 new Ast.InputParam(
@@ -273,7 +252,6 @@ class RecordingSession {
             );
         }
         if (event.selector) {
-            console.log('event.selector', event.selector);
             params.push(
                 new Ast.InputParam(
                     null,
@@ -282,15 +260,14 @@ class RecordingSession {
                 ),
             );
         }
-        console.log(params);
 
         this._builder.addNamedQuery(
             saveAs,
-            new Ast.Table.Invocation(
+            new Ast.InvocationExpression(
                 null,
                 new Ast.Invocation(
                     null,
-                    new Ast.Selector.Device(
+                    new Ast.DeviceSelector(
                         null,
                         'com.google.puppeteer',
                         'com.google.puppeteer',
@@ -326,11 +303,11 @@ class RecordingSession {
         }
 
         this._builder.addAction(
-            new Ast.Action.Invocation(
+            new Ast.InvocationExpression(
                 null,
                 new Ast.Invocation(
                     null,
-                    new Ast.Selector.Device(
+                    new Ast.DeviceSelector(
                         null,
                         'com.google.puppeteer',
                         'com.google.puppeteer',
@@ -353,8 +330,6 @@ class RecordingSession {
 
         if (this._currentInput === null) return;
 
-        console.log('_currentInput before event.', this._currentInput);
-        console.log('event before maybeFlushCurrentInput condition', event);
         if (event) {
             if (
                 (event.action === 'change' ||
@@ -394,7 +369,6 @@ class RecordingSession {
             else value = operands[0];
         }
 
-        console.log('Ast value', value);
         this._addPuppeteerAction(this._currentInput, 'set_input', [
             new Ast.InputParam(null, 'text', value),
         ]);
@@ -411,73 +385,40 @@ class RecordingSession {
     async _doRunProgram(builder) {
         console.log('RUNNING PROGRAM!!!');
         const code = builder.finishForExecution();
-        console.log('CODE (_doRunProgram)', code);
-        const app = await this._engine.createApp(code, {
+        const output = await this._engine.createAppAndReturnResults(code, {
             description: 'this is a thingtalk program', // there is a bug in thingtalk where we fail to describe certain programs...
         });
 
-        let results = [];
-        let errors = [];
-        if (!app) return { results, errors };
+        if (output.errors.length > 0) console.error(output.errors);
 
-        for (;;) {
-            let { item: next, resolve, reject } = await app.mainOutput.next();
-
-            if (next.isDone) {
-                resolve();
-                break;
-            }
-
-            if (next.isNotification) {
-                try {
-                    console.log(next);
-                    const message = await this._formatter.formatForType(
-                        next.outputType,
-                        next.outputValue,
-                        'string',
-                    );
-                    results.push({
-                        message: message,
-                        value: next.outputValue,
-                        type: next.outputType,
-                    });
-                    resolve();
-                } catch (e) {
-                    reject(e);
-                }
-            } else if (next.isError) {
-                // If Thingtalk command fails
-                errors.push(next.error);
-                resolve();
-            } else if (next.isQuestion) {
-                let e = new Error('User cancelled');
-                e.code = 'ECANCELLED';
-                reject(e);
-            }
-        }
-
-        if (errors.length > 0) console.error(errors);
+        // simplify the way we represent outputs
+        const resultselection = [];
+        const results = output.results.map((r) => {
+            resultselection.push(r.formatted[0]);
+            return {
+                message: r.formatted[0],
+                value: r.raw,
+                type: r.type,
+            };
+        });
+        // make errors json serializable
+        const errors = output.errors.map((e) => ({
+            message: e.message,
+            code: e.code,
+            status: e.status
+        }));
 
         console.log('doRunProgram Error!!!', errors);
         console.log('doRunProgram Results!!!', results);
+        this._builder.selectionValues.set(wordsToVariable('result', 't_'), resultselection);
 
         return { results, errors };
     }
 
     async _runProgram(progName, options) {
-        console.log('_runProgram', progName, options.args);
         let time = null;
-        if (options.time) {
-            console.log(
-                '_scheduleProgram',
-                progName,
-                options.time,
-                options.args,
-                options.clipboard,
-            );
+        if (options.time)
             time = await parseTime(options.time);
-            console.log(time);
-        }
         const params_missing = this._recordProgramCall(
             progName,
             options.args,
@@ -528,11 +469,11 @@ class RecordingSession {
     _makeConstantTable(injectschema, variable, value) {
         // HACK: we use a puppeteer pseudo call to make up a constant and avoid
         // new syntax in ThingTalk
-        return new Ast.Table.Invocation(
+        return new Ast.InvocationExpression(
             null,
             new Ast.Invocation(
                 null,
-                new Ast.Selector.Device(
+                new Ast.DeviceSelector(
                     null,
                     'com.google.puppeteer',
                     'com.google.puppeteer',
@@ -549,12 +490,12 @@ class RecordingSession {
     async _makeImmediateProgramCall(progName, givenArgs, time, condition) {
         progName = wordsToVariable(progName, 'p_');
         const prog = this._namedPrograms.get(progName);
-        const parsed = ThingTalk.Grammar.parse(prog);
+        const parsed = ThingTalk.Syntax.parse(prog);
         assert(
             parsed.classes.length === 0 &&
                 parsed.declarations.length === 1 &&
                 parsed.declarations[0].name === progName &&
-                parsed.rules.length === 0,
+                parsed.statements.length === 0,
         );
 
         const decl = parsed.declarations[0];
@@ -578,7 +519,7 @@ class RecordingSession {
         );
         const builder = new ProgramBuilder();
         builder.addProcedure(decl);
-        const action = new Ast.Action.VarRef(null, progName, in_params, null);
+        const action = new Ast.FunctionCallExpression(null, progName, in_params, null);
 
         const injectschema = await this._engine.schemas.getSchemaAndNames('com.google.puppeteer', 'query', 'inject');
 
@@ -592,7 +533,7 @@ class RecordingSession {
             const { condVar, value, direction } = condition;
             const variable = wordsToVariable(condVar, 't_');
             const condValue = this._builder.selectionValues.get(variable) || [];
-            const condTable = new Ast.Table.Filter(
+            const condTable = new Ast.FilterExpression(
                 null,
                 this._makeConstantTable(injectschema, variable, condValue),
                 new Ast.BooleanExpression.Atom(
@@ -607,22 +548,22 @@ class RecordingSession {
         }
 
         const query = tables.length ? tables.reduce(
-            (t1, t2) => new Ast.Table.Join(null, t1, t2, [], null),
+            (t1, t2) => new Ast.ChainExpression(null, [t1, t2], null),
         ) : null;
 
         if (time) {
-            const ttTime = Ast.Value.fromJS(
+            const ttTime = new Ast.Value.Array([Ast.Value.fromJS(
                 Type.Time,
                 new Builtin.Time(
                     time.getHours(),
                     time.getMinutes(),
                     time.getSeconds(),
                 ),
-            );
-            let stream = new Ast.Stream.AtTimer(null, [ttTime], null, null);
+            )]);
+            let stream = new Ast.FunctionCallExpression(null, 'attimer', [new Ast.InputParam(null, 'time', ttTime)], null);
 
             if (query)
-                stream = new Ast.Stream.Join(null, stream, query, [], null);
+                stream = new Ast.ChainExpression(null, [stream, query], null);
             builder.addAtTimedAction(action, stream);
         } else if (query) {
             builder.addQueryAction(query, action);
@@ -634,19 +575,16 @@ class RecordingSession {
     }
 
     _recordProgramCall(progName, givenArgs, time, condition) {
-        console.log(`RECORD PROGRAM CALL!!!`);
-        console.log('Given Args', givenArgs);
         progName = wordsToVariable(progName, 'p_');
         const prog = this._namedPrograms.get(progName);
-        console.log(`PROG: ${prog}`);
         if (!prog) throw new Error(`No such program ${progName}`);
 
-        const parsed = ThingTalk.Grammar.parse(prog);
+        const parsed = ThingTalk.Syntax.parse(prog);
         assert(
             parsed.classes.length === 0 &&
                 parsed.declarations.length === 1 &&
                 parsed.declarations[0].name === progName &&
-                parsed.rules.length === 0,
+                parsed.statements.length === 0,
         );
 
         const decl = parsed.declarations[0];
@@ -657,13 +595,11 @@ class RecordingSession {
         if (args.includes('this')) { // if implicit this, default to first required arg
             args = [requiredArgs[0]];
             queryArgs = ['this']; // these args are the variables under which data is actually stored.
-            console.log('This args', givenArgs);
         } else {
             // check if enough args provided
             if (condition && condition.value && requiredArgs.length > 0) {
                 // Handling implicit arguments for conditional
                 args = this._getRelevantStoredArgs(requiredArgs);
-                console.log(`RETRIEVED ARGS: ${args}`);
             }
             // if using implicit this argument (i.e. wildcard), handled on frontend
             const missingArgs = this._missingArgs(args, requiredArgs);
@@ -672,9 +608,6 @@ class RecordingSession {
                 return missingArgs;
             }
         }
-
-        console.log('I"M HERE', decl);
-        console.log('args', args);
 
         // FIXME we should use an alias here but aliases do not work
         //let in_params = args.map((arg) =>
@@ -685,13 +618,12 @@ class RecordingSession {
                 new Ast.Value.VarRef('text'),
             ),
         );
-        console.log(`In Params: ${in_params}`);
 
         this._builder.addProcedure(decl);
-        const action = new Ast.Action.VarRef(null, progName, in_params, null);
+        const action = new Ast.FunctionCallExpression(null, progName, in_params, null);
 
         let tables = queryArgs.map((arg) =>
-                new Ast.Table.VarRef(
+                new Ast.FunctionCallExpression(
                     null,
                     wordsToVariable(arg, 't_'),
                     [],
@@ -701,9 +633,9 @@ class RecordingSession {
 
         if (condition && condition.value) {
             const { condVar, value, direction } = condition;
-            const condTable = new Ast.Table.Filter(
+            const condTable = new Ast.FilterExpression(
                 null,
-                new Ast.Table.VarRef(
+                new Ast.FunctionCallExpression(
                     null,
                     wordsToVariable(condVar, 't_'),
                     [],
@@ -721,22 +653,22 @@ class RecordingSession {
         }
 
         const query = tables.length ? tables.reduce(
-            (t1, t2) => new Ast.Table.Join(null, t1, t2, [], null),
+            (t1, t2) => new Ast.ChainExpression(null, [t1, t2], null),
         ) : null;
 
         if (time) {
-            const ttTime = Ast.Value.fromJS(
+            const ttTime = new Ast.Value.Array([Ast.Value.fromJS(
                 Type.Time,
                 new Builtin.Time(
                     time.getHours(),
                     time.getMinutes(),
                     time.getSeconds(),
                 ),
-            );
-            let stream = new Ast.Stream.AtTimer(null, [ttTime], null, null);
+            )]);
+            let stream = new Ast.FunctionCallExpression(null, 'attimer', [new Ast.InputParam(null, 'time', ttTime)], null);
 
             if (query)
-                stream = new Ast.Stream.Join(null, stream, query, [], null);
+                stream = new Ast.ChainExpression(null, [stream, query], null);
             this._builder.addAtTimedAction(action, stream);
         } else if (query) {
             this._builder.addNamedQueryAction(wordsToVariable('result', 't_'), query, action);
@@ -749,20 +681,22 @@ class RecordingSession {
 
     _doAggregation(operator, varName) {
         const variable = wordsToVariable(varName, 't_');
-        const table = new Ast.Table.VarRef(
+        const table = new Ast.FunctionCallExpression(
             null,
             variable,
             [],
             null,
         );
-        const aggregation = new Ast.Table.Aggregation(null, table, 'number', operator, null, null);
+        const aggregation = new Ast.AggregationExpression(null, table, 'number', operator, null, null);
 
         let saveAs = operator === 'avg' ? 'average' : operator;
         this._builder.addNamedQuery(wordsToVariable(saveAs, 't_'), aggregation);
 
+        console.log('aggregation', variable, this._builder.selectionValues.get(variable));
+
         // return the result immediately
         const values = (this._builder.selectionValues.get(variable) || [])
-            .map((v) => Math.floor(parseFloat(v.replace(/[^0-9.]/g, ''))));
+            .map((v) => parseFloat(v.replace(/[^0-9.]/g, '')));
 
         let result;
         switch (operator) {
@@ -793,7 +727,7 @@ class RecordingSession {
     }
 
     _doReturnValue(varName, condition) {
-        const table = new Ast.Table.VarRef(
+        const table = new Ast.FunctionCallExpression(
             null,
             wordsToVariable(varName, 't_'),
             [],
@@ -801,12 +735,11 @@ class RecordingSession {
         );
         let tables = [table];
         if (condition && condition.value) {
-            console.log('return value condition', condition);
             const { condvar, value, direction } = condition;
             if (condvar !== varName) {
-                const condTable = new Ast.Table.Filter(
+                const condTable = new Ast.FunctionCallExpression(
                     null,
-                    new Ast.Table.VarRef(
+                    new Ast.FunctionCallExpression(
                         null,
                         wordsToVariable(condvar, 't_'),
                         [],
@@ -822,7 +755,7 @@ class RecordingSession {
                 );
                 tables = [condTable].concat(tables);
             } else {
-                tables[0] = new Ast.Table.Filter(null, table,
+                tables[0] = new Ast.FilterExpression(null, table,
                     new Ast.BooleanExpression.Atom(
                         null,
                         'number',
@@ -834,19 +767,16 @@ class RecordingSession {
             }
         }
 
-        const query = tables.reduce((t1, t2) => new Ast.Table.Join(null, t1, t2, [], null));
-        const action = new Ast.Action.Notify(null, 'notify', null);
-        this._builder.addQueryAction(query, action);
+        const query = tables.reduce((t1, t2) => new Ast.ChainExpression(null, [t1, t2], null));
+        this._builder.addReturnStatement(query);
     }
 
     _handleThisIsA(event) {
         this._maybeFlushCurrentInput(event);
         if (event.tagName) {
-            console.log('TAGGED A VARIABLE!!!');
             // tagged a variable inside an input
             this._currentInput = event;
         } else {
-            console.log('TAGGED A SELECTION!!!');
             const variable = wordsToVariable(event.varName, 't_');
             this._builder.selectionValues.set(variable, event.value);
 
@@ -864,7 +794,6 @@ class RecordingSession {
     }
 
     async addRecordingEvent(event) {
-        console.log('addRecordingEvent', event);
         switch (event.action) {
             case 'START_RECORDING':
                 this._accRecArgs = new Set();
@@ -881,7 +810,6 @@ class RecordingSession {
                 break;
 
             case 'GOTO':
-                console.log('GOTO', event);
                 this._maybeFlushCurrentInput(event);
 
                 if (this._builder.isToplevel) {
@@ -920,9 +848,6 @@ class RecordingSession {
                 break;
 
             case 'change':
-                console.log('change event', event);
-                console.log('this._currentInput', this._currentInput);
-
                 // after tagging a variable we'll get a change event for the same input
                 // but we don't want to add a set_input with a constant
                 if (this._currentInput && this._currentInput.varName &&
@@ -930,7 +855,6 @@ class RecordingSession {
                     event.frameId === this._currentInput.frameId &&
                     event.frameUrl === this._currentInput.frameUrl)
                     break;
-                console.log('tagged inputs', this._builder.taggedInputs);
                 if (this._builder.taggedInputs.has(event.frameUrl + '#' + event.frameId + '#' + event.selector))
                     break;
 
@@ -948,7 +872,6 @@ class RecordingSession {
                 return this._doAggregation(event.operator, event.varName);
 
             case 'RUN_PROGRAM':
-                console.log('RUN_PROGRAM');
                 this._maybeFlushCurrentInput(event);
 
                 return this._runProgram(event.varName, {
@@ -956,7 +879,6 @@ class RecordingSession {
                 });
 
             case 'RUN_PROGRAM_WITH_CLIPBOARD':
-                console.log('RUN_PROGRAM_WITH_CLIPBOARD');
                 this._maybeFlushCurrentInput(event);
 
                 return this._runProgram(event.varName, {
@@ -1033,7 +955,7 @@ class RecordingSession {
 
     async _slotFill(program) {
         for (const [, slot, ,] of program.iterateSlots()) {
-            if (!(slot instanceof Ast.Selector)) continue;
+            if (!(slot instanceof Ast.DeviceSelector)) continue;
             await this._chooseDevice(slot);
         }
     }
@@ -1082,7 +1004,7 @@ class RecordingSession {
         const program = candidates[0];
 
         // FIXME replace $context.selection with the current selection on the screen
-        this._statements.push(...program.rules);
+        this._statements.push(...program.statements);
         return { reply: '', status: 'ok' };
     }
 
@@ -1099,7 +1021,6 @@ router.post('/start', (req, res) => {
 });
 
 router.post('/add-event', (req, res, next) => {
-    console.log('router /add-event');
     const session = _sessions.get(req.body.token);
     if (!session) {
         res.status(404).json({ error: 'invalid token', code: 'ENOENT' });
@@ -1144,11 +1065,11 @@ router.get('/procedures', (req, res) => {
     const programs = programsObj.keys();
     const procedures = programs.map(procName => {
         const proc = programsObj.get(procName);
-        const parsed = ThingTalk.Grammar.parse(proc);
+        const parsed = ThingTalk.Syntax.parse(proc);
         assert(
             parsed.classes.length === 0 &&
                 parsed.declarations.length === 1 &&
-                parsed.rules.length === 0,
+                parsed.statements.length === 0,
         );
 
         const decl = parsed.declarations[0];

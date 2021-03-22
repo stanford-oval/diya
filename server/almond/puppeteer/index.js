@@ -79,7 +79,7 @@ class PuppeteerSession {
             if (match)
                 v = match[1];
 
-            return ({ text: v, number: Math.floor(parseFloat(v.replace(/[^0-9.]/g, ''))) });
+            return ({ text: v, number: parseFloat(v.replace(/[^0-9.]/g, '')) });
         });
     }
 }

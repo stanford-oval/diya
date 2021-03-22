@@ -9,5 +9,5 @@
 // See COPYING for details
 "use strict";
 
-module.exports.NL_SERVER_URL = 'https://almond-nl.stanford.edu';
-module.exports.THINGPEDIA_URL = 'https://thingpedia.stanford.edu/thingpedia';
+module.exports.NL_SERVER_URL = 'https://nlp-staging.almond.stanford.edu';
+module.exports.THINGPEDIA_URL = 'https://dev.almond.stanford.edu/thingpedia';
