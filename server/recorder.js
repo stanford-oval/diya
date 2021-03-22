@@ -76,7 +76,7 @@ class MemoryStore {
         this._store[key] = value;
     }
 }
-const PERSISTENT_NAMED_PROGRAMS = false;
+const PERSISTENT_NAMED_PROGRAMS = true;
 
 class ProgramBuilder {
     constructor() {
@@ -334,8 +334,6 @@ class RecordingSession {
                 return;
         }
 
-        console.log('_currentInput', this._currentInput);
-        console.log('event maybeFlushCurrentInput', event);
         let value = new Ast.Value.String(this._currentInput.value);
         if (this._currentInput.varName) {
             this._builder.declareVariable(
@@ -367,7 +365,7 @@ class RecordingSession {
         this._addPuppeteerAction(this._currentInput, 'set_input', [
             new Ast.InputParam(null, 'text', value),
         ]);
-        this._builder.taggedInputs.add(event.frameUrl + '//' + event.frameId + '//' + event.selector);
+        this._builder.taggedInputs.add(this._currentInput.frameUrl + '#' + this._currentInput.frameId + '#' + this._currentInput.selector);
         this._currentInput = null;
     }
 
@@ -804,7 +802,7 @@ class RecordingSession {
 
             case 'change':
                 console.log('change event', event);
-                this._maybeFlushCurrentInput(event);
+                console.log('this._currentInput', this._currentInput);
 
                 // after tagging a variable we'll get a change event for the same input
                 // but we don't want to add a set_input with a constant
@@ -813,9 +811,11 @@ class RecordingSession {
                     event.frameId === this._currentInput.frameId &&
                     event.frameUrl === this._currentInput.frameUrl)
                     break;
-                if (this._builder.taggedInputs.has(event.frameUrl + '//' + event.frameId + '//' + event.selector))
+                console.log('tagged inputs', this._builder.taggedInputs);
+                if (this._builder.taggedInputs.has(event.frameUrl + '#' + event.frameId + '#' + event.selector))
                     break;
 
+                this._maybeFlushCurrentInput(event);
                 this._currentInput = event;
                 break;
 
@@ -991,8 +991,6 @@ router.post('/add-event', (req, res, next) => {
         .addRecordingEvent(req.body.event)
         .then((result = {}) => {
             result.status = 'ok';
-            console.log('RESULT!!!!');
-            console.log('result', result);
             res.json(result);
         })
         .catch(next);
