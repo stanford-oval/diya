@@ -7,7 +7,8 @@ class @com.google.puppeteer
   import config from @org.thingpedia.config.none();
 
   list query inject(in req values : Array(String) #_[canonical="values"],
-                    out text : String #_[canonical="text"])
+                    out text : String #_[canonical="text"],
+                    out number : Number #_[canonical="number"])
   #_[canonical="constant values"]
   #_[confirmation="the values ${values}"];
 

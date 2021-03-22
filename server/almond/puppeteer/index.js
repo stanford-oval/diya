@@ -19,7 +19,7 @@ class PuppeteerSession {
     async init() {
         console.log('PUPPETEER LAUNCH!');
         this._browser = await puppeteer.launch({
-            slowMo: 250,
+            slowMo: 100,
             headless: false,
             defaultViewport: null,
             //executablePath: 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
@@ -72,7 +72,15 @@ class PuppeteerSession {
         await frame.waitForSelector(selector, { timeout: 10000 });
 
         const values = await frame.$$eval(selector, (elements) => elements.map((el) => el.textContent));
-        return values.map((v) => ({ text: v, number: Math.floor(parseFloat(v.replace(/[^0-9.]/g, ''))) }));
+        return values.map((v) => {
+            // sometimes, in walmart the returned text is duplicated ("$5.98$5.98")
+            // detect that case and fix it
+            const match = /(.*)\s*\1/.exec(v);
+            if (match)
+                v = match[1];
+
+            return ({ text: v, number: Math.floor(parseFloat(v.replace(/[^0-9.]/g, ''))) });
+        });
     }
 }
 
@@ -108,7 +116,7 @@ module.exports = class PuppeteerDevice extends Tp.BaseDevice {
     }
 
     async get_inject({ values }) {
-        return values.map((v) => ({ text: v }));
+        return values.map((v) => ({ text: v, number: Math.floor(parseFloat(v.replace(/[^0-9.]/g, ''))) }));
     }
 
     async get_select({ frame_url, selector }, filter, env) {

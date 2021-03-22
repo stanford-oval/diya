@@ -92,6 +92,9 @@ class ProgramBuilder {
         this.isToplevel = false;
         this.hasGoto = false;
         this.taggedInputs = new Set;
+
+        // value of the selection during recording
+        this.selectionValues = new Map;
     }
 
     trackVariable(varName) {
@@ -182,6 +185,9 @@ class ProgramBuilder {
 }
 
 function wordsToVariable(words, prefix = '') {
+    if (words === 'this')
+        return prefix + 'this';
+
     // stem all words
     if (!Array.isArray(words)) words = words.split(/\s+/g);
 
@@ -375,9 +381,9 @@ class RecordingSession {
         this._popProgramBuilder();
     }
 
-    async _doRunProgram() {
+    async _doRunProgram(builder) {
         console.log('RUNNING PROGRAM!!!');
-        const code = this._builder.finishForExecution();
+        const code = builder.finishForExecution();
         console.log('CODE (_doRunProgram)', code);
         const app = await this._engine.createApp(code, {
             description: 'this is a thingtalk program', // there is a bug in thingtalk where we fail to describe certain programs...
@@ -456,7 +462,15 @@ class RecordingSession {
         if (params_missing && params_missing.length > 0)
             return { params_missing, results: [], errors: [] };
 
-        const { results, errors } = await this._doRunProgram();
+        // make a program that only contains a single statement (plus the procedure declaration)
+        // and call it immediately
+        const tmpbuilder = await this._makeImmediateProgramCall(progName,
+            options.args,
+            time,
+            options.condition,
+            options.clipboard,
+        );
+        const { results, errors } = await this._doRunProgram(tmpbuilder);
         return { params_missing: [], results, errors };
     }
 
@@ -484,7 +498,115 @@ class RecordingSession {
         return missingArgs;
     }
 
-    _recordProgramCall(progName, givenArgs, time, condition, clipboard) {
+    _makeConstantTable(injectschema, variable, value) {
+        // HACK: we use a puppeteer pseudo call to make up a constant and avoid
+        // new syntax in ThingTalk
+        return new Ast.Table.Invocation(
+            null,
+            new Ast.Invocation(
+                null,
+                new Ast.Selector.Device(
+                    null,
+                    'com.google.puppeteer',
+                    'com.google.puppeteer',
+                    null,
+                ),
+                'inject',
+                [new Ast.InputParam(null, 'values', new Ast.Value.Array(value.map((v) => new Ast.Value.String(v))))],
+                injectschema,
+            ),
+            injectschema.removeArgument('values'),
+        );
+    }
+
+    async _makeImmediateProgramCall(progName, givenArgs, time, condition) {
+        progName = wordsToVariable(progName, 'p_');
+        const prog = this._namedPrograms.get(progName);
+        const parsed = ThingTalk.Grammar.parse(prog);
+        assert(
+            parsed.classes.length === 0 &&
+                parsed.declarations.length === 1 &&
+                parsed.declarations[0].name === progName &&
+                parsed.rules.length === 0,
+        );
+
+        const decl = parsed.declarations[0];
+
+        const requiredArgs = Object.keys(decl.args).map(x => x.split('_')[1]);
+        let args = givenArgs;
+        let queryArgs = givenArgs;
+        if (args.includes('this')) { // if implicit this, default to first required arg
+            args = [requiredArgs[0]];
+            queryArgs = ['this']; // these args are the variables under which data is actually stored.
+        }
+
+        // FIXME we should use an alias here but aliases do not work
+        //let in_params = args.map((arg) =>
+        //    new Ast.InputParam(null, wordsToVariable(arg, 'v_'), new Ast.Value.VarRef(wordsToVariable(arg, '__t_') + '.text')));
+        const in_params = args.map((arg) =>
+            new Ast.InputParam(null,
+                wordsToVariable(arg, 'v_'),
+                new Ast.Value.VarRef('text'),
+            ),
+        );
+        const builder = new ProgramBuilder();
+        builder.addProcedure(decl);
+        const action = new Ast.Action.VarRef(null, progName, in_params, null);
+
+        const injectschema = await this._engine.schemas.getSchemaAndNames('com.google.puppeteer', 'query', 'inject');
+
+        let tables = queryArgs.map((arg) => {
+            const variable = wordsToVariable(arg, 't_');
+            const value = this._builder.selectionValues.get(variable) || [];
+            return this._makeConstantTable(injectschema, variable, value);
+        });
+
+        if (condition && condition.value) {
+            const { condVar, value, direction } = condition;
+            const variable = wordsToVariable(condVar, 't_');
+            const condValue = this._builder.selectionValues.get(variable) || [];
+            const condTable = new Ast.Table.Filter(
+                null,
+                this._makeConstantTable(injectschema, variable, condValue),
+                new Ast.BooleanExpression.Atom(
+                    null,
+                    'number',
+                    direction,
+                    new Ast.Value.Number(parseInt(value)),
+                ),
+                null,
+            );
+            tables = [condTable].concat(tables);
+        }
+
+        const query = tables.length ? tables.reduce(
+            (t1, t2) => new Ast.Table.Join(null, t1, t2, [], null),
+        ) : null;
+
+        if (time) {
+            const ttTime = Ast.Value.fromJS(
+                Type.Time,
+                new Builtin.Time(
+                    time.getHours(),
+                    time.getMinutes(),
+                    time.getSeconds(),
+                ),
+            );
+            let stream = new Ast.Stream.AtTimer(null, [ttTime], null, null);
+
+            if (query)
+                stream = new Ast.Stream.Join(null, stream, query, [], null);
+            builder.addAtTimedAction(action, stream);
+        } else if (query) {
+            builder.addQueryAction(query, action);
+        } else {
+            builder.addAction(action);
+        }
+
+        return builder;
+    }
+
+    _recordProgramCall(progName, givenArgs, time, condition) {
         console.log(`RECORD PROGRAM CALL!!!`);
         console.log('Given Args', givenArgs);
         progName = wordsToVariable(progName, 'p_');
@@ -505,9 +627,9 @@ class RecordingSession {
         const requiredArgs = Object.keys(decl.args).map(x => x.split('_')[1]);
         let args = givenArgs;
         let queryArgs = givenArgs;
-        if (args.includes('var')) { // if implicit this, default to first required arg
+        if (args.includes('this')) { // if implicit this, default to first required arg
             args = [requiredArgs[0]];
-            queryArgs = ['var']; // these args are the variables under which data is actually stored.
+            queryArgs = ['this']; // these args are the variables under which data is actually stored.
             console.log('This args', givenArgs);
         } else {
             // check if enough args provided
@@ -530,37 +652,52 @@ class RecordingSession {
         // FIXME we should use an alias here but aliases do not work
         //let in_params = args.map((arg) =>
         //    new Ast.InputParam(null, wordsToVariable(arg, 'v_'), new Ast.Value.VarRef(wordsToVariable(arg, '__t_') + '.text')));
-        let in_params;
-        if (!clipboard) {
-            in_params = args.map(
-                arg =>
-                    new Ast.InputParam(
-                        null,
-                        wordsToVariable(arg, 'v_'),
-                        new Ast.Value.VarRef('text'),
-                    ),
-            );
-        } else {
-            console.log('Ast.Value.String clipboard');
-            in_params = [
-                new Ast.InputParam(
-                    null,
-                    wordsToVariable(clipboard.argName, 'v_'),
-                    new Ast.Value.String(clipboard.argValue),
-                )
-            ];
-        }
+        const in_params = args.map((arg) =>
+            new Ast.InputParam(null,
+                wordsToVariable(arg, 'v_'),
+                new Ast.Value.VarRef('text'),
+            ),
+        );
         console.log(`In Params: ${in_params}`);
 
         this._builder.addProcedure(decl);
         const action = new Ast.Action.VarRef(null, progName, in_params, null);
 
-        if (clipboard) {
-            this._builder.addAction(action);
-            return undefined;
+        let tables = queryArgs.map((arg) =>
+                new Ast.Table.VarRef(
+                    null,
+                    wordsToVariable(arg, 't_'),
+                    [],
+                    null,
+                ),
+        );
+
+        if (condition && condition.value) {
+            const { condVar, value, direction } = condition;
+            const condTable = new Ast.Table.Filter(
+                null,
+                new Ast.Table.VarRef(
+                    null,
+                    wordsToVariable(condVar, 't_'),
+                    [],
+                    null,
+                ),
+                new Ast.BooleanExpression.Atom(
+                    null,
+                    'number',
+                    direction,
+                    new Ast.Value.Number(parseInt(value)),
+                ),
+                null,
+            );
+            tables = [condTable].concat(tables);
         }
 
-        if (time) {
+        const query = tables.length ? tables.reduce(
+            (t1, t2) => new Ast.Table.Join(null, t1, t2, [], null),
+        ) : null;
+
+if (time) {
             const ttTime = Ast.Value.fromJS(
                 Type.Time,
                 new Builtin.Time(
@@ -571,93 +708,13 @@ class RecordingSession {
             );
             let stream = new Ast.Stream.AtTimer(null, [ttTime], null, null);
 
-            if (args.length > 0) {
-                console.log('QUERY TIME!!!');
-                const tables = queryArgs.map(
-                    arg =>
-                        new Ast.Table.VarRef(
-                            null,
-                            wordsToVariable(arg, 't_'),
-                            [],
-                            null,
-                        ),
-                );
-                stream = tables.reduce(
-                    (t1, t2) => new Ast.Stream.Join(null, t1, t2, [], null),
-                    stream,
-                );
-
-                this._builder.addAtTimedAction(action, stream);
-            } else {
-                this._builder.addAtTimedAction(action, stream);
-            }
-
-            return undefined;
-        }
-
-        if (args.length > 0) {
-            console.log('query without time args', args);
-            console.log('QUERY WITHOUT TIME!!!');
-            let tables = queryArgs.map(
-                arg =>
-                    new Ast.Table.VarRef(
-                        null,
-                        wordsToVariable(arg, 't_'),
-                        [],
-                        null,
-                    ),
-            );
-
-            if (condition && condition.value) {
-                const { condVar, value, direction } = condition;
-                const condTable = new Ast.Table.Filter(
-                    null,
-                    new Ast.Table.VarRef(
-                        null,
-                        wordsToVariable(condVar, 't_'),
-                        [],
-                        null,
-                    ),
-                    new Ast.BooleanExpression.Atom(
-                        null,
-                        'number',
-                        direction,
-                        new Ast.Value.Number(parseInt(value)),
-                    ),
-                    null,
-                );
-                tables = [condTable].concat(tables);
-            }
-
-            const query = tables.reduce(
-                (t1, t2) => new Ast.Table.Join(null, t1, t2, [], null),
-            );
+            if (query)
+                stream = new Ast.Stream.Join(null, stream, query, [], null);
+            this._builder.addAtTimedAction(action, stream);
+        } else if (query) {
             this._builder.addQueryAction(query, action);
         } else {
-            console.log('CONDITION!!!');
-            console.log('condition', condition);
-            if (condition && condition.value) {
-                const { condVar, value, direction } = condition;
-                const condTable = new Ast.Table.Filter(
-                    null,
-                    new Ast.Table.VarRef(
-                        null,
-                        wordsToVariable(condVar, 't_'),
-                        [],
-                        null,
-                    ),
-                    new Ast.BooleanExpression.Atom(
-                        null,
-                        'number',
-                        direction,
-                        new Ast.Value.Number(parseInt(value)),
-                    ),
-                    null,
-                );
-                this._builder.addQueryAction(condTable, action);
-            } else {
-                this._builder.addAction(action);
-            }
+            this._builder.addAction(action);
         }
 
         return undefined;
@@ -731,12 +788,15 @@ class RecordingSession {
             this._currentInput = event;
         } else {
             console.log('TAGGED A SELECTION!!!');
+            const variable = wordsToVariable(event.varName, 't_');
+            this._builder.selectionValues.set(variable, event.value);
+
             // tagged a selection
             this._addPuppeteerQuery(
                 event,
                 'select',
                 [],
-                wordsToVariable(event.varName, 't_'),
+                variable,
             );
         }
 

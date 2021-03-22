@@ -158,17 +158,8 @@ export default class VoiceHandler {
             }
             if (msg.action == 'executionResult') {
                 console.log('executionResult', msg);
-                const messages = msg.results.map(m => {
-                    var str = m.message
-                    try {
-                        str = str.split('$')[1]
-                    } catch(error) {
-                        
-                    }
-                    return `<p>${str}</p>`;
-                    // return `<p>${m.message}</p>`;
-                });
-                alert(messages.join(' '))
+                const messages = msg.results.map(m => m.message);
+                alert(messages.join('\n'));
 
                 // document.getElementById('result-modal-content').innerHTML = messages.join(' ');
                 // MicroModal.show('result-modal');
@@ -404,16 +395,16 @@ export default class VoiceHandler {
             ),
 
             // Aggregation
-            'calculate the sum of this': this.calculateAggregation.bind(this, 'sum', 'var'),
+            'calculate the sum of this': this.calculateAggregation.bind(this, 'sum', 'this'),
             'calculate the sum of :var_name': this.calculateAggregation.bind(this, 'sum'),
-            'calculate the average of this': this.calculateAggregation.bind(this, 'average', 'var'),
+            'calculate the average of this': this.calculateAggregation.bind(this, 'average', 'this'),
             'calculate the average of :var_name': this.calculateAggregation.bind(this, 'average'),
-            'calculate the count of this': this.calculateAggregation.bind(this, 'count', 'var'),
+            'calculate the count of this': this.calculateAggregation.bind(this, 'count', 'this'),
             'calculate the count of :var_name': this.calculateAggregation.bind(this, 'count'),
 
-            'calculate the max of this': this.calculateAggregation.bind(this, 'max', 'var'),
+            'calculate the max of this': this.calculateAggregation.bind(this, 'max', 'this'),
             'calculate the max of :var_name': this.calculateAggregation.bind(this, 'max'),
-            'calculate the min of this': this.calculateAggregation.bind(this, 'min', 'var'),
+            'calculate the min of this': this.calculateAggregation.bind(this, 'min', 'this'),
             'calculate the min of :var_name': this.calculateAggregation.bind(this, 'min'),
 
             // Return selected value
@@ -425,45 +416,45 @@ export default class VoiceHandler {
             'return :var_name': this.returnValue.bind(this),
             'return the :var_name': this.returnValue.bind(this),
 
-            'return this if this is at least :value': this.returnIf.bind(this, '>=', 'var', 'var'),
-            'return this if this more than :value': this.returnIf.bind(this, '>=', 'var', 'var'),
-            'return this if this is greater than :value': this.returnIf.bind(this, '>=', 'var', 'var'),
-            'return this if this equals :value': this.returnIf.bind(this, '==', 'var', 'var'),
-            'return this if this equals :value': this.returnIf.bind(this, '==', 'var', 'var'),
-            'return this if this is at most :value': this.returnIf.bind(this, '<=', 'var', 'var'),
-            'return this if this is at most :value': this.returnIf.bind(this, '<=', 'var', 'var'),
-            'return this if this is less than :value': this.returnIf.bind(this, '<=', 'var', 'var'),
-            'return this if this is less than :value': this.returnIf.bind(this, '<=', 'var', 'var'),
+            'return this if this is at least :value': this.returnIf.bind(this, '>=', 'this', 'this'),
+            'return this if this more than :value': this.returnIf.bind(this, '>=', 'this', 'this'),
+            'return this if this is greater than :value': this.returnIf.bind(this, '>=', 'this', 'this'),
+            'return this if this equals :value': this.returnIf.bind(this, '==', 'this', 'this'),
+            'return this if this equals :value': this.returnIf.bind(this, '==', 'this', 'this'),
+            'return this if this is at most :value': this.returnIf.bind(this, '<=', 'this', 'this'),
+            'return this if this is at most :value': this.returnIf.bind(this, '<=', 'this', 'this'),
+            'return this if this is less than :value': this.returnIf.bind(this, '<=', 'this', 'this'),
+            'return this if this is less than :value': this.returnIf.bind(this, '<=', 'this', 'this'),
 
-            'return this value if this is at least :value': this.returnIf.bind(this, '>=', 'var', 'var'),
-            'return this value if this more than :value': this.returnIf.bind(this, '>=', 'var', 'var'),
-            'return this value if this is greater than :value': this.returnIf.bind(this, '>=', 'var', 'var'),
-            'return this value if this equals :value': this.returnIf.bind(this, '==', 'var', 'var'),
-            'return this value if this equals :value': this.returnIf.bind(this, '==', 'var', 'var'),
-            'return this value if this is at most :value': this.returnIf.bind(this, '<=', 'var', 'var'),
-            'return this value if this is at most :value': this.returnIf.bind(this, '<=', 'var', 'var'),
-            'return this value if this is less than :value': this.returnIf.bind(this, '<=', 'var', 'var'),
-            'return this value if this is less than :value': this.returnIf.bind(this, '<=', 'var', 'var'),
+            'return this value if this is at least :value': this.returnIf.bind(this, '>=', 'this', 'this'),
+            'return this value if this more than :value': this.returnIf.bind(this, '>=', 'this', 'this'),
+            'return this value if this is greater than :value': this.returnIf.bind(this, '>=', 'this', 'this'),
+            'return this value if this equals :value': this.returnIf.bind(this, '==', 'this', 'this'),
+            'return this value if this equals :value': this.returnIf.bind(this, '==', 'this', 'this'),
+            'return this value if this is at most :value': this.returnIf.bind(this, '<=', 'this', 'this'),
+            'return this value if this is at most :value': this.returnIf.bind(this, '<=', 'this', 'this'),
+            'return this value if this is less than :value': this.returnIf.bind(this, '<=', 'this', 'this'),
+            'return this value if this is less than :value': this.returnIf.bind(this, '<=', 'this', 'this'),
 
-            'return this value if it is at least :value': this.returnIf.bind(this, '>=', 'var', 'var'),
-            'return this value if it more than :value': this.returnIf.bind(this, '>=', 'var', 'var'),
-            'return this value if it is greater than :value': this.returnIf.bind(this, '>=', 'var', 'var'),
-            'return this value if it equals :value': this.returnIf.bind(this, '==', 'var', 'var'),
-            'return this value if it equals :value': this.returnIf.bind(this, '==', 'var', 'var'),
-            'return this value if it is at most :value': this.returnIf.bind(this, '<=', 'var', 'var'),
-            'return this value if it is at most :value': this.returnIf.bind(this, '<=', 'var', 'var'),
-            'return this value if it is less than :value': this.returnIf.bind(this, '<=', 'var', 'var'),
-            'return this value if it is less than :value': this.returnIf.bind(this, '<=', 'var', 'var'),
+            'return this value if it is at least :value': this.returnIf.bind(this, '>=', 'this', 'this'),
+            'return this value if it more than :value': this.returnIf.bind(this, '>=', 'this', 'this'),
+            'return this value if it is greater than :value': this.returnIf.bind(this, '>=', 'this', 'this'),
+            'return this value if it equals :value': this.returnIf.bind(this, '==', 'this', 'this'),
+            'return this value if it equals :value': this.returnIf.bind(this, '==', 'this', 'this'),
+            'return this value if it is at most :value': this.returnIf.bind(this, '<=', 'this', 'this'),
+            'return this value if it is at most :value': this.returnIf.bind(this, '<=', 'this', 'this'),
+            'return this value if it is less than :value': this.returnIf.bind(this, '<=', 'this', 'this'),
+            'return this value if it is less than :value': this.returnIf.bind(this, '<=', 'this', 'this'),
 
-            'return this if :var_name is at least :value': this.returnIf.bind(this, '>=', 'var'),
-            'return this if :var_name more than :value': this.returnIf.bind(this, '>=', 'var'),
-            'return this if :var_name is greater than :value': this.returnIf.bind(this, '>=', 'var'),
-            'return this if :var_name equals :value': this.returnIf.bind(this, '==', 'var'),
-            'return this if :var_name equals :value': this.returnIf.bind(this, '==', 'var'),
-            'return this if :var_name is at most :value': this.returnIf.bind(this, '<=', 'var'),
-            'return this if :var_name is at most :value': this.returnIf.bind(this, '<=', 'var'),
-            'return this if :var_name is less than :value': this.returnIf.bind(this, '<=', 'var'),
-            'return this if :var_name is less than :value': this.returnIf.bind(this, '<=', 'var'),
+            'return this if :var_name is at least :value': this.returnIf.bind(this, '>=', 'this'),
+            'return this if :var_name more than :value': this.returnIf.bind(this, '>=', 'this'),
+            'return this if :var_name is greater than :value': this.returnIf.bind(this, '>=', 'this'),
+            'return this if :var_name equals :value': this.returnIf.bind(this, '==', 'this'),
+            'return this if :var_name equals :value': this.returnIf.bind(this, '==', 'this'),
+            'return this if :var_name is at most :value': this.returnIf.bind(this, '<=', 'this'),
+            'return this if :var_name is at most :value': this.returnIf.bind(this, '<=', 'this'),
+            'return this if :var_name is less than :value': this.returnIf.bind(this, '<=', 'this'),
+            'return this if :var_name is less than :value': this.returnIf.bind(this, '<=', 'this'),
 
             'return :v1 if :v2 is at least :value': this.returnIf.bind(this, '>='),
             'return :v1 if :v2 more than :value': this.returnIf.bind(this, '>='),
@@ -655,11 +646,11 @@ export default class VoiceHandler {
     runProgramWithThis(progName, ...args) {
         this._speak(`Running ${progName}.`);
         console.log('run');
-        this.tagVariable('var');
+        this.tagVariable('this');
         this._sendMessage({
             action: 'RUN_PROGRAM',
             varName: progName,
-            args: ['var'],
+            args: ['this'],
         });
     }
 
@@ -731,7 +722,7 @@ export default class VoiceHandler {
         this._sendMessage({
             action: 'SCHEDULE_PROGRAM',
             varName: progName,
-            args: args.length === 1 ? ['var'] : args,
+            args: args.length === 1 ? ['this'] : args,
             time: time,
         });
     }
@@ -800,8 +791,8 @@ export default class VoiceHandler {
     }
 
     calculateAggregation(aggOp, varName) {
-        this._speak(`OK I will calculate the ${aggOp} of ${varName === 'var' ? 'this' : varName}.`);
-        if (varName === 'var')
+        this._speak(`OK I will calculate the ${aggOp} of ${varName === 'this' ? 'this' : varName}.`);
+        if (varName === 'this')
             this._tagImplicitSelection();
         const msg = {
             value: null,
@@ -837,14 +828,14 @@ export default class VoiceHandler {
             this._current_click &&
             ['TEXTAREA', 'INPUT'].includes(this._current_click.target.tagName)
         ) {
-            this._tagVariableForInput('var');
+            this._tagVariableForInput('this');
         } else {
-            this._tagVariableForSelection('var');
+            this._tagVariableForSelection('this');
         }
     }
 
     tagThisCopy() {
-        this._tagVariableForInput('var', true);
+        this._tagVariableForInput('this', true);
     }
 
     async copyHighlighted() {
@@ -873,11 +864,28 @@ export default class VoiceHandler {
         return selectors.join(', ');
     }
 
-    _tagVariableForSelection(varName, selector) {
-        if (!selector) selector = this._getMultiSelector(this._selectedElements);
+    _tagVariableForSelection(varName) {
+        let selector, value;
+        if (this._selectedElements.size > 0) {
+            // something was selected using selection mode
+            selector = this._getMultiSelector(this._selectedElements);
+            value = Array.from(document.querySelectorAll(selector)).map((el) => el.textContent);
+        } else {
+            // something was selected using native selection
+            const tags = getSelectedElementTags(window);
+            console.log('tags', tags);
+            if (!tags) throw Error('Can\'t identify selected tags.');
+
+            // Get nearest common ancestor of selected tags
+            const ancestor = getCommonAncestor(tags);
+            selector = this._getMultiSelector([ancestor]);
+            value = [ancestor.textContent];
+            if (!selector) throw Error('Cannot find selector of selected elements.');
+        }
+
         const msg = {
             selector: selector,
-            value: null,
+            value: value,
             tagName: null,
             inputType: null,
             selection: null,
@@ -908,7 +916,7 @@ export default class VoiceHandler {
                 );
             }
         } else {
-            replaced = '[var]'
+            replaced = '[this]'
         }
 
         const optimizedMinLength = this._current_click.target.id ? 2 : 10; // if the target has an id, use that instead of multiple other selectors
@@ -928,7 +936,7 @@ export default class VoiceHandler {
                     : null,
             selection: null,
             action: 'THIS_IS_A',
-            varName: implicit ? 'var' : varName, // for implicit variables
+            varName: implicit ? 'this' : varName, // for implicit variables
             // varName: varName,
             keyCode: null,
             href: this._current_click.target.href
@@ -1010,8 +1018,8 @@ export default class VoiceHandler {
     }
 
     returnIf(direction, returnValue, condvar, value) {
-        this._speak(`OK I will return ${returnValue === 'var' ? 'this' : returnValue}.`);
-        if (returnValue === 'var' || condvar === 'var')
+        this._speak(`OK I will return ${returnValue === 'this' ? 'this' : returnValue}.`);
+        if (returnValue === 'this' || condvar === 'this')
             this._tagImplicitSelection();
         console.log('return ' + returnValue + ' if ' + condvar + ' ' + direction + ' ' + value);
         this._sendMessage({
@@ -1026,22 +1034,7 @@ export default class VoiceHandler {
     }
 
     _tagImplicitSelection() {
-        let selector;
-        if (this._selectedElements.size > 0) {
-            // something was selected using selection mode
-            selector = this._getMultiSelector(this._selectedElements);
-        } else {
-            // something was selected using native selection
-            const tags = getSelectedElementTags(window);
-            console.log('tags', tags);
-            if (!tags) throw Error('Can\'t identify selected tags.');
-
-            // Get nearest common ancestor of selected tags
-            const ancestor = getCommonAncestor(tags);
-            selector = this._getMultiSelector([ancestor]);
-            if (!selector) throw Error('Cannot find selector of selected elements.');
-        }
-        this._tagVariableForSelection('var', selector);
+        this._tagVariableForSelection('this');
     }
 
     returnSelected() {
@@ -1051,7 +1044,7 @@ export default class VoiceHandler {
         this._tagImplicitSelection();
         this._sendMessage({
             action: 'RETURN_VALUE',
-            varName: 'var',
+            varName: 'this',
         });
     }
 
