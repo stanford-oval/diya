@@ -547,7 +547,7 @@ export default class VoiceHandler {
 
     _speak(message) {
         var msg = new SpeechSynthesisUtterance(message);
-        msg.rate = 1.7;
+        msg.rate = 1.2;
         window.speechSynthesis.speak(msg);
     }
 
