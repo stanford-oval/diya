@@ -84,6 +84,7 @@ class ProgramBuilder {
         this._statements = [];
         this._declaredProcedures = new Map();
         this._declaredVariables = new Map();
+        this._nextTempProcedure = 0;
 
         // accumulated arguments (meant for auto argument passing)
         this._accArgs = new Set();
@@ -169,6 +170,32 @@ class ProgramBuilder {
         console.log('ADDING NAMED QUERY!!!!!!');
         this.addStatement(
             new Ast.Statement.Assignment(null, name, query, query.schema),
+        );
+    }
+
+    addNamedAction(name, action) {
+        console.log('ADDING NAMED ACTION!!!!!!');
+        this.addStatement(
+            new Ast.Statement.Assignment(null, name, action, action.schema),
+        );
+    }
+
+    addNamedQueryAction(name, query, action) {
+        console.log('ADDING NAMED QUERY+ACTION!!!!!!');
+
+        // hack: we can't have both an action and a query in the same assignment in ThingTalk 1.*
+        // so we have to make a temporary procedure
+        const tmpProcedure = 'tmp_' + (this._nextTempProcedure++);
+        const decl = new Ast.Statement.Declaration(
+            null,
+            tmpProcedure,
+            'procedure',
+            {},
+            new Ast.Program(null, [], [], [new Ast.Statement.Command(null, query, [action])]),
+        );
+        this.addProcedure(decl);
+        this.addStatement(
+            new Ast.Statement.Assignment(null, name, new Ast.Action.VarRef(null, tmpProcedure, [], action.schema), action.schema),
         );
     }
 
@@ -697,7 +724,7 @@ class RecordingSession {
             (t1, t2) => new Ast.Table.Join(null, t1, t2, [], null),
         ) : null;
 
-if (time) {
+        if (time) {
             const ttTime = Ast.Value.fromJS(
                 Type.Time,
                 new Builtin.Time(
@@ -712,18 +739,19 @@ if (time) {
                 stream = new Ast.Stream.Join(null, stream, query, [], null);
             this._builder.addAtTimedAction(action, stream);
         } else if (query) {
-            this._builder.addQueryAction(query, action);
+            this._builder.addNamedQueryAction(wordsToVariable('result', 't_'), query, action);
         } else {
-            this._builder.addAction(action);
+            this._builder.addNamedAction(wordsToVariable('result', 't_'), action);
         }
 
         return undefined;
     }
 
     _doAggregation(operator, varName) {
+        const variable = wordsToVariable(varName, 't_');
         const table = new Ast.Table.VarRef(
             null,
-            wordsToVariable(varName, 't_'),
+            variable,
             [],
             null,
         );
@@ -731,6 +759,37 @@ if (time) {
 
         let saveAs = operator === 'avg' ? 'average' : operator;
         this._builder.addNamedQuery(wordsToVariable(saveAs, 't_'), aggregation);
+
+        // return the result immediately
+        const values = (this._builder.selectionValues.get(variable) || [])
+            .map((v) => Math.floor(parseFloat(v.replace(/[^0-9.]/g, ''))));
+
+        let result;
+        switch (operator) {
+        case 'avg':
+            result = values.reduce((x, y) => x+y, 0) / result.length;
+            break;
+        case 'count':
+            result = result.length;
+            break;
+        case 'sum':
+            result = values.reduce((x, y) => x+y, 0);
+            break;
+        case 'max':
+            result = values.reduce((x, y) => Math.max(x, y), -Infinity);
+            break;
+        case 'min':
+            result = values.reduce((x, y) => Math.min(x, y), Infinity);
+            break;
+        }
+
+        return { params_missing: [], results: [{
+            message: String(result),
+            value: {
+                number: result
+            },
+            type: operator + '(com.google.puppeteer:select)'
+        }], errors: [] };
     }
 
     _doReturnValue(varName, condition) {
@@ -886,8 +945,7 @@ if (time) {
 
             case 'AGGREGATION':
                 this._maybeFlushCurrentInput(event);
-                this._doAggregation(event.operator, event.varName);
-                break;
+                return this._doAggregation(event.operator, event.varName);
 
             case 'RUN_PROGRAM':
                 console.log('RUN_PROGRAM');
