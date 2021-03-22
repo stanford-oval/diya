@@ -167,7 +167,7 @@ export default class VoiceHandler {
             if (msg.action == 'executionError') {
                 console.log('executionError', msg);
                 const mErrors = msg.errors.map(e => {
-                    return `${msg.message || msg}`;
+                    return `${e.message || e}`;
                 });
                 alert(`Sorry that did not work: ${mErrors.join(' ')}`)
                 // document.getElementById('result-modal-content').innerHTML = `Sorry that did not work: ${mErrors.join(' ')}`;
@@ -570,7 +570,7 @@ export default class VoiceHandler {
     }
 
     recordingStop(funcName) {
-        this._speak(`Recordingstopped.`);
+        this._speak(`Recording stopped.`);
         this._sendMessage({
             action: actions.STOP,
             funcName: funcName
@@ -656,9 +656,9 @@ export default class VoiceHandler {
     }
 
     runProgramWithThis(progName, ...args) {
-        this._speak(`Running ${progName}.`);
+        this._speak(`Running ${progName} with this.`);
         console.log('run');
-        this.tagVariable('this');
+        this.tagVariable('this', true);
         this._sendMessage({
             action: 'RUN_PROGRAM',
             varName: progName,
@@ -704,7 +704,7 @@ export default class VoiceHandler {
 
         const value = args.pop();
         const condVar = args.pop(); // variable being conditioned on
-        if (condVar === 'condvar') this.tagVariable('condvar');
+        if (condVar === 'condvar') this.tagVariable('condvar', true);
 
         this._speak(
             `Running ${progName} if this ${direction[0]} ${value}`,
