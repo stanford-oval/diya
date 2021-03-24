@@ -56,7 +56,7 @@
     "sqlite3": "^4.2.0",
     "stemmer": "^1.0.5",
     "thingpedia": "^2.9.0-alpha.1",
-    "thingtalk": "github:stanford-oval/thingtalk#wip/nightmare",
+    "thingtalk": "github:stanford-oval/thingtalk",
     "utf-8-validate": "^5.0.4",
     "vue": "^2.6.12",
     "vue-clipboard2": "^0.2.1",
