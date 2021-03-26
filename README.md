@@ -1,4 +1,8 @@
-# Nightmare
+# DIYA: The DIY Assistant
+
+This repository contains the implementation of the paper [DIY Assistant: A Multi-ModalEnd-User Programmable Virtual Assistant](https://arxiv.org/abs/2008.13510).
+
+**NOTE**: this system is a prototype and a work-in-progress. It is not usable yet.
 
 ## Getting Started
 
@@ -20,13 +24,13 @@ Initialize Chrome Hot Plugin Server.
 npm run dev
 ```
 
-Initialize local Nightmare server.
+Initialize local DIYA server (modified [almond-server](https://github.com/stanford-oval/almond-server)).
 
 ```
 npm run start-server
 ```
 
-Now install Nightmare browser extension on Google Chrome. Go to `chrome://extensions` via your address bar on Chrome. Set "Developer Mode" to on in the top-right corner of your window. Click "Load Unpacked" and select the `./build` directory.
+Now install the DIYA browser extension on Google Chrome. Go to `chrome://extensions` via your address bar on Chrome. Set "Developer Mode" to on in the top-right corner of your window. Click "Load Unpacked" and select the `./build` directory.
 
 These actions will lead the "Nightmare Recorder" extension to appear in your extensions. Make sure the extension is enabled.
 
