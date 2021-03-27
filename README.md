@@ -4,12 +4,12 @@ This repository contains the DIYA, a new voice assistant that lets the user
 define custom skills using a combination of voice commands and programming
 by demonstration on the web.
 
-DIYA was described in the paper [DIY Assistant: A Multi-ModalEnd-User Programmable Virtual Assistant](https://arxiv.org/abs/2008.13510),
+DIYA was described in the paper [DIY Assistant: A Multi-Modal End-User Programmable Virtual Assistant](https://almond-static.stanford.edu/papers/diya-pldi21.pdf),
 conditionally accepted to PLDI 2021.
 
 **NOTE**: this system is a prototype and a work-in-progress. It is not fully-featured or usable yet.
 
-## Trying DIYA
+## Setting up DIYA
 
 ### Step 1: Installing dependencies
 
